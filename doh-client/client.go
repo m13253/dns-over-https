@@ -183,13 +183,14 @@ var (
 
 func (c *Client) findClientIP(w dns.ResponseWriter, r *dns.Msg) (ednsClientAddress net.IP, ednsClientNetmask uint8) {
 	ednsClientNetmask = 255
-	opt := r.IsEdns0()
-	for _, option := range opt.Option {
-		if option.Option() == dns.EDNS0SUBNET {
-			edns0Subnet := option.(*dns.EDNS0_SUBNET)
-			ednsClientAddress = edns0Subnet.Address
-			ednsClientNetmask = edns0Subnet.SourceNetmask
-			return
+	if opt := r.IsEdns0(); opt != nil {
+		for _, option := range opt.Option {
+			if option.Option() == dns.EDNS0SUBNET {
+				edns0Subnet := option.(*dns.EDNS0_SUBNET)
+				ednsClientAddress = edns0Subnet.Address
+				ednsClientNetmask = edns0Subnet.SourceNetmask
+				return
+			}
 		}
 	}
 	remoteAddr, err := net.ResolveUDPAddr("udp", w.RemoteAddr().String())
