@@ -123,7 +123,15 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		requestURL += fmt.Sprintf("&edns_client_subnet=%s/%d", ednsClientAddress.String(), ednsClientNetmask)
 	}
 
-	resp, err := http.Get(requestURL)
+	req, err := http.NewRequest("GET", requestURL, nil)
+	if err != nil {
+		log.Println(err)
+		reply.Rcode = dns.RcodeServerFailure
+		w.WriteMsg(reply)
+		return
+	}
+	req.Header.Set("User-Agent", "DNS-over-HTTPS/1.0 (+https://github.com/m13253/dns-over-https)")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Println(err)
 		reply.Rcode = dns.RcodeServerFailure

@@ -79,6 +79,8 @@ func (s *Server) Start() error {
 
 func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Server", "DNS-over-HTTPS/1.0 (+https://github.com/m13253/dns-over-https)")
+	w.Header().Set("X-Powered-By", "DNS-over-HTTPS/1.0 (+https://github.com/m13253/dns-over-https)")
 
 	name := r.FormValue("name")
 	if name == "" {
