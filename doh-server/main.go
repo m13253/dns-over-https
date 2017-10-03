@@ -25,7 +25,7 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", ":8080", "HTTP listen port")
+	addr := flag.String("addr", "[::1]:8080", "HTTP listen port")
 	cert := flag.String("cert", "", "TLS certification file")
 	key := flag.String("key", "", "TLS key file")
 	path := flag.String("path", "/resolve", "HTTP path for resolve application")

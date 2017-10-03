@@ -23,8 +23,8 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", ":5533", "DNS listen port")
-	upstream := flag.String("upstream", "http://localhost:8080/resolve", "HTTP path for upstream resolver")
+	addr := flag.String("addr", ":53", "DNS listen port")
+	upstream := flag.String("upstream", "https://dns.google.com/resolve", "HTTP path for upstream resolver")
 	flag.Parse()
 
 	client := NewClient(*addr, *upstream)
