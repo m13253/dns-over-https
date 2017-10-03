@@ -1,0 +1,15 @@
+[Unit]
+Description=DNS-over-HTTPS Client
+After=network.target
+
+[Service]
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+ExecStart=/usr/local/bin/doh-client -addr :53 -upstream https://dns.google.com/resolve
+LimitNOFILE=1048576
+Restart=always
+RestartSec=3
+Type=simple
+User=nobody
+
+[Install]
+WantedBy=multi-user.target

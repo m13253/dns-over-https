@@ -9,13 +9,13 @@ clean:
 	rm -f doh-client/doh-client doh-server/doh-server
 
 install: doh-client/doh-client doh-server/doh-server
-	install -Dm0755 doh-client/doh-client $(PREFIX)/bin/doh-client
-	install -Dm0755 doh-server/doh-server $(PREFIX)/bin/doh-server
-	setcap cap_net_bind_service=+ep $(PREFIX)/bin/doh-client
-	setcap cap_net_bind_service=+ep $(PREFIX)/bin/doh-server
+	install -Dm0755 doh-client/doh-client "$(DESTDIR)$(PREFIX)/bin/doh-client"
+	install -Dm0755 doh-server/doh-server "$(DESTDIR)$(PREFIX)/bin/doh-server"
+	$(MAKE) -C systemd install "DESTDIR=$(DESTDIR)" "PREFIX=$(PREFIX)"
 
 uninstall:
-	rm -f $(PREFIX)/bin/doh-client $(PREFIX)/bin/doh-server
+	rm -f "$(DESTDIR)$(PREFIX)/bin/doh-client" "$(DESTDIR)$(PREFIX)/bin/doh-server"
+	$(MAKE) -C systemd uninstall "DESTDIR=$(DESTDIR)" "PREFIX=$(PREFIX)"
 
 doh-client/doh-client: doh-client/client.go doh-client/main.go json-dns/error.go json-dns/globalip.go json-dns/marshal.go json-dns/response.go json-dns/unmarshal.go
 	cd doh-client && $(GOBUILD)
