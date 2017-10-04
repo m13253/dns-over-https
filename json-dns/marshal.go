@@ -19,6 +19,7 @@
 package jsonDNS
 
 import (
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -77,7 +78,8 @@ func Marshal(msg *dns.Msg) *Response {
 			for _, option := range opt.Option {
 				if option.Option() == dns.EDNS0SUBNET {
 					edns0 := option.(*dns.EDNS0_SUBNET)
-					resp.EdnsClientSubnet = edns0.Address.String() + "/" + strconv.Itoa(int(edns0.SourceScope))
+					scopeMask := net.CIDRMask(int(edns0.SourceScope), len(edns0.Address))
+					resp.EdnsClientSubnet = edns0.Address.Mask(scopeMask).String() + "/" + strconv.Itoa(int(edns0.SourceScope))
 				}
 			}
 			continue
