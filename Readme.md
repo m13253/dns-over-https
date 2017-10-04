@@ -76,7 +76,8 @@ Currently supported features are:
 - [X] EDNS0 Client Subnet
 - [ ] DNSSEC
 
-DNSSEC is planned but not implemented yet. Contributions are welcome.
+DNSSEC is planned but not implemented yet. Contributions are welcome. It is
+suggested that you install `unbound` or `bind` to validate DNS records.
 
 ## License
 
