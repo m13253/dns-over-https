@@ -7,7 +7,12 @@ Client and server software to query DNS over HTTPS protocol
 
 Install [Go](https://golang.org), at least version 1.8.
 
-Type:
+First create an empty directory, used for `$GOPATH`:
+
+    mkdir ~/gopath
+    export GOPATH=~/gopath
+
+To build the program, type:
 
     make
 
