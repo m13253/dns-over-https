@@ -27,6 +27,12 @@ default settings, type:
     sudo cp /usr/lib/systemd/system/doh-client.service /etc/systemd/system/
     sudoedit /etc/systemd/system/doh-client.service
 
+Perform a DNS lookup to `dns.google.com`, and store the result in `/etc/hosts`.
+This is used for bootstrap.
+
+    dig +short dns.google.com
+    echo 'XXX.XXX.XXX.XXX dns.google.com' | sudo tee -a /etc/hosts
+
 To automatically start DNS-over-HTTPS client as a system service, type:
 
     sudo systemctl start doh-client.service
