@@ -80,7 +80,7 @@ DNSSEC is planned but not implemented yet. Contributions are welcome.
 
 ## License
 
-DNS-over-HTTPS is licensed under [GNU AFFERO GENERAL PUBLIC LICENSE](LICENSE)
+DNS-over-HTTPS is licensed under [GNU Affero General Public License](LICENSE)
 version 3 or later. That means, if you improved DNS-over-HTTPS or fixed a bug, you
 **must** disclose your modification to the public, so that others may benefit from
 your modification, in the same way you receive benefits from this project.
