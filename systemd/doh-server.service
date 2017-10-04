@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 AmbientCapabilities=CAP_NET_BIND_SERVICE
-ExecStart=/usr/local/bin/doh-server
+ExecStart=/usr/local/bin/doh-server -addr 127.0.0.1:8053 -upstream 8.8.8.8:53,8.8.4.4:53
 LimitNOFILE=1048576
 Restart=always
 RestartSec=3

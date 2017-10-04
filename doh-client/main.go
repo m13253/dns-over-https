@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", ":53", "DNS listen port")
+	addr := flag.String("addr", "127.0.0.1:53", "DNS listen port")
 	upstream := flag.String("upstream", "https://dns.google.com/resolve", "HTTP path for upstream resolver")
 	flag.Parse()
 
