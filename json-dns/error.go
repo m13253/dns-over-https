@@ -21,6 +21,7 @@ package jsonDNS
 import (
 	"encoding/json"
 	"log"
+	"net/http"
 	"github.com/miekg/dns"
 )
 
@@ -29,7 +30,7 @@ type dnsError struct {
 	Comment				string		`json:"Comment,omitempty"`
 }
 
-func FormatError(comment string) string {
+func FormatError(w http.ResponseWriter, comment string, errcode int) {
 	errJson := dnsError {
 		Status: dns.RcodeServerFailure,
 		Comment: comment,
@@ -38,5 +39,6 @@ func FormatError(comment string) string {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	return string(errStr)
+	w.WriteHeader(errcode)
+	w.Write(errStr)
 }
