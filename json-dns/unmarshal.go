@@ -42,7 +42,7 @@ func PrepareReply(req *dns.Msg) *dns.Msg {
 	return reply
 }
 
-func Unmarshal(msg *dns.Msg, resp *Response, udpSize uint16, ednsClientNetmask uint8) *dns.Msg {
+func Unmarshal(msg *dns.Msg, resp *Response, udpSize uint16) *dns.Msg {
 	now := time.Now().UTC()
 
 	reply := msg.Copy()
@@ -110,17 +110,10 @@ func Unmarshal(msg *dns.Msg, resp *Response, udpSize uint16, ednsClientNetmask u
 		}
 	}
 	if ednsClientAddress != nil {
-		if ednsClientNetmask == 255 {
-			if ednsClientFamily == 1 {
-				ednsClientNetmask = 24
-			} else {
-				ednsClientNetmask = 48
-			}
-		}
 		edns0Subnet := new(dns.EDNS0_SUBNET)
         edns0Subnet.Code = dns.EDNS0SUBNET
         edns0Subnet.Family = ednsClientFamily
-        edns0Subnet.SourceNetmask = ednsClientNetmask
+        edns0Subnet.SourceNetmask = ednsClientScope
         edns0Subnet.SourceScope = ednsClientScope
         edns0Subnet.Address = ednsClientAddress
         opt.Option = append(opt.Option, edns0Subnet)

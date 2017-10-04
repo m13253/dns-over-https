@@ -156,7 +156,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		return
 	}
 
-	fullReply := jsonDNS.Unmarshal(reply, &respJson, udpSize, ednsClientNetmask)
+	fullReply := jsonDNS.Unmarshal(reply, &respJson, udpSize)
 	buf, err := fullReply.Pack()
 	if err != nil {
 		log.Println(err)
