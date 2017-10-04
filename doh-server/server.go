@@ -81,7 +81,6 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Server", "DNS-over-HTTPS/1.0 (+https://github.com/m13253/dns-over-https)")
 	w.Header().Set("X-Powered-By", "DNS-over-HTTPS/1.0 (+https://github.com/m13253/dns-over-https)")
-	w.Header().Set("Vary", "X-Edns-Client-Subnet")
 
 	name := r.FormValue("name")
 	if name == "" {
@@ -204,9 +203,6 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	if respJson.HaveTTL {
 		w.Header().Set("Cache-Control", "max-age=" + strconv.Itoa(int(respJson.LeastTTL)))
 		w.Header().Set("Expires", respJson.EarliestExpires.Format(time.RFC1123))
-	}
-	if respJson.EdnsClientSubnet != "" {
-		w.Header().Set("X-Edns-Client-Subnet", respJson.EdnsClientSubnet)
 	}
 	w.Write(respStr)
 }
