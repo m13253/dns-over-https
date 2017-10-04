@@ -201,7 +201,11 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if respJson.HaveTTL {
-		w.Header().Set("Cache-Control", "max-age=" + strconv.Itoa(int(respJson.LeastTTL)))
+		if ednsClientSubnet != "" {
+			w.Header().Set("Cache-Control", "public, max-age=" + strconv.Itoa(int(respJson.LeastTTL)))
+		} else {
+			w.Header().Set("Cache-Control", "private, max-age=" + strconv.Itoa(int(respJson.LeastTTL)))
+		}
 		w.Header().Set("Expires", respJson.EarliestExpires.Format(time.RFC1123))
 	}
 	w.Write(respStr)
