@@ -59,10 +59,10 @@ can host DNS-over-HTTPS along with other HTTPS services.
 
 ## Protocol compatibility
 
- [X] IPv4 / IPv6
- [X] EDNS0 large UDP packet
- [X] EDNS0 Client Subnet
- [ ] DNSSEC
+- [X] IPv4 / IPv6
+- [X] EDNS0 large UDP packet
+- [X] EDNS0 Client Subnet
+- [ ] DNSSEC
 
 DNSSEC is planned but not implemented yet. Contributions are welcome.
 
