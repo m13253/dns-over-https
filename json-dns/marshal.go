@@ -78,8 +78,12 @@ func Marshal(msg *dns.Msg) *Response {
 			for _, option := range opt.Option {
 				if option.Option() == dns.EDNS0SUBNET {
 					edns0 := option.(*dns.EDNS0_SUBNET)
+					clientAddress := edns0.Address
+					if clientAddress == nil {
+						clientAddress = net.IPv4(0, 0, 0, 0)
+					}
 					scopeMask := net.CIDRMask(int(edns0.SourceScope), len(edns0.Address))
-					resp.EdnsClientSubnet = edns0.Address.Mask(scopeMask).String() + "/" + strconv.Itoa(int(edns0.SourceScope))
+					resp.EdnsClientSubnet = clientAddress.Mask(scopeMask).String() + "/" + strconv.Itoa(int(edns0.SourceScope))
 				}
 			}
 			continue
