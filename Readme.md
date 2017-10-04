@@ -64,6 +64,13 @@ can host DNS-over-HTTPS along with other HTTPS services.
 
 ## Protocol compatibility
 
+DNS-over-HTTPS use a protocol compatible to [Google DNS-over-HTTPS](https://developers.google.com/speed/public-dns/docs/dns-over-https),
+except for absolute expire time is preferred to relative TTL value. Refer to
+[json-dns/response.go](json-dns/response.go) for a complete description of the
+API.
+
+Currently supported features are:
+
 - [X] IPv4 / IPv6
 - [X] EDNS0 large UDP packet
 - [X] EDNS0 Client Subnet
