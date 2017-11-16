@@ -20,13 +20,17 @@ package main
 
 import (
 	"flag"
+	"log"
 )
 
 func main() {
 	addr := flag.String("addr", "127.0.0.1:53", "DNS listen port")
 	upstream := flag.String("upstream", "https://dns.google.com/resolve", "HTTP path for upstream resolver")
+	bootstrap := flag.String("bootstrap", "", "The bootstrap DNS server to resolve the address of the upstream resolver")
+	timeout := flag.Uint("timeout", 10, "Timeout for upstream request")
 	flag.Parse()
 
-	client := NewClient(*addr, *upstream)
+	client, err := NewClient(*addr, *upstream, *bootstrap, *timeout)
+	if err != nil { log.Fatalln(err) }
 	_ = client.Start()
 }

@@ -19,6 +19,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -33,16 +34,20 @@ import (
 )
 
 type Client struct {
-	addr		string
-	upstream	string
-	udpServer	*dns.Server
-	tcpServer	*dns.Server
+	addr			string
+	upstream		string
+	bootstrap		string
+	timeout			uint
+	udpServer		*dns.Server
+	tcpServer		*dns.Server
+	httpClient		*http.Client
 }
 
-func NewClient(addr, upstream string) (c *Client) {
+func NewClient(addr, upstream, bootstrap string, timeout uint) (c *Client, err error) {
 	c = &Client {
 		addr: addr,
 		upstream: upstream,
+		timeout: timeout,
 	}
 	c.udpServer = &dns.Server {
 		Addr: addr,
@@ -55,7 +60,34 @@ func NewClient(addr, upstream string) (c *Client) {
 		Net: "tcp",
 		Handler: dns.HandlerFunc(c.tcpHandlerFunc),
 	}
-	return
+	bootResolver := net.DefaultResolver
+	if bootstrap != "" {
+		bootstrapAddr, err := net.ResolveUDPAddr("udp", bootstrap)
+		if err != nil {
+			bootstrapAddr, err = net.ResolveUDPAddr("udp", "[" + bootstrap + "]:53")
+		}
+		if err != nil { return nil, err }
+		c.bootstrap = bootstrapAddr.String()
+		bootResolver = &net.Resolver {
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				var d net.Dialer
+				conn, err := d.DialContext(ctx, network, c.bootstrap)
+				return conn, err
+			},
+		}
+	}
+	httpTransport := *http.DefaultTransport.(*http.Transport)
+	httpTransport.DialContext = (&net.Dialer {
+		Timeout: time.Duration(c.timeout) * time.Second,
+		KeepAlive: 30 * time.Second,
+		DualStack: true,
+		Resolver: bootResolver,
+	}).DialContext
+	c.httpClient = &http.Client {
+		Transport: &httpTransport,
+	}
+	return c, nil
 }
 
 func (c *Client) Start() error {
@@ -131,7 +163,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		return
 	}
 	req.Header.Set("User-Agent", "DNS-over-HTTPS/1.0 (+https://github.com/m13253/dns-over-https)")
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		log.Println(err)
 		reply.Rcode = dns.RcodeServerFailure
