@@ -87,6 +87,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		jsonDNS.FormatError(w, "Invalid argument value: \"name\"", 400)
 		return
 	}
+	name = strings.ToLower(name)
 	if punycode, err := idna.ToASCII(name); err == nil {
 		name = punycode
 	} else {

@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 	"github.com/miekg/dns"
 	"../json-dns"
@@ -129,7 +130,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		return
 	}
 	question := r.Question[0]
-	questionName := question.Name
+	questionName := strings.ToLower(question.Name)
 	questionType := ""
 	if qtype, ok := dns.TypeToString[question.Qtype]; ok {
 		questionType = qtype
