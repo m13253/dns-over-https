@@ -39,16 +39,18 @@ type Client struct {
 	upstream		string
 	bootstrap		string
 	timeout			uint
+	noECS			bool
 	udpServer		*dns.Server
 	tcpServer		*dns.Server
 	httpClient		*http.Client
 }
 
-func NewClient(addr, upstream, bootstrap string, timeout uint) (c *Client, err error) {
+func NewClient(addr, upstream, bootstrap string, timeout uint, noECS bool) (c *Client, err error) {
 	c = &Client {
 		addr: addr,
 		upstream: upstream,
 		timeout: timeout,
+		noECS: noECS,
 	}
 	c.udpServer = &dns.Server {
 		Addr: addr,
@@ -224,6 +226,9 @@ var (
 
 func (c *Client) findClientIP(w dns.ResponseWriter, r *dns.Msg) (ednsClientAddress net.IP, ednsClientNetmask uint8) {
 	ednsClientNetmask = 255
+	if c.noECS {
+		return net.IPv4(0, 0, 0, 0), 0
+	}
 	if opt := r.IsEdns0(); opt != nil {
 		for _, option := range opt.Option {
 			if option.Option() == dns.EDNS0SUBNET {
