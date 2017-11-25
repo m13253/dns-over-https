@@ -1,0 +1,13 @@
+#!/bin/bash
+
+case "$2" in
+    up)
+        /usr/bin/systemctl is-active doh-client.service > /dev/null && /usr/bin/systemctl restart doh-client.service
+        ;;
+    down)
+        /usr/bin/systemctl is-active doh-client.service > /dev/null && /usr/bin/systemctl restart doh-client.service
+        ;;
+    *)
+        exit 0
+        ;;
+esac
