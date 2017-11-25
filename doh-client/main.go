@@ -21,6 +21,7 @@ package main
 import (
 	"flag"
 	"log"
+	"strings"
 )
 
 func main() {
@@ -32,7 +33,11 @@ func main() {
 	verbose := flag.Bool("verbose", false, "Enable logging")
 	flag.Parse()
 
-	client, err := NewClient(*addr, *upstream, *bootstrap, *timeout, *noECS, *verbose)
+	bootstraps := []string {}
+	if *bootstrap != "" {
+		bootstraps = strings.Split(*bootstrap, ",")
+	}
+	client, err := NewClient(*addr, *upstream, bootstraps, *timeout, *noECS, *verbose)
 	if err != nil { log.Fatalln(err) }
 	_ = client.Start()
 }

@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"io/ioutil"
 	"log"
 	"net"
@@ -37,7 +38,7 @@ import (
 type Client struct {
 	addr			string
 	upstream		string
-	bootstrap		string
+	bootstraps		[]string
 	timeout			uint
 	noECS			bool
 	verbose			bool
@@ -46,10 +47,11 @@ type Client struct {
 	httpClient		*http.Client
 }
 
-func NewClient(addr, upstream, bootstrap string, timeout uint, noECS, verbose bool) (c *Client, err error) {
+func NewClient(addr, upstream string, bootstraps []string, timeout uint, noECS, verbose bool) (c *Client, err error) {
 	c = &Client {
 		addr: addr,
 		upstream: upstream,
+		bootstraps: bootstraps,
 		timeout: timeout,
 		noECS: noECS,
 		verbose: verbose,
@@ -66,18 +68,22 @@ func NewClient(addr, upstream, bootstrap string, timeout uint, noECS, verbose bo
 		Handler: dns.HandlerFunc(c.tcpHandlerFunc),
 	}
 	bootResolver := net.DefaultResolver
-	if bootstrap != "" {
-		bootstrapAddr, err := net.ResolveUDPAddr("udp", bootstrap)
-		if err != nil {
-			bootstrapAddr, err = net.ResolveUDPAddr("udp", "[" + bootstrap + "]:53")
+	if len(c.bootstraps) != 0 {
+		for i, bootstrap := range c.bootstraps {
+			bootstrapAddr, err := net.ResolveUDPAddr("udp", bootstrap)
+			if err != nil {
+				bootstrapAddr, err = net.ResolveUDPAddr("udp", "[" + bootstrap + "]:53")
+			}
+			if err != nil { return nil, err }
+			c.bootstraps[i] = bootstrapAddr.String()
 		}
-		if err != nil { return nil, err }
-		c.bootstrap = bootstrapAddr.String()
 		bootResolver = &net.Resolver {
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 				var d net.Dialer
-				conn, err := d.DialContext(ctx, network, c.bootstrap)
+				num_servers := len(c.bootstraps)
+				bootstrap := c.bootstraps[rand.Intn(num_servers)]
+				conn, err := d.DialContext(ctx, network, bootstrap)
 				return conn, err
 			},
 		}
