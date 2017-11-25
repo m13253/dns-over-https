@@ -20,9 +20,9 @@ To install DNS-over-HTTPS as Systemd services, type:
 
     sudo make install
 
-By default, [Google DNS over HTTPS](https://dns.google.com) is used. It should work
-for most users (except for People's Republic of China). If you need to modify the
-default settings, type:
+By default, [Google DNS over HTTPS](https://dns.google.com) is used. It should
+work for most users (except for People's Republic of China). If you need to
+modify the default settings, type:
 
     sudo cp /usr/lib/systemd/system/doh-client.service /etc/systemd/system/
     sudoedit /etc/systemd/system/doh-client.service
@@ -59,8 +59,16 @@ The following is a typical DNS-over-HTTPS architecture:
     |  doh-client  +--+ Content Delivery Network +--+ (Apache, Nginx, Caddy) |
     +--------------+  +--------------------------+  +------------------------+
 
-Although DNS-over-HTTPS can work alone, a HTTP service muxer would be useful as you
-can host DNS-over-HTTPS along with other HTTPS services.
+Although DNS-over-HTTPS can work alone, a HTTP service muxer would be useful as
+you can host DNS-over-HTTPS along with other HTTPS services.
+
+## DNSSEC
+
+DNSSEC validation is not built-in. It is highly recommended that you install
+`unbound` or `bind` and pass results for them to validate DNS records.
+
+If you are running a server without anycast, you probably want to enable EDNS0
+Client Subnet during your configuring `unbound` or `bind`.
 
 ## Protocol compatibility
 
@@ -72,16 +80,16 @@ API.
 Currently supported features are:
 
 - [X] IPv4 / IPv6
-- [X] EDNS0 large UDP packet
-- [X] EDNS0 Client Subnet
-- [ ] DNSSEC
-
-DNSSEC is planned but not implemented yet. Contributions are welcome. It is
-suggested that you install `unbound` or `bind` to validate DNS records.
+- [X] EDNS0 large UDP packet (4 KiB by default)
+- [X] EDNS0 Client Subnet (/24 for IPv4, /48 for IPv6 by default)
 
 ## License
 
 DNS-over-HTTPS is licensed under [GNU Affero General Public License](LICENSE)
-version 3 or later. That means, if you improved DNS-over-HTTPS or fixed a bug, you
-**must** disclose your modification to the public, so that others may benefit from
-your modification, in the same way you receive benefits from this project.
+version 3 or later. That means, if you improved DNS-over-HTTPS or fixed a bug,
+you **must** disclose your modification to the public, so that others may
+benefit from your modification, in the same way you receive benefits from this
+project.
+
+Anyhow, if you have special licensing requirements, as long as you are doing
+good to the public, feel free to write to me.
