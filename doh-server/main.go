@@ -31,6 +31,7 @@ func main() {
 	path := flag.String("path", "/resolve", "HTTP path for resolve application")
 	upstream := flag.String("upstream", "8.8.8.8:53,8.8.4.4:53", "Upstream DNS resolver")
 	tcpOnly := flag.Bool("tcp", false, "Only use TCP for DNS query")
+	verbose := flag.Bool("verbose", false, "Enable logging")
 	flag.Parse()
 
 	if (*cert != "") != (*key != "") {
@@ -38,7 +39,7 @@ func main() {
 	}
 
 	upstreams := strings.Split(*upstream, ",")
-	server := NewServer(*addr, *cert, *key, *path, upstreams, *tcpOnly)
+	server := NewServer(*addr, *cert, *key, *path, upstreams, *tcpOnly, *verbose)
 	err := server.Start()
 	if err != nil {
 		log.Fatalln(err)

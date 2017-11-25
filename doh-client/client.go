@@ -40,17 +40,19 @@ type Client struct {
 	bootstrap		string
 	timeout			uint
 	noECS			bool
+	verbose			bool
 	udpServer		*dns.Server
 	tcpServer		*dns.Server
 	httpClient		*http.Client
 }
 
-func NewClient(addr, upstream, bootstrap string, timeout uint, noECS bool) (c *Client, err error) {
+func NewClient(addr, upstream, bootstrap string, timeout uint, noECS, verbose bool) (c *Client, err error) {
 	c = &Client {
 		addr: addr,
 		upstream: upstream,
 		timeout: timeout,
 		noECS: noECS,
+		verbose: verbose,
 	}
 	c.udpServer = &dns.Server {
 		Addr: addr,
@@ -140,7 +142,9 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		questionType = strconv.Itoa(int(question.Qtype))
 	}
 
-	fmt.Printf("%s - - [%s] \"%s IN %s\"\n", w.RemoteAddr(), time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionType)
+	if c.verbose{
+		fmt.Printf("%s - - [%s] \"%s IN %s\"\n", w.RemoteAddr(), time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionType)
+	}
 
 	requestURL := fmt.Sprintf("%s?name=%s&type=%s", c.upstream, url.QueryEscape(questionName), url.QueryEscape(questionType))
 

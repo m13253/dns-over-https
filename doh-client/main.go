@@ -29,9 +29,10 @@ func main() {
 	bootstrap := flag.String("bootstrap", "", "The bootstrap DNS server to resolve the address of the upstream resolver")
 	timeout := flag.Uint("timeout", 10, "Timeout for upstream request")
 	noECS := flag.Bool("no-ecs", false, "Disable EDNS0-Client-Subnet, do not send client's IP address")
+	verbose := flag.Bool("verbose", false, "Enable logging")
 	flag.Parse()
 
-	client, err := NewClient(*addr, *upstream, *bootstrap, *timeout, *noECS)
+	client, err := NewClient(*addr, *upstream, *bootstrap, *timeout, *noECS, *verbose)
 	if err != nil { log.Fatalln(err) }
 	_ = client.Start()
 }

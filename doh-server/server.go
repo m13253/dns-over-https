@@ -42,12 +42,13 @@ type Server struct {
 	path		string
 	upstreams	[]string
 	tcpOnly		bool
+	verbose		bool
 	udpClient	*dns.Client
 	tcpClient	*dns.Client
 	servemux	*http.ServeMux
 }
 
-func NewServer(addr, cert, key, path string, upstreams []string, tcpOnly bool) (s *Server) {
+func NewServer(addr, cert, key, path string, upstreams []string, tcpOnly, verbose bool) (s *Server) {
 	upstreamsCopy := make([]string, len(upstreams))
 	copy(upstreamsCopy, upstreams)
 	s = &Server {
@@ -57,6 +58,7 @@ func NewServer(addr, cert, key, path string, upstreams []string, tcpOnly bool) (
 		path: path,
 		upstreams: upstreamsCopy,
 		tcpOnly: tcpOnly,
+		verbose: verbose,
 		udpClient: &dns.Client {
 			Net: "udp",
 		},
@@ -70,10 +72,14 @@ func NewServer(addr, cert, key, path string, upstreams []string, tcpOnly bool) (
 }
 
 func (s *Server) Start() error {
+	servemux := http.Handler(s.servemux)
+	if s.verbose {
+		servemux = handlers.CombinedLoggingHandler(os.Stdout, servemux)
+	}
 	if s.cert != "" || s.key != "" {
-		return http.ListenAndServeTLS(s.addr, s.cert, s.key, handlers.CombinedLoggingHandler(os.Stdout, s.servemux))
+		return http.ListenAndServeTLS(s.addr, s.cert, s.key, servemux)
 	} else {
-		return http.ListenAndServe(s.addr, handlers.CombinedLoggingHandler(os.Stdout, s.servemux))
+		return http.ListenAndServe(s.addr, servemux)
 	}
 }
 
