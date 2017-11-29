@@ -183,6 +183,12 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		w.WriteMsg(reply)
 		return
 	}
+	if resp.StatusCode != 200 {
+		log.Printf("Server returned error: %s\n", resp.Status)
+		reply.Rcode = dns.RcodeServerFailure
+		w.WriteMsg(reply)
+		return
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
