@@ -85,11 +85,10 @@ Currently supported features are:
 
 ## License
 
-DNS-over-HTTPS is licensed under [GNU Affero General Public License](LICENSE)
-version 3 or later. That means, if you improved DNS-over-HTTPS or fixed a bug,
-you **must** disclose your modification to the public, so that others may
-benefit from your modification, in the same way you receive benefits from this
-project.
+DNS-over-HTTPS is licensed under the [MIT License](LICENSE). You are encouraged
+to embed DNS-over-HTTPS into your other projects, as long as the license
+permits.
 
-Anyhow, if you have special licensing requirements, as long as you are doing
-good to the public, feel free to write to me.
+You are also encouraged to disclose your improvements to the public, so that
+others may benefit from your modification, in the same way you receive benefits
+from this project.
