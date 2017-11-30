@@ -205,7 +205,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := s.doDNSQuery(msg)
 	if err != nil {
-		jsonDNS.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 502)
+		jsonDNS.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 503)
 		return
 	}
 	respJson := jsonDNS.Marshal(resp)
