@@ -205,7 +205,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := s.doDNSQuery(msg)
 	if err != nil {
-		jsonDNS.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 503)
+		jsonDNS.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 502)
 		return
 	}
 	respJson := jsonDNS.Marshal(resp)
@@ -222,6 +222,9 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Cache-Control", "private, max-age=" + strconv.Itoa(int(respJson.LeastTTL)))
 		}
 		w.Header().Set("Expires", respJson.EarliestExpires.Format(time.RFC1123))
+	}
+	if respJson.Status == dns.RcodeServerFailure {
+		w.WriteHeader(503)
 	}
 	w.Write(respStr)
 }

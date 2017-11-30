@@ -194,7 +194,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		return
 	}
 	if resp.StatusCode != 200 {
-		log.Printf("Server returned error: %s\n", resp.Status)
+		log.Printf("HTTP error: %s\n", resp.Status)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
 		return
