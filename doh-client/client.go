@@ -32,6 +32,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strconv"
 	"strings"
@@ -100,8 +101,11 @@ func NewClient(addr, upstream string, bootstraps []string, timeout uint, noECS, 
 		DualStack: true,
 		Resolver: bootResolver,
 	}).DialContext
+	cookieJar, err := cookiejar.New(nil)
+	if err != nil { return nil, err }
 	c.httpClient = &http.Client {
 		Transport: &httpTransport,
+		Jar: cookieJar,
 	}
 	return c, nil
 }
