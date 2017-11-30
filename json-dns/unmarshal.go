@@ -34,14 +34,14 @@ import (
 )
 
 func PrepareReply(req *dns.Msg) *dns.Msg {
-    reply := new(dns.Msg)
-    reply.Id = req.Id
-    reply.Response = true
-    reply.Opcode = reply.Opcode
+	reply := new(dns.Msg)
+	reply.Id = req.Id
+	reply.Response = true
+	reply.Opcode = reply.Opcode
 	reply.RecursionDesired = req.RecursionDesired
 	reply.CheckingDisabled = req.CheckingDisabled
 	reply.Rcode = dns.RcodeServerFailure
-    reply.Compress = true
+	reply.Compress = true
 	reply.Question = make([]dns.Question, len(req.Question))
 	copy(reply.Question, req.Question)
 	return reply
@@ -123,12 +123,12 @@ func Unmarshal(msg *dns.Msg, resp *Response, udpSize uint16, ednsClientNetmask u
 			}
 		}
 		edns0Subnet := new(dns.EDNS0_SUBNET)
-        edns0Subnet.Code = dns.EDNS0SUBNET
-        edns0Subnet.Family = ednsClientFamily
-        edns0Subnet.SourceNetmask = ednsClientNetmask
-        edns0Subnet.SourceScope = ednsClientScope
-        edns0Subnet.Address = ednsClientAddress
-        opt.Option = append(opt.Option, edns0Subnet)
+		edns0Subnet.Code = dns.EDNS0SUBNET
+		edns0Subnet.Family = ednsClientFamily
+		edns0Subnet.SourceNetmask = ednsClientNetmask
+		edns0Subnet.SourceScope = ednsClientScope
+		edns0Subnet.Address = ednsClientAddress
+		opt.Option = append(opt.Option, edns0Subnet)
 	}
 	reply.Extra = append(reply.Extra, opt)
 	for _, rr := range resp.Additional {
