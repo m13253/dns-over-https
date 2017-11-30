@@ -39,6 +39,7 @@ func PrepareReply(req *dns.Msg) *dns.Msg {
 	reply.Response = true
 	reply.Opcode = reply.Opcode
 	reply.RecursionDesired = req.RecursionDesired
+	reply.RecursionAvailable = req.RecursionDesired
 	reply.CheckingDisabled = req.CheckingDisabled
 	reply.Rcode = dns.RcodeServerFailure
 	reply.Compress = true
@@ -52,7 +53,6 @@ func Unmarshal(msg *dns.Msg, resp *Response, udpSize uint16, ednsClientNetmask u
 
 	reply := msg.Copy()
 	reply.Truncated = resp.TC
-	reply.RecursionAvailable = resp.RA
 	reply.AuthenticatedData = resp.AD
 	reply.CheckingDisabled = resp.CD
 	reply.Rcode = dns.RcodeServerFailure
