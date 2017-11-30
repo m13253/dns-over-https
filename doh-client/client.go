@@ -198,7 +198,10 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		log.Printf("HTTP error: %s\n", resp.Status)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
-		return
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != "application/json" && !strings.HasPrefix(contentType, "application/json;") {
+			return
+		}
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -216,6 +219,10 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
 		return
+	}
+
+	if respJson.Status != dns.RcodeSuccess && respJson.Comment != "" {
+		log.Printf("DNS error: %s\n", respJson.Comment)
 	}
 
 	fullReply := jsonDNS.Unmarshal(reply, &respJson, udpSize, ednsClientNetmask)

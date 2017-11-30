@@ -52,7 +52,6 @@ func Unmarshal(msg *dns.Msg, resp *Response, udpSize uint16, ednsClientNetmask u
 
 	reply := msg.Copy()
 	reply.Truncated = resp.TC
-	reply.RecursionDesired = resp.RD
 	reply.RecursionAvailable = resp.RA
 	reply.AuthenticatedData = resp.AD
 	reply.CheckingDisabled = resp.CD
