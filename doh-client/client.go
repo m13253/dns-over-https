@@ -42,53 +42,45 @@ import (
 )
 
 type Client struct {
-	addr			string
-	upstream		string
-	bootstraps		[]string
-	timeout			uint
-	noECS			bool
-	verbose			bool
+	conf			*config
+	bootstrap		[]string
 	udpServer		*dns.Server
 	tcpServer		*dns.Server
 	httpClient		*http.Client
 }
 
-func NewClient(addr, upstream string, bootstraps []string, timeout uint, noECS, verbose bool) (c *Client, err error) {
+func NewClient(conf *config) (c *Client, err error) {
 	c = &Client {
-		addr: addr,
-		upstream: upstream,
-		bootstraps: bootstraps,
-		timeout: timeout,
-		noECS: noECS,
-		verbose: verbose,
+		conf: conf,
 	}
 	c.udpServer = &dns.Server {
-		Addr: addr,
+		Addr: conf.Listen,
 		Net: "udp",
 		Handler: dns.HandlerFunc(c.udpHandlerFunc),
 		UDPSize: 4096,
 	}
 	c.tcpServer = &dns.Server {
-		Addr: addr,
+		Addr: conf.Listen,
 		Net: "tcp",
 		Handler: dns.HandlerFunc(c.tcpHandlerFunc),
 	}
 	bootResolver := net.DefaultResolver
-	if len(c.bootstraps) != 0 {
-		for i, bootstrap := range c.bootstraps {
+	if len(conf.Bootstrap) != 0 {
+		c.bootstrap = make([]string, len(conf.Bootstrap))
+		for i, bootstrap := range conf.Bootstrap {
 			bootstrapAddr, err := net.ResolveUDPAddr("udp", bootstrap)
 			if err != nil {
 				bootstrapAddr, err = net.ResolveUDPAddr("udp", "[" + bootstrap + "]:53")
 			}
 			if err != nil { return nil, err }
-			c.bootstraps[i] = bootstrapAddr.String()
+			c.bootstrap[i] = bootstrapAddr.String()
 		}
 		bootResolver = &net.Resolver {
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 				var d net.Dialer
-				num_servers := len(c.bootstraps)
-				bootstrap := c.bootstraps[rand.Intn(num_servers)]
+				num_servers := len(c.bootstrap)
+				bootstrap := c.bootstrap[rand.Intn(num_servers)]
 				conn, err := d.DialContext(ctx, network, bootstrap)
 				return conn, err
 			},
@@ -96,12 +88,12 @@ func NewClient(addr, upstream string, bootstraps []string, timeout uint, noECS, 
 	}
 	httpTransport := *http.DefaultTransport.(*http.Transport)
 	httpTransport.DialContext = (&net.Dialer {
-		Timeout: time.Duration(c.timeout) * time.Second,
+		Timeout: time.Duration(conf.Timeout) * time.Second,
 		KeepAlive: 30 * time.Second,
 		DualStack: true,
 		Resolver: bootResolver,
 	}).DialContext
-	httpTransport.ResponseHeaderTimeout = time.Duration(c.timeout) * time.Second
+	httpTransport.ResponseHeaderTimeout = time.Duration(conf.Timeout) * time.Second
 	// Most CDNs require Cookie support to prevent DDoS attack
 	cookieJar, err := cookiejar.New(nil)
 	if err != nil { return nil, err }
@@ -159,11 +151,13 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		questionType = strconv.Itoa(int(question.Qtype))
 	}
 
-	if c.verbose{
+	if c.conf.Verbose {
 		fmt.Printf("%s - - [%s] \"%s IN %s\"\n", w.RemoteAddr(), time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionType)
 	}
 
-	requestURL := fmt.Sprintf("%s?name=%s&type=%s", c.upstream, url.QueryEscape(questionName), url.QueryEscape(questionType))
+	num_servers := len(c.conf.Upstream)
+	upstream := c.conf.Upstream[rand.Intn(num_servers)]
+	requestURL := fmt.Sprintf("%s?name=%s&type=%s", upstream, url.QueryEscape(questionName), url.QueryEscape(questionType))
 
 	if r.CheckingDisabled {
 		requestURL += "&cd=1"
@@ -260,7 +254,7 @@ var (
 
 func (c *Client) findClientIP(w dns.ResponseWriter, r *dns.Msg) (ednsClientAddress net.IP, ednsClientNetmask uint8) {
 	ednsClientNetmask = 255
-	if c.noECS {
+	if c.conf.NoECS {
 		return net.IPv4(0, 0, 0, 0), 0
 	}
 	if opt := r.IsEdns0(); opt != nil {

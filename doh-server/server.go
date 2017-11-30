@@ -41,29 +41,15 @@ import (
 )
 
 type Server struct {
-	addr		string
-	cert		string
-	key			string
-	path		string
-	upstreams	[]string
-	tcpOnly		bool
-	verbose		bool
+	conf		*config
 	udpClient	*dns.Client
 	tcpClient	*dns.Client
 	servemux	*http.ServeMux
 }
 
-func NewServer(addr, cert, key, path string, upstreams []string, tcpOnly, verbose bool) (s *Server) {
-	upstreamsCopy := make([]string, len(upstreams))
-	copy(upstreamsCopy, upstreams)
+func NewServer(conf *config) (s *Server) {
 	s = &Server {
-		addr: addr,
-		cert: cert,
-		key: key,
-		path: path,
-		upstreams: upstreamsCopy,
-		tcpOnly: tcpOnly,
-		verbose: verbose,
+		conf: conf,
 		udpClient: &dns.Client {
 			Net: "udp",
 		},
@@ -72,19 +58,19 @@ func NewServer(addr, cert, key, path string, upstreams []string, tcpOnly, verbos
 		},
 		servemux: http.NewServeMux(),
 	}
-	s.servemux.HandleFunc(path, s.handlerFunc)
+	s.servemux.HandleFunc(conf.Path, s.handlerFunc)
 	return
 }
 
 func (s *Server) Start() error {
 	servemux := http.Handler(s.servemux)
-	if s.verbose {
+	if s.conf.Verbose {
 		servemux = handlers.CombinedLoggingHandler(os.Stdout, servemux)
 	}
-	if s.cert != "" || s.key != "" {
-		return http.ListenAndServeTLS(s.addr, s.cert, s.key, servemux)
+	if s.conf.Cert != "" || s.conf.Key != "" {
+		return http.ListenAndServeTLS(s.conf.Listen, s.conf.Cert, s.conf.Key, servemux)
 	} else {
-		return http.ListenAndServe(s.addr, servemux)
+		return http.ListenAndServe(s.conf.Listen, servemux)
 	}
 }
 
@@ -211,6 +197,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	respJson := jsonDNS.Marshal(resp)
 	respStr, err := json.Marshal(respJson)
 	if err != nil {
+		log.Println(err)
 		jsonDNS.FormatError(w, fmt.Sprintf("DNS packet parse failure (%s)", err.Error()), 500)
 		return
 	}
@@ -259,31 +246,17 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 }
 
 func (s *Server) doDNSQuery(msg *dns.Msg) (resp *dns.Msg, err error) {
-	num_servers := len(s.upstreams)
-	init_server := rand.Intn(num_servers)
-	for i := 0; i < num_servers; i++ {
-		var server string
-		if init_server + i < num_servers {
-			server = s.upstreams[i + init_server]
-		} else {
-			server = s.upstreams[i + init_server - num_servers]
-		}
-		if !s.tcpOnly {
+	num_servers := len(s.conf.Upstream)
+	for i := uint(0); i < s.conf.Tries; i++ {
+		server := s.conf.Upstream[rand.Intn(num_servers)]
+		if !s.conf.TCPOnly {
 			resp, _, err = s.udpClient.Exchange(msg, server)
 			if err == dns.ErrTruncated {
 				log.Println(err)
 				resp, _, err = s.tcpClient.Exchange(msg, server)
-				if err == dns.ErrTruncated {
-					log.Println(err)
-					return
-				}
 			}
 		} else {
 			resp, _, err = s.tcpClient.Exchange(msg, server)
-			if err == dns.ErrTruncated {
-				log.Println(err)
-				return
-			}
 		}
 		if err == nil {
 			return

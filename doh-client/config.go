@@ -24,27 +24,46 @@
 package main
 
 import (
-	"flag"
-	"log"
+	"fmt"
+	"github.com/BurntSushi/toml"
 )
 
-func main() {
-	confPath := flag.String("conf", "doh-client.conf", "Configuration file")
-	verbose := flag.Bool("verbose", false, "Enable logging")
-	flag.Parse()
+type config struct {
+	Listen		string		`toml:"listen"`
+	Upstream	[]string	`toml:"upstream"`
+	Bootstrap	[]string	`toml:"bootstrap"`
+	Timeout		uint		`toml:"timeout"`
+	NoECS		bool		`toml:"no_ecs"`
+	Verbose		bool		`toml:"verbose"`
+}
 
-	conf, err := loadConfig(*confPath)
+func loadConfig(path string) (*config, error) {
+	conf := &config {}
+	metaData, err := toml.DecodeFile(path, conf)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
+	}
+	for _, key := range metaData.Undecoded() {
+		return nil, &configError { fmt.Sprintf("unknown option %q", key.String()) }
 	}
 
-	if *verbose {
-		conf.Verbose = true
+	if conf.Listen == "" {
+		conf.Listen = "127.0.0.1:53"
+	}
+	if len(conf.Upstream) == 0 {
+		conf.Upstream = []string { "https://dns.google.com/resolve" }
+	}
+	if conf.Timeout == 0 {
+		conf.Timeout = 10
 	}
 
-	client, err := NewClient(conf)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	_ = client.Start()
+	return conf, nil
+}
+
+type configError struct {
+	err		string
+}
+
+func (e *configError) Error() string {
+	return e.err
 }

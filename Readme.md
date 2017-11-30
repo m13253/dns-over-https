@@ -24,8 +24,7 @@ By default, [Google DNS over HTTPS](https://dns.google.com) is used. It should
 work for most users (except for People's Republic of China). If you need to
 modify the default settings, type:
 
-    sudo cp /usr/lib/systemd/system/doh-client.service /etc/systemd/system/
-    sudoedit /etc/systemd/system/doh-client.service
+    sudoedit /etc/dns-over-https/doh-client.conf
 
 To automatically start DNS-over-HTTPS client as a system service, type:
 

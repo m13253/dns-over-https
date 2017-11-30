@@ -26,26 +26,24 @@ package main
 import (
 	"flag"
 	"log"
-	"strings"
 )
 
 func main() {
-	addr := flag.String("addr", "127.0.0.1:8053", "HTTP listen port")
-	cert := flag.String("cert", "", "TLS certification file")
-	key := flag.String("key", "", "TLS key file")
-	path := flag.String("path", "/resolve", "HTTP path for resolve application")
-	upstream := flag.String("upstream", "8.8.8.8:53,8.8.4.4:53", "Upstream DNS resolver")
-	tcpOnly := flag.Bool("tcp", false, "Only use TCP for DNS query")
+	confPath := flag.String("conf", "doh-server.conf", "Configuration file")
 	verbose := flag.Bool("verbose", false, "Enable logging")
 	flag.Parse()
 
-	if (*cert != "") != (*key != "") {
-		log.Fatalln("You must specify both -cert and -key to enable TLS")
+	conf, err := loadConfig(*confPath)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	upstreams := strings.Split(*upstream, ",")
-	server := NewServer(*addr, *cert, *key, *path, upstreams, *tcpOnly, *verbose)
-	err := server.Start()
+	if *verbose {
+		conf.Verbose = true
+	}
+
+	server := NewServer(conf)
+	err = server.Start()
 	if err != nil {
 		log.Fatalln(err)
 	}

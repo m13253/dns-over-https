@@ -24,27 +24,55 @@
 package main
 
 import (
-	"flag"
-	"log"
+	"fmt"
+	"github.com/BurntSushi/toml"
 )
 
-func main() {
-	confPath := flag.String("conf", "doh-client.conf", "Configuration file")
-	verbose := flag.Bool("verbose", false, "Enable logging")
-	flag.Parse()
+type config struct {
+	Listen		string		`toml:"listen"`
+	Cert		string		`toml:"cert"`
+	Key			string		`toml:"key"`
+	Path		string		`toml:"path"`
+	Upstream	[]string	`toml:"upstream"`
+	Tries		uint		`toml:"tries"`
+	TCPOnly		bool		`toml:"tcp_only"`
+	Verbose		bool		`toml:"verbose"`
+}
 
-	conf, err := loadConfig(*confPath)
+func loadConfig(path string) (*config, error) {
+	conf := &config {}
+	metaData, err := toml.DecodeFile(path, conf)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
+	}
+	for _, key := range metaData.Undecoded() {
+		return nil, &configError { fmt.Sprintf("unknown option %q", key.String()) }
 	}
 
-	if *verbose {
-		conf.Verbose = true
+	if conf.Listen == "" {
+		conf.Listen = "127.0.0.1:8053"
+	}
+	if conf.Path == "" {
+		conf.Path = "/resolve"
+	}
+	if len(conf.Upstream) == 0 {
+		conf.Upstream = []string { "8.8.8.8:53", "8.8.4.4:53" }
+	}
+	if conf.Tries == 0 {
+		conf.Tries = 3
 	}
 
-	client, err := NewClient(conf)
-	if err != nil {
-		log.Fatalln(err)
+	if (conf.Cert != "") != (conf.Key != "") {
+		return nil, &configError { "You must specify both -cert and -key to enable TLS" }
 	}
-	_ = client.Start()
+
+	return conf, nil
+}
+
+type configError struct {
+	err		string
+}
+
+func (e *configError) Error() string {
+	return e.err
 }
