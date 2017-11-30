@@ -101,6 +101,7 @@ func NewClient(addr, upstream string, bootstraps []string, timeout uint, noECS, 
 		DualStack: true,
 		Resolver: bootResolver,
 	}).DialContext
+	// Most CDNs require Cookie support to prevent DDoS attack
 	cookieJar, err := cookiejar.New(nil)
 	if err != nil { return nil, err }
 	c.httpClient = &http.Client {
