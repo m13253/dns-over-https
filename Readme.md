@@ -1,7 +1,7 @@
 DNS-over-HTTPS
 ==============
 
-Client and server software to query DNS over HTTPS protocol
+Client and server software to query DNS over HTTPS, using [Google DNS-over-HTTPS protocol](https://developers.google.com/speed/public-dns/docs/dns-over-https).
 
 ## Easy start
 
