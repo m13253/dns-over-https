@@ -129,13 +129,13 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ednsClientSubnet := r.FormValue("edns_client_subnet")
-	if ednsClientSubnet == "0/0" {
-		ednsClientSubnet = "0.0.0.0/0"
-	}
 	ednsClientFamily := uint16(0)
 	ednsClientAddress := net.IP(nil)
 	ednsClientNetmask := uint8(255)
 	if ednsClientSubnet != "" {
+		if ednsClientSubnet == "0/0" {
+			ednsClientSubnet = "0.0.0.0/0"
+		}
 		slash := strings.IndexByte(ednsClientSubnet, '/')
 		if slash < 0 {
 			ednsClientAddress = net.ParseIP(ednsClientSubnet)
