@@ -46,6 +46,7 @@ type Client struct {
 	bootstrap		[]string
 	udpServer		*dns.Server
 	tcpServer		*dns.Server
+	httpTransport	*http.Transport
 	httpClient		*http.Client
 }
 
@@ -86,19 +87,20 @@ func NewClient(conf *config) (c *Client, err error) {
 			},
 		}
 	}
-	httpTransport := *http.DefaultTransport.(*http.Transport)
-	httpTransport.DialContext = (&net.Dialer {
+	c.httpTransport = new(http.Transport)
+	*c.httpTransport = *http.DefaultTransport.(*http.Transport)
+	c.httpTransport.DialContext = (&net.Dialer {
 		Timeout: time.Duration(conf.Timeout) * time.Second,
 		KeepAlive: 30 * time.Second,
 		DualStack: true,
 		Resolver: bootResolver,
 	}).DialContext
-	httpTransport.ResponseHeaderTimeout = time.Duration(conf.Timeout) * time.Second
+	c.httpTransport.ResponseHeaderTimeout = time.Duration(conf.Timeout) * time.Second
 	// Most CDNs require Cookie support to prevent DDoS attack
 	cookieJar, err := cookiejar.New(nil)
 	if err != nil { return nil, err }
 	c.httpClient = &http.Client {
-		Transport: &httpTransport,
+		Transport: c.httpTransport,
 		Jar: cookieJar,
 	}
 	return c, nil
@@ -186,6 +188,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		log.Println(err)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
+		c.httpTransport.CloseIdleConnections()
 		return
 	}
 	if resp.StatusCode != 200 {
