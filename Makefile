@@ -1,7 +1,7 @@
-.PHONY: all clean install uninstall
+.PHONY: all clean install uninstall deps
 
 GOBUILD=go build
-GOGET=go get -d -v .
+GOGET=go get -d -v
 PREFIX=/usr/local
 
 all: doh-client/doh-client doh-server/doh-server
@@ -22,8 +22,11 @@ uninstall:
 	$(MAKE) -C systemd uninstall "DESTDIR=$(DESTDIR)" "PREFIX=$(PREFIX)"
 	$(MAKE) -C NetworkManager uninstall "DESTDIR=$(DESTDIR)" "PREFIX=$(PREFIX)"
 
-doh-client/doh-client: doh-client/client.go doh-client/config.go doh-client/main.go json-dns/error.go json-dns/globalip.go json-dns/marshal.go json-dns/response.go json-dns/unmarshal.go
-	cd doh-client && $(GOGET) && $(GOBUILD)
+deps:
+	$(GOGET) ./doh-client ./doh-server
 
-doh-server/doh-server: doh-server/config.go doh-server/main.go doh-server/server.go json-dns/error.go json-dns/globalip.go json-dns/marshal.go json-dns/response.go json-dns/unmarshal.go
-	cd doh-server && $(GOGET) && $(GOBUILD)
+doh-client/doh-client: deps doh-client/client.go doh-client/config.go doh-client/main.go json-dns/error.go json-dns/globalip.go json-dns/marshal.go json-dns/response.go json-dns/unmarshal.go
+	cd doh-client && $(GOBUILD)
+
+doh-server/doh-server: deps doh-server/config.go doh-server/main.go doh-server/server.go json-dns/error.go json-dns/globalip.go json-dns/marshal.go json-dns/response.go json-dns/unmarshal.go
+	cd doh-server && $(GOBUILD)
