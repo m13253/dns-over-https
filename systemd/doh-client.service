@@ -1,5 +1,6 @@
 [Unit]
 Description=DNS-over-HTTPS Client
+Documentation=https://github.com/m13253/dns-over-https
 After=network.target
 Before=nss-lookup.target
 Wants=nss-lookup.target
