@@ -5,7 +5,7 @@ Client and server software to query DNS over HTTPS, using [Google DNS-over-HTTPS
 
 ## Easy start
 
-Install [Go](https://golang.org), at least version 1.8.
+Install [Go](https://golang.org), at least version 1.9.
 
 First create an empty directory, used for `$GOPATH`:
 
