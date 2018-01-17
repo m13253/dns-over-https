@@ -34,6 +34,7 @@ type config struct {
 	Key			string		`toml:"key"`
 	Path		string		`toml:"path"`
 	Upstream	[]string	`toml:"upstream"`
+	Timeout		uint		`toml:"timeout"`
 	Tries		uint		`toml:"tries"`
 	TCPOnly		bool		`toml:"tcp_only"`
 	Verbose		bool		`toml:"verbose"`
@@ -58,8 +59,11 @@ func loadConfig(path string) (*config, error) {
 	if len(conf.Upstream) == 0 {
 		conf.Upstream = []string { "8.8.8.8:53", "8.8.4.4:53" }
 	}
+	if conf.Timeout == 0 {
+		conf.Timeout = 10
+	}
 	if conf.Tries == 0 {
-		conf.Tries = 3
+		conf.Tries = 1
 	}
 
 	if (conf.Cert != "") != (conf.Key != "") {

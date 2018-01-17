@@ -52,9 +52,11 @@ func NewServer(conf *config) (s *Server) {
 		conf: conf,
 		udpClient: &dns.Client {
 			Net: "udp",
+			Timeout: time.Duration(conf.Timeout) * time.Second,
 		},
 		tcpClient: &dns.Client {
 			Net: "tcp",
+			Timeout: time.Duration(conf.Timeout) * time.Second,
 		},
 		servemux: http.NewServeMux(),
 	}
