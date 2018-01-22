@@ -210,7 +210,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		} else {
 			w.Header().Set("Cache-Control", "private, max-age=" + strconv.Itoa(int(respJson.LeastTTL)))
 		}
-		w.Header().Set("Expires", respJson.EarliestExpires.Format(time.RFC1123))
+		w.Header().Set("Expires", respJson.EarliestExpires.Format(http.TimeFormat))
 	}
 	if respJson.Status == dns.RcodeServerFailure {
 		w.WriteHeader(503)
