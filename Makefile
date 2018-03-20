@@ -23,6 +23,7 @@ uninstall:
 	$(MAKE) -C NetworkManager uninstall "DESTDIR=$(DESTDIR)" "PREFIX=$(PREFIX)"
 
 deps:
+	[ -e ./doh-client/doh-client -a -e ./doh-server/doh-server ] || \
 	$(GOGET) ./doh-client ./doh-server
 
 doh-client/doh-client: deps doh-client/client.go doh-client/config.go doh-client/main.go json-dns/error.go json-dns/globalip.go json-dns/marshal.go json-dns/response.go json-dns/unmarshal.go
