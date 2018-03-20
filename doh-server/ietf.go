@@ -70,7 +70,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 	}
 
 	if s.conf.Verbose && len(msg.Question) > 0 {
-		question := msg.Question[0]
+		question := &msg.Question[0]
 		questionName := question.Name
 		questionClass := ""
 		if qclass, ok := dns.ClassToString[question.Qclass]; ok {

@@ -49,7 +49,7 @@ func (c *Client) handlerFuncIETF(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		return
 	}
 
-	question := r.Question[0]
+	question := &r.Question[0]
 	// knot-resolver scrambles capitalization, I think it is unfriendly to cache
 	questionName := strings.ToLower(question.Name)
 	questionType := ""
