@@ -88,22 +88,23 @@ func (c *Client) handlerFuncIETF(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	if edns0Subnet == nil {
 		ednsClientFamily := uint16(0)
 		ednsClientAddress, ednsClientNetmask := c.findClientIP(w, r)
-		if ednsClientAddress == nil {
-		} else if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
-			ednsClientFamily = 1
-			ednsClientAddress = ipv4
-			ednsClientNetmask = 24
-		} else {
-			ednsClientFamily = 2
-			ednsClientNetmask = 48
+		if ednsClientAddress != nil {
+			if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
+				ednsClientFamily = 1
+				ednsClientAddress = ipv4
+				ednsClientNetmask = 24
+			} else {
+				ednsClientFamily = 2
+				ednsClientNetmask = 48
+			}
+			edns0Subnet = new(dns.EDNS0_SUBNET)
+			edns0Subnet.Code = dns.EDNS0SUBNET
+			edns0Subnet.Family = ednsClientFamily
+			edns0Subnet.SourceNetmask = ednsClientNetmask
+			edns0Subnet.SourceScope = 0
+			edns0Subnet.Address = ednsClientAddress
+			opt.Option = append(opt.Option, edns0Subnet)
 		}
-		edns0Subnet = new(dns.EDNS0_SUBNET)
-		edns0Subnet.Code = dns.EDNS0SUBNET
-		edns0Subnet.Family = ednsClientFamily
-		edns0Subnet.SourceNetmask = ednsClientNetmask
-		edns0Subnet.SourceScope = 0
-		edns0Subnet.Address = ednsClientAddress
-		opt.Option = append(opt.Option, edns0Subnet)
 	}
 
 	requestBinary, err := r.Pack()

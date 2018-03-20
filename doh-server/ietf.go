@@ -90,23 +90,23 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 		ednsClientFamily := uint16(0)
 		ednsClientAddress := s.findClientIP(r)
 		ednsClientNetmask := uint8(255)
-		if ednsClientAddress == nil {
-			ednsClientNetmask = 0
-		} else if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
-			ednsClientFamily = 1
-			ednsClientAddress = ipv4
-			ednsClientNetmask = 24
-		} else {
-			ednsClientFamily = 2
-			ednsClientNetmask = 48
+		if ednsClientAddress != nil {
+			if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
+				ednsClientFamily = 1
+				ednsClientAddress = ipv4
+				ednsClientNetmask = 24
+			} else {
+				ednsClientFamily = 2
+				ednsClientNetmask = 48
+			}
+			edns0Subnet = new(dns.EDNS0_SUBNET)
+			edns0Subnet.Code = dns.EDNS0SUBNET
+			edns0Subnet.Family = ednsClientFamily
+			edns0Subnet.SourceNetmask = ednsClientNetmask
+			edns0Subnet.SourceScope = 0
+			edns0Subnet.Address = ednsClientAddress
+			opt.Option = append(opt.Option, edns0Subnet)
 		}
-		edns0Subnet = new(dns.EDNS0_SUBNET)
-		edns0Subnet.Code = dns.EDNS0SUBNET
-		edns0Subnet.Family = ednsClientFamily
-		edns0Subnet.SourceNetmask = ednsClientNetmask
-		edns0Subnet.SourceScope = 0
-		edns0Subnet.Address = ednsClientAddress
-		opt.Option = append(opt.Option, edns0Subnet)
 	}
 
 	return &DNSRequest{

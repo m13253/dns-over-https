@@ -154,7 +154,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	}
 	numServers := len(c.conf.UpstreamGoogle) + len(c.conf.UpstreamIETF)
 	random := rand.Intn(numServers)
-	if random <= len(c.conf.UpstreamGoogle) {
+	if random < len(c.conf.UpstreamGoogle) {
 		c.handlerFuncGoogle(w, r, isTCP)
 	} else {
 		c.handlerFuncIETF(w, r, isTCP)
