@@ -49,6 +49,7 @@ func (c *Client) handlerFuncGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool)
 		return
 	}
 	question := r.Question[0]
+	// knot-resolver scrambles capitalization, I think it is unfriendly to cache
 	questionName := strings.ToLower(question.Name)
 	questionType := ""
 	if qtype, ok := dns.TypeToString[question.Qtype]; ok {
@@ -86,6 +87,7 @@ func (c *Client) handlerFuncGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool)
 		w.WriteMsg(reply)
 		return
 	}
+	req.Header.Set("Accept", "application/json")
 	req.Header.Set("User-Agent", "DNS-over-HTTPS/1.0 (+https://github.com/m13253/dns-over-https)")
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -98,9 +100,9 @@ func (c *Client) handlerFuncGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool)
 	if resp.StatusCode != 200 {
 		log.Printf("HTTP error: %s\n", resp.Status)
 		reply.Rcode = dns.RcodeServerFailure
-		w.WriteMsg(reply)
 		contentType := resp.Header.Get("Content-Type")
 		if contentType != "application/json" && !strings.HasPrefix(contentType, "application/json;") {
+			w.WriteMsg(reply)
 			return
 		}
 	}

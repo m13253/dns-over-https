@@ -144,7 +144,21 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		return
 	}
 
-	c.handlerFuncGoogle(w, r, isTCP)
+	if len(c.conf.UpstreamIETF) == 0 {
+		c.handlerFuncGoogle(w, r, isTCP)
+		return
+	}
+	if len(c.conf.UpstreamGoogle) == 0 {
+		c.handlerFuncIETF(w, r, isTCP)
+		return
+	}
+	numServers := len(c.conf.UpstreamGoogle) + len(c.conf.UpstreamIETF)
+	random := rand.Intn(numServers)
+	if random <= len(c.conf.UpstreamGoogle) {
+		c.handlerFuncGoogle(w, r, isTCP)
+	} else {
+		c.handlerFuncIETF(w, r, isTCP)
+	}
 }
 
 func (c *Client) udpHandlerFunc(w dns.ResponseWriter, r *dns.Msg) {

@@ -38,7 +38,7 @@ import (
 
 func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRequest {
 	requestBase64 := r.FormValue("dns")
-	requestBinary, err := base64.StdEncoding.DecodeString(requestBase64)
+	requestBinary, err := base64.RawURLEncoding.DecodeString(requestBase64)
 	if err != nil {
 		return &DNSRequest{
 			errcode: 400,
