@@ -72,17 +72,16 @@ Client Subnet during your configuring `unbound` or `bind`.
 
 ## Protocol compatibility
 
-### Google DNS-over-HTTPS
+### Google DNS-over-HTTPS Protocol
 
 DNS-over-HTTPS uses a protocol compatible to [Google DNS-over-HTTPS](https://developers.google.com/speed/public-dns/docs/dns-over-https),
 except for absolute expire time is preferred to relative TTL value. Refer to
 [json-dns/response.go](json-dns/response.go) for a complete description of the
 API.
 
-### IETF DNS-over-HTTPS (Draft)
+### IETF DNS-over-HTTPS Protocol (Draft)
 
-DNS-over-HTTPS uses a protocol compatible to [draft-ietf-doh-dns-over-https
-](https://github.com/dohwg/draft-ietf-doh-dns-over-https).
+DNS-over-HTTPS uses a protocol compatible to [draft-ietf-doh-dns-over-https](https://github.com/dohwg/draft-ietf-doh-dns-over-https).
 This protocol is in draft stage. Any incompatibility may be introduced before
 it is finished.
 
