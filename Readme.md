@@ -42,6 +42,14 @@ If it is OK, you will wee:
 
     ;; SERVER: 127.0.0.1#53(127.0.0.1)
 
+### Uninstalling
+
+To uninstall, type:
+
+    sudo make uninstall
+
+The configuration files are kept at `/etc/dns-over-https`. Remove them manually if you want.
+
 ## Server Configuration
 
 The following is a typical DNS-over-HTTPS architecture:
