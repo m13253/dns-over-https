@@ -145,7 +145,7 @@ func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, re
 	}
 
 	w.Header().Set("Content-Type", "application/dns-udpwireformat")
-	now := time.Now().Format(http.TimeFormat)
+	now := time.Now().UTC().Format(http.TimeFormat)
 	w.Header().Set("Date", now)
 	w.Header().Set("Last-Modified", now)
 	if respJSON.HaveTTL {
