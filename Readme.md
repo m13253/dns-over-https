@@ -1,7 +1,8 @@
 DNS-over-HTTPS
 ==============
 
-Client and server software to query DNS over HTTPS, using [Google DNS-over-HTTPS protocol](https://developers.google.com/speed/public-dns/docs/dns-over-https).
+Client and server software to query DNS over HTTPS, using [Google DNS-over-HTTPS protocol](https://developers.google.com/speed/public-dns/docs/dns-over-https)
+and [draft-ietf-doh-dns-over-https](https://github.com/dohwg/draft-ietf-doh-dns-over-https).
 
 ## Easy start
 
@@ -71,10 +72,21 @@ Client Subnet during your configuring `unbound` or `bind`.
 
 ## Protocol compatibility
 
-DNS-over-HTTPS use a protocol compatible to [Google DNS-over-HTTPS](https://developers.google.com/speed/public-dns/docs/dns-over-https),
+### Google DNS-over-HTTPS
+
+DNS-over-HTTPS uses a protocol compatible to [Google DNS-over-HTTPS](https://developers.google.com/speed/public-dns/docs/dns-over-https),
 except for absolute expire time is preferred to relative TTL value. Refer to
 [json-dns/response.go](json-dns/response.go) for a complete description of the
 API.
+
+### IETF DNS-over-HTTPS (Draft)
+
+DNS-over-HTTPS uses a protocol compatible to [draft-ietf-doh-dns-over-https
+](https://github.com/dohwg/draft-ietf-doh-dns-over-https).
+This protocol is in draft stage. Any incompatibility may be introduced before
+it is finished.
+
+### Supported features
 
 Currently supported features are:
 
