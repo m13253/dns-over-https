@@ -170,7 +170,7 @@ func (c *Client) handlerFuncIETF(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	if lastModified == "" {
 		lastModified = resp.Header.Get("Date")
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 	lastModifiedDate, err := time.Parse(http.TimeFormat, lastModified)
 	if err != nil {
 		log.Println(err)
@@ -227,8 +227,8 @@ func fixRecordTTL(rr dns.RR, delta time.Duration) dns.RR {
 	rrHeader := rr.Header()
 	oldTTL := time.Duration(rrHeader.Ttl) * time.Second
 	newTTL := oldTTL - delta
-	if newTTL >= 0 {
-		rrHeader.Ttl = uint32(newTTL / time.Second)
+	if newTTL > 0 {
+		rrHeader.Ttl = uint32((newTTL + time.Second/2) / time.Second)
 	} else {
 		rrHeader.Ttl = 0
 	}
