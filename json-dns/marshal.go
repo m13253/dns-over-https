@@ -1,24 +1,24 @@
 /*
-    DNS-over-HTTPS
-    Copyright (C) 2017 Star Brilliant <m13253@hotmail.com>
+   DNS-over-HTTPS
+   Copyright (C) 2017-2018 Star Brilliant <m13253@hotmail.com>
 
-    Permission is hereby granted, free of charge, to any person obtaining a
-    copy of this software and associated documentation files (the "Software"),
-    to deal in the Software without restriction, including without limitation
-    the rights to use, copy, modify, merge, publish, distribute, sublicense,
-    and/or sell copies of the Software, and to permit persons to whom the
-    Software is furnished to do so, subject to the following conditions:
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-    DEALINGS IN THE SOFTWARE.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
 */
 
 package jsonDNS
@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"github.com/miekg/dns"
 )
 
@@ -44,7 +45,7 @@ func Marshal(msg *dns.Msg) *Response {
 
 	resp.Question = make([]Question, 0, len(msg.Question))
 	for _, question := range msg.Question {
-		jsonQuestion := Question {
+		jsonQuestion := Question{
 			Name: question.Name,
 			Type: question.Qtype,
 		}
@@ -85,7 +86,7 @@ func Marshal(msg *dns.Msg) *Response {
 					edns0 := option.(*dns.EDNS0_SUBNET)
 					clientAddress := edns0.Address
 					if clientAddress == nil {
-						clientAddress = net.IP { 0, 0, 0, 0 }
+						clientAddress = net.IP{0, 0, 0, 0}
 					} else if ipv4 := clientAddress.To4(); ipv4 != nil {
 						clientAddress = ipv4
 					}
@@ -106,7 +107,7 @@ func Marshal(msg *dns.Msg) *Response {
 }
 
 func marshalRR(rr dns.RR, now time.Time) RR {
-	jsonRR := RR {}
+	jsonRR := RR{}
 	rrHeader := rr.Header()
 	jsonRR.Name = rrHeader.Name
 	jsonRR.Type = rrHeader.Rrtype

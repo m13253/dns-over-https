@@ -1,24 +1,24 @@
 /*
-    DNS-over-HTTPS
-    Copyright (C) 2017 Star Brilliant <m13253@hotmail.com>
+   DNS-over-HTTPS
+   Copyright (C) 2017-2018 Star Brilliant <m13253@hotmail.com>
 
-    Permission is hereby granted, free of charge, to any person obtaining a
-    copy of this software and associated documentation files (the "Software"),
-    to deal in the Software without restriction, including without limitation
-    the rights to use, copy, modify, merge, publish, distribute, sublicense,
-    and/or sell copies of the Software, and to permit persons to whom the
-    Software is furnished to do so, subject to the following conditions:
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-    DEALINGS IN THE SOFTWARE.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
 */
 
 package jsonDNS
@@ -30,6 +30,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"github.com/miekg/dns"
 )
 
@@ -77,7 +78,7 @@ func Unmarshal(msg *dns.Msg, resp *Response, udpSize uint16, ednsClientNetmask u
 		}
 	}
 
-	reply.Extra = make([]dns.RR, 0, len(resp.Additional) + 1)
+	reply.Extra = make([]dns.RR, 0, len(resp.Additional)+1)
 	opt := new(dns.OPT)
 	opt.Hdr.Name = "."
 	opt.Hdr.Rrtype = dns.TypeOPT
@@ -94,20 +95,20 @@ func Unmarshal(msg *dns.Msg, resp *Response, udpSize uint16, ednsClientNetmask u
 	if ednsClientSubnet != "" {
 		slash := strings.IndexByte(ednsClientSubnet, '/')
 		if slash < 0 {
-			log.Println(UnmarshalError { "Invalid client subnet" })
+			log.Println(UnmarshalError{"Invalid client subnet"})
 		} else {
 			ednsClientAddress = net.ParseIP(ednsClientSubnet[:slash])
 			if ednsClientAddress == nil {
-				log.Println(UnmarshalError { "Invalid client subnet address" })
+				log.Println(UnmarshalError{"Invalid client subnet address"})
 			} else if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
 				ednsClientFamily = 1
 				ednsClientAddress = ipv4
 			} else {
 				ednsClientFamily = 2
 			}
-			scope, err := strconv.ParseUint(ednsClientSubnet[slash + 1:], 10, 8)
+			scope, err := strconv.ParseUint(ednsClientSubnet[slash+1:], 10, 8)
 			if err != nil {
-				log.Println(UnmarshalError { "Invalid client subnet address" })
+				log.Println(UnmarshalError{"Invalid client subnet address"})
 			} else {
 				ednsClientScope = uint8(scope)
 			}
@@ -147,12 +148,12 @@ func Unmarshal(msg *dns.Msg, resp *Response, udpSize uint16, ednsClientNetmask u
 
 func unmarshalRR(rr RR, now time.Time) (dnsRR dns.RR, err error) {
 	if strings.ContainsAny(rr.Name, "\t\r\n \"();\\") {
-		return nil, UnmarshalError { fmt.Sprintf("Record name contains space: %q", rr.Name) }
+		return nil, UnmarshalError{fmt.Sprintf("Record name contains space: %q", rr.Name)}
 	}
 	if rr.ExpiresStr != "" {
 		rr.Expires, err = time.Parse(time.RFC1123, rr.ExpiresStr)
 		if err != nil {
-			return nil, UnmarshalError { fmt.Sprintf("Invalid expire time: %q", rr.ExpiresStr) }
+			return nil, UnmarshalError{fmt.Sprintf("Invalid expire time: %q", rr.ExpiresStr)}
 		}
 		ttl := rr.Expires.Sub(now) / time.Second
 		if ttl >= 0 && ttl <= 0xffffffff {
@@ -161,10 +162,10 @@ func unmarshalRR(rr RR, now time.Time) (dnsRR dns.RR, err error) {
 	}
 	rrType, ok := dns.TypeToString[rr.Type]
 	if !ok {
-		return nil, UnmarshalError { fmt.Sprintf("Unknown record type: %d", rr.Type) }
+		return nil, UnmarshalError{fmt.Sprintf("Unknown record type: %d", rr.Type)}
 	}
 	if strings.ContainsAny(rr.Data, "\r\n") {
-		return nil, UnmarshalError { fmt.Sprintf("Record data contains newline: %q", rr.Data) }
+		return nil, UnmarshalError{fmt.Sprintf("Record data contains newline: %q", rr.Data)}
 	}
 	zone := fmt.Sprintf("%s %d IN %s %s", rr.Name, rr.TTL, rrType, rr.Data)
 	dnsRR, err = dns.NewRR(zone)
@@ -172,7 +173,7 @@ func unmarshalRR(rr RR, now time.Time) (dnsRR dns.RR, err error) {
 }
 
 type UnmarshalError struct {
-	err		string
+	err string
 }
 
 func (e UnmarshalError) Error() string {
