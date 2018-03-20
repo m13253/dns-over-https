@@ -68,6 +68,25 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 			errtext: fmt.Sprintf("DNS packet parse failure (%s)", err.Error()),
 		}
 	}
+
+	if s.conf.Verbose && len(msg.Question) > 0 {
+		question := msg.Question[0]
+		questionName := question.Name
+		questionClass := ""
+		if qclass, ok := dns.ClassToString[question.Qclass]; ok {
+			questionClass = qclass
+		} else {
+			questionClass = strconv.Itoa(int(question.Qclass))
+		}
+		questionType := ""
+		if qtype, ok := dns.TypeToString[question.Qtype]; ok {
+			questionType = qtype
+		} else {
+			questionType = strconv.Itoa(int(question.Qtype))
+		}
+		fmt.Printf("%s - - [%s] \"%s %s %s\"\n", r.RemoteAddr, time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
+	}
+
 	msg.Id = dns.Id()
 	opt := msg.IsEdns0()
 	if opt == nil {
