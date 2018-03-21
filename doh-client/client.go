@@ -30,6 +30,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"strings"
 	"time"
 
 	"../json-dns"
@@ -44,6 +45,15 @@ type Client struct {
 	tcpServer     *dns.Server
 	httpTransport *http.Transport
 	httpClient    *http.Client
+}
+
+type DNSRequest struct {
+	response          *http.Response
+	reply             *dns.Msg
+	udpSize           uint16
+	ednsClientAddress net.IP
+	ednsClientNetmask uint8
+	err               error
 }
 
 func NewClient(conf *config) (c *Client, err error) {
@@ -144,20 +154,50 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		return
 	}
 
+	requestType := ""
 	if len(c.conf.UpstreamIETF) == 0 {
-		c.handlerFuncGoogle(w, r, isTCP)
-		return
-	}
-	if len(c.conf.UpstreamGoogle) == 0 {
-		c.handlerFuncIETF(w, r, isTCP)
-		return
-	}
-	numServers := len(c.conf.UpstreamGoogle) + len(c.conf.UpstreamIETF)
-	random := rand.Intn(numServers)
-	if random < len(c.conf.UpstreamGoogle) {
-		c.handlerFuncGoogle(w, r, isTCP)
+		requestType = "application/x-www-form-urlencoded"
+	} else if len(c.conf.UpstreamGoogle) == 0 {
+		requestType = "application/dns-udpwireformat"
 	} else {
-		c.handlerFuncIETF(w, r, isTCP)
+		numServers := len(c.conf.UpstreamGoogle) + len(c.conf.UpstreamIETF)
+		random := rand.Intn(numServers)
+		if random < len(c.conf.UpstreamGoogle) {
+			requestType = "application/x-www-form-urlencoded"
+		} else {
+			requestType = "application/dns-udpwireformat"
+		}
+	}
+
+	var req *DNSRequest
+	if requestType == "application/x-www-form-urlencoded" {
+		req = c.generateRequestGoogle(w, r, isTCP)
+	} else if requestType == "application/dns-udpwireformat" {
+		req = c.generateRequestIETF(w, r, isTCP)
+	} else {
+		panic("Unknown request Content-Type")
+	}
+
+	contentType := ""
+	candidateType := strings.SplitN(req.response.Header.Get("Content-Type"), ";", 2)[0]
+	if candidateType == "application/json" {
+		contentType = "application/json"
+	} else if candidateType == "application/dns-udpwireformat" {
+		contentType = "application/dns-udpwireformat"
+	} else {
+		if requestType == "application/x-www-form-urlencoded" {
+			contentType = "application/json"
+		} else if requestType == "application/dns-udpwireformat" {
+			contentType = "application/dns-udpwireformat"
+		}
+	}
+
+	if contentType == "application/json" {
+		c.parseResponseGoogle(w, r, isTCP, req)
+	} else if contentType == "application/dns-udpwireformat" {
+		c.parseResponseIETF(w, r, isTCP, req)
+	} else {
+		panic("Unknown response Content-Type")
 	}
 }
 

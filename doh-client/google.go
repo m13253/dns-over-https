@@ -39,14 +39,16 @@ import (
 	"github.com/miekg/dns"
 )
 
-func (c *Client) handlerFuncGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
+func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool) *DNSRequest {
 	reply := jsonDNS.PrepareReply(r)
 
 	if len(r.Question) != 1 {
 		log.Println("Number of questions is not 1")
 		reply.Rcode = dns.RcodeFormatError
 		w.WriteMsg(reply)
-		return
+		return &DNSRequest{
+			err: &dns.Error{},
+		}
 	}
 	question := &r.Question[0]
 	// knot-resolver scrambles capitalization, I think it is unfriendly to cache
@@ -85,9 +87,11 @@ func (c *Client) handlerFuncGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool)
 		log.Println(err)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
-		return
+		return &DNSRequest{
+			err: err,
+		}
 	}
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Accept", "application/json, application/dns-udpwireformat")
 	req.Header.Set("User-Agent", "DNS-over-HTTPS/1.1 (+https://github.com/m13253/dns-over-https)")
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -95,23 +99,36 @@ func (c *Client) handlerFuncGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
 		c.httpTransport.CloseIdleConnections()
-		return
+		return &DNSRequest{
+			err: err,
+		}
 	}
-	if resp.StatusCode != 200 {
-		log.Printf("HTTP error: %s\n", resp.Status)
-		reply.Rcode = dns.RcodeServerFailure
-		contentType := resp.Header.Get("Content-Type")
+
+	return &DNSRequest{
+		response:          resp,
+		reply:             reply,
+		udpSize:           udpSize,
+		ednsClientAddress: ednsClientAddress,
+		ednsClientNetmask: ednsClientNetmask,
+	}
+}
+
+func (c *Client) parseResponseGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool, req *DNSRequest) {
+	if req.response.StatusCode != 200 {
+		log.Printf("HTTP error: %s\n", req.response.Status)
+		req.reply.Rcode = dns.RcodeServerFailure
+		contentType := req.response.Header.Get("Content-Type")
 		if contentType != "application/json" && !strings.HasPrefix(contentType, "application/json;") {
-			w.WriteMsg(reply)
+			w.WriteMsg(req.reply)
 			return
 		}
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(req.response.Body)
 	if err != nil {
 		log.Println(err)
-		reply.Rcode = dns.RcodeServerFailure
-		w.WriteMsg(reply)
+		req.reply.Rcode = dns.RcodeServerFailure
+		w.WriteMsg(req.reply)
 		return
 	}
 
@@ -119,8 +136,8 @@ func (c *Client) handlerFuncGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool)
 	err = json.Unmarshal(body, &respJSON)
 	if err != nil {
 		log.Println(err)
-		reply.Rcode = dns.RcodeServerFailure
-		w.WriteMsg(reply)
+		req.reply.Rcode = dns.RcodeServerFailure
+		w.WriteMsg(req.reply)
 		return
 	}
 
@@ -128,22 +145,22 @@ func (c *Client) handlerFuncGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool)
 		log.Printf("DNS error: %s\n", respJSON.Comment)
 	}
 
-	fullReply := jsonDNS.Unmarshal(reply, &respJSON, udpSize, ednsClientNetmask)
+	fullReply := jsonDNS.Unmarshal(req.reply, &respJSON, req.udpSize, req.ednsClientNetmask)
 	buf, err := fullReply.Pack()
 	if err != nil {
 		log.Println(err)
-		reply.Rcode = dns.RcodeServerFailure
-		w.WriteMsg(reply)
+		req.reply.Rcode = dns.RcodeServerFailure
+		w.WriteMsg(req.reply)
 		return
 	}
-	if !isTCP && len(buf) > int(udpSize) {
+	if !isTCP && len(buf) > int(req.udpSize) {
 		fullReply.Truncated = true
 		buf, err = fullReply.Pack()
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		buf = buf[:udpSize]
+		buf = buf[:req.udpSize]
 	}
 	w.Write(buf)
 }

@@ -146,6 +146,8 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		s.generateResponseGoogle(w, r, req)
 	} else if contentType == "application/dns-udpwireformat" {
 		s.generateResponseIETF(w, r, req)
+	} else {
+		panic("Unknown response Content-Type")
 	}
 }
 
