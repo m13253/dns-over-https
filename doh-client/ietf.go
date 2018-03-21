@@ -166,17 +166,25 @@ func (c *Client) handlerFuncIETF(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		w.WriteMsg(reply)
 		return
 	}
-	lastModified := resp.Header.Get("Last-Modified")
-	if lastModified == "" {
-		lastModified = resp.Header.Get("Date")
-	}
+	headerNow := resp.Header.Get("Date")
 	now := time.Now().UTC()
-	lastModifiedDate, err := time.Parse(http.TimeFormat, lastModified)
-	if err != nil {
-		log.Println(err)
-		lastModifiedDate = now
+	if headerNow != "" {
+		if nowDate, err := time.Parse(http.TimeFormat, headerNow); err == nil {
+			now = nowDate
+		} else {
+			log.Println(err)
+		}
 	}
-	timeDelta := now.Sub(lastModifiedDate)
+	headerLastModified := resp.Header.Get("Last-Modified")
+	lastModified := now
+	if headerLastModified != "" {
+		if lastModifiedDate, err := time.Parse(http.TimeFormat, headerLastModified); err == nil {
+			lastModified = lastModifiedDate
+		} else {
+			log.Println(err)
+		}
+	}
+	timeDelta := now.Sub(lastModified)
 	if timeDelta < 0 {
 		timeDelta = 0
 	}
@@ -228,7 +236,7 @@ func fixRecordTTL(rr dns.RR, delta time.Duration) dns.RR {
 	oldTTL := time.Duration(rrHeader.Ttl) * time.Second
 	newTTL := oldTTL - delta
 	if newTTL > 0 {
-		rrHeader.Ttl = uint32((newTTL + time.Second/2) / time.Second)
+		rrHeader.Ttl = uint32(newTTL / time.Second)
 	} else {
 		rrHeader.Ttl = 0
 	}
