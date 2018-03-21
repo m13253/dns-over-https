@@ -142,7 +142,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if contentType == "application/x-www-form-urlencoded" {
+	if responseType == "application/json" {
 		s.generateResponseGoogle(w, r, req)
 	} else if contentType == "application/dns-udpwireformat" {
 		s.generateResponseIETF(w, r, req)
