@@ -180,9 +180,9 @@ func (s *Server) generateResponseGoogle(w http.ResponseWriter, r *http.Request, 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	if respJSON.HaveTTL {
 		if req.isTailored {
-			w.Header().Set("Cache-Control", "public, max-age="+strconv.Itoa(int(respJSON.LeastTTL)))
-		} else {
 			w.Header().Set("Cache-Control", "private, max-age="+strconv.Itoa(int(respJSON.LeastTTL)))
+		} else {
+			w.Header().Set("Cache-Control", "public, max-age="+strconv.Itoa(int(respJSON.LeastTTL)))
 		}
 		w.Header().Set("Expires", respJSON.EarliestExpires.Format(http.TimeFormat))
 	}
