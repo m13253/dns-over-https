@@ -31,6 +31,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"../json-dns"
 	"github.com/miekg/dns"
@@ -178,6 +179,9 @@ func (s *Server) generateResponseGoogle(w http.ResponseWriter, r *http.Request, 
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	now := time.Now().UTC().Format(http.TimeFormat)
+	w.Header().Set("Date", now)
+	w.Header().Set("Last-Modified", now)
 	if respJSON.HaveTTL {
 		if req.isTailored {
 			w.Header().Set("Cache-Control", "private, max-age="+strconv.Itoa(int(respJSON.LeastTTL)))
