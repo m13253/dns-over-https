@@ -178,6 +178,10 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		panic("Unknown request Content-Type")
 	}
 
+	if req.err != nil {
+		return
+	}
+
 	contentType := ""
 	candidateType := strings.SplitN(req.response.Header.Get("Content-Type"), ";", 2)[0]
 	if candidateType == "application/json" {
