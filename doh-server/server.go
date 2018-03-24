@@ -127,7 +127,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	} else if contentType == "application/dns-udpwireformat" {
 		req = s.parseRequestIETF(w, r)
 	} else {
-		jsonDNS.FormatError(w, fmt.Sprintf("Invalid argument value: \"ct\" = %q", contentType), 400)
+		jsonDNS.FormatError(w, fmt.Sprintf("Invalid argument value: \"ct\" = %q", contentType), 415)
 		return
 	}
 	if req.errcode != 0 {
