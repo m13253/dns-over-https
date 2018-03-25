@@ -72,11 +72,26 @@ you can host DNS-over-HTTPS along with other HTTPS services.
 
 ## DNSSEC
 
-DNSSEC validation is not built-in. It is highly recommended that you install
-`unbound` or `bind` and pass results for them to validate DNS records.
+DNS-over-HTTPS is compatible with DNSSEC, and requests DNSSEC signatures by
+default. However signature validation is not built-in. It is highly recommended
+that you install `unbound` or `bind` and pass results for them to validate DNS
+records.
 
-If you are running a server without anycast, you probably want to enable EDNS0
-Client Subnet during your configuring `unbound` or `bind`.
+## EDNS0-Client-Subnet (GeoDNS)
+
+DNS-over-HTTPS supports EDNS0-Client-Subnet protocol, which submits part of the
+client's IP address (/24 for IPv4, /48 for IPv6 by default) to the upstream
+server. This is useful for GeoDNS and CDNs to work, and is exactly the same
+configuration as most public DNS servers.
+
+Keep in mind that /24 is not enough to track a single user, although it is
+precise enough to know the city where the user is from. If you think
+EDNS0-Client-Subnet is affecting your privacy, you can set `no_ecs` to true in
+`/etc/dns-over-https/doh-client.conf`, with the cost of slower video streaming
+or software downloading speed.
+
+If your server is backed by `unbound` or `bind`, you probably want to enable
+the EDNS0-Client-Subnet feature in their configuration files as well.
 
 ## Protocol compatibility
 
@@ -99,7 +114,7 @@ Currently supported features are:
 
 - [X] IPv4 / IPv6
 - [X] EDNS0 large UDP packet (4 KiB by default)
-- [X] EDNS0 Client Subnet (/24 for IPv4, /48 for IPv6 by default)
+- [X] EDNS0-Client-Subnet (/24 for IPv4, /48 for IPv6 by default)
 
 ## License
 
