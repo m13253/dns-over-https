@@ -86,7 +86,7 @@ configuration as most public DNS servers.
 
 Keep in mind that /24 is not enough to track a single user, although it is
 precise enough to know the city where the user is from. If you think
-EDNS0-Client-Subnet is affecting your privacy, you can set `no_ecs` to true in
+EDNS0-Client-Subnet is affecting your privacy, you can set `no_ecs = true` in
 `/etc/dns-over-https/doh-client.conf`, with the cost of slower video streaming
 or software downloading speed.
 
