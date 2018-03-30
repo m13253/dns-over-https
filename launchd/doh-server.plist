@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+	<dict>
+		<key>Label</key>
+		<string>org.eu.starlab.doh.server</string>
+		<key>ProgramArguments</key>
+		<array>
+			<string>/usr/local/bin/doh-server</string>
+			<string>-conf</string>
+			<string>/usr/local/etc/dns-over-https/doh-server.conf</string>
+		</array>
+		<key>Disabled</key>
+		<true/>
+		<key>RunAtLoad</key>
+		<true/>
+		<key>UserName</key>
+		<string>root</string>
+		<key>GroupName</key>
+		<string>wheel</string>
+		<key>KeepAlive</key>
+		<dict>
+			<key>SuccessfulExit</key>
+			<false/>
+		</dict>
+		<key>ThrottleInterval</key>
+		<integer>5</integer>
+	</dict>
+</plist>
