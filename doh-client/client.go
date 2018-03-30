@@ -31,6 +31,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"strings"
+	"sync"
 	"time"
 
 	"../json-dns"
@@ -39,12 +40,15 @@ import (
 )
 
 type Client struct {
-	conf          *config
-	bootstrap     []string
-	udpServer     *dns.Server
-	tcpServer     *dns.Server
-	httpTransport *http.Transport
-	httpClient    *http.Client
+	conf              *config
+	bootstrap         []string
+	udpServer         *dns.Server
+	tcpServer         *dns.Server
+	bootstrapResolver *net.Resolver
+	cookieJar         *cookiejar.Jar
+	httpClientMux     *sync.RWMutex
+	httpTransport     *http.Transport
+	httpClient        *http.Client
 }
 
 type DNSRequest struct {
@@ -71,7 +75,7 @@ func NewClient(conf *config) (c *Client, err error) {
 		Net:     "tcp",
 		Handler: dns.HandlerFunc(c.tcpHandlerFunc),
 	}
-	bootResolver := net.DefaultResolver
+	c.bootstrapResolver = net.DefaultResolver
 	if len(conf.Bootstrap) != 0 {
 		c.bootstrap = make([]string, len(conf.Bootstrap))
 		for i, bootstrap := range conf.Bootstrap {
@@ -84,7 +88,7 @@ func NewClient(conf *config) (c *Client, err error) {
 			}
 			c.bootstrap[i] = bootstrapAddr.String()
 		}
-		bootResolver = &net.Resolver{
+		c.bootstrapResolver = &net.Resolver{
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 				var d net.Dialer
@@ -95,33 +99,51 @@ func NewClient(conf *config) (c *Client, err error) {
 			},
 		}
 	}
-	c.httpTransport = new(http.Transport)
+	// Most CDNs require Cookie support to prevent DDoS attack.
+	// Disabling Cookie does not effectively prevent tracking,
+	// so I will leave it on to make anti-DDoS services happy.
+	c.cookieJar, err = cookiejar.New(nil)
+	if err != nil {
+		return nil, err
+	}
+	c.httpClientMux = new(sync.RWMutex)
+	err = c.newHTTPClient()
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func (c *Client) newHTTPClient() error {
+	c.httpClientMux.Lock()
+	defer c.httpClientMux.Unlock()
+	if c.httpTransport != nil {
+		c.httpTransport.CloseIdleConnections()
+	}
 	c.httpTransport = &http.Transport{
 		DialContext: (&net.Dialer{
-			Timeout:   time.Duration(conf.Timeout) * time.Second,
+			Timeout:   time.Duration(c.conf.Timeout) * time.Second,
 			KeepAlive: 30 * time.Second,
 			DualStack: true,
-			Resolver:  bootResolver,
+			Resolver:  c.bootstrapResolver,
 		}).DialContext,
 		ExpectContinueTimeout: 1 * time.Second,
 		IdleConnTimeout:       90 * time.Second,
 		MaxIdleConns:          100,
 		MaxIdleConnsPerHost:   10,
 		Proxy:                 http.ProxyFromEnvironment,
-		ResponseHeaderTimeout: time.Duration(conf.Timeout) * time.Second,
-		TLSHandshakeTimeout:   time.Duration(conf.Timeout) * time.Second,
+		ResponseHeaderTimeout: time.Duration(c.conf.Timeout) * time.Second,
+		TLSHandshakeTimeout:   time.Duration(c.conf.Timeout) * time.Second,
 	}
-	http2.ConfigureTransport(c.httpTransport)
-	// Most CDNs require Cookie support to prevent DDoS attack
-	cookieJar, err := cookiejar.New(nil)
+	err := http2.ConfigureTransport(c.httpTransport)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	c.httpClient = &http.Client{
 		Transport: c.httpTransport,
-		Jar:       cookieJar,
+		Jar:       c.cookieJar,
 	}
-	return c, nil
+	return nil
 }
 
 func (c *Client) Start() error {
