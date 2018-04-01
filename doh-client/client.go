@@ -102,9 +102,11 @@ func NewClient(conf *config) (c *Client, err error) {
 	// Most CDNs require Cookie support to prevent DDoS attack.
 	// Disabling Cookie does not effectively prevent tracking,
 	// so I will leave it on to make anti-DDoS services happy.
-	c.cookieJar, err = cookiejar.New(nil)
-	if err != nil {
-		return nil, err
+	if !c.conf.NoCookies {
+		c.cookieJar, err = cookiejar.New(nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 	c.httpClientMux = new(sync.RWMutex)
 	err = c.newHTTPClient()
