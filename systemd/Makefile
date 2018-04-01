@@ -1,6 +1,5 @@
 .PHONY: install uninstall
 
-PREFIX = /usr/local
 SYSTEMD_DIR = /usr/lib/systemd
 SYSTEMD_UNIT_DIR = $(SYSTEMD_DIR)/system
 
