@@ -154,12 +154,17 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 	}
 	req.Header.Set("Accept", "application/dns-udpwireformat, application/json")
 	req.Header.Set("User-Agent", "DNS-over-HTTPS/1.1 (+https://github.com/m13253/dns-over-https)")
+	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)
+	c.httpClientMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
-		c.httpTransport.CloseIdleConnections()
+		err1 := c.newHTTPClient()
+		if err1 != nil {
+			log.Fatalln(err1)
+		}
 		return &DNSRequest{
 			err: err,
 		}
