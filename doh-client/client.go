@@ -178,21 +178,21 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 
 	requestType := ""
 	if len(c.conf.UpstreamIETF) == 0 {
-		requestType = "application/x-www-form-urlencoded"
+		requestType = "application/dns-json"
 	} else if len(c.conf.UpstreamGoogle) == 0 {
 		requestType = "application/dns-udpwireformat"
 	} else {
 		numServers := len(c.conf.UpstreamGoogle) + len(c.conf.UpstreamIETF)
 		random := rand.Intn(numServers)
 		if random < len(c.conf.UpstreamGoogle) {
-			requestType = "application/x-www-form-urlencoded"
+			requestType = "application/dns-json"
 		} else {
 			requestType = "application/dns-udpwireformat"
 		}
 	}
 
 	var req *DNSRequest
-	if requestType == "application/x-www-form-urlencoded" {
+	if requestType == "application/dns-json" {
 		req = c.generateRequestGoogle(w, r, isTCP)
 	} else if requestType == "application/dns-udpwireformat" {
 		req = c.generateRequestIETF(w, r, isTCP)
@@ -211,7 +211,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	} else if candidateType == "application/dns-udpwireformat" {
 		contentType = "application/dns-udpwireformat"
 	} else {
-		if requestType == "application/x-www-form-urlencoded" {
+		if requestType == "application/dns-json" {
 			contentType = "application/json"
 		} else if requestType == "application/dns-udpwireformat" {
 			contentType = "application/dns-udpwireformat"

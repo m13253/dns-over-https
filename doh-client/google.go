@@ -66,7 +66,7 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 
 	numServers := len(c.conf.UpstreamGoogle)
 	upstream := c.conf.UpstreamGoogle[rand.Intn(numServers)]
-	requestURL := fmt.Sprintf("%s?name=%s&type=%s", upstream, url.QueryEscape(questionName), url.QueryEscape(questionType))
+	requestURL := fmt.Sprintf("%s?ct=application/dns-json&name=%s&type=%s", upstream, url.QueryEscape(questionName), url.QueryEscape(questionType))
 
 	if r.CheckingDisabled {
 		requestURL += "&cd=1"

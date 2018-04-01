@@ -96,7 +96,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	if contentType == "" {
 		// Guess request Content-Type based on other parameters
 		if r.FormValue("name") != "" {
-			contentType = "application/x-www-form-urlencoded"
+			contentType = "application/dns-json"
 		} else if r.FormValue("dns") != "" {
 			contentType = "application/dns-udpwireformat"
 		}
@@ -114,7 +114,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 	if responseType == "" {
 		// Guess response Content-Type based on request Content-Type
-		if contentType == "application/x-www-form-urlencoded" {
+		if contentType == "application/dns-json" {
 			responseType = "application/json"
 		} else if contentType == "application/dns-udpwireformat" {
 			responseType = "application/dns-udpwireformat"
@@ -122,7 +122,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req *DNSRequest
-	if contentType == "application/x-www-form-urlencoded" {
+	if contentType == "application/dns-json" {
 		req = s.parseRequestGoogle(w, r)
 	} else if contentType == "application/dns-udpwireformat" {
 		req = s.parseRequestIETF(w, r)
