@@ -36,7 +36,7 @@ import (
 	"strings"
 	"time"
 
-	"../json-dns"
+	"github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
