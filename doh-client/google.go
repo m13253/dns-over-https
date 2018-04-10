@@ -91,7 +91,7 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 			err: err,
 		}
 	}
-	req.Header.Set("Accept", "application/json, application/dns-udpwireformat")
+	req.Header.Set("Accept", "application/json, message/dns, application/dns-udpwireformat")
 	req.Header.Set("User-Agent", "DNS-over-HTTPS/1.1 (+https://github.com/m13253/dns-over-https)")
 	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)

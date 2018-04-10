@@ -128,6 +128,7 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 	numServers := len(c.conf.UpstreamIETF)
 	upstream := c.conf.UpstreamIETF[rand.Intn(numServers)]
 	requestURL := fmt.Sprintf("%s?ct=application/dns-udpwireformat&dns=%s", upstream, requestBase64)
+	//requestURL := fmt.Sprintf("%s?ct=message/dns&dns=%s", upstream, requestBase64)
 
 	var req *http.Request
 	if len(requestURL) < 2048 {
@@ -150,9 +151,9 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 				err: err,
 			}
 		}
-		req.Header.Set("Content-Type", "application/dns-udpwireformat")
+		req.Header.Set("Content-Type", "message/dns")
 	}
-	req.Header.Set("Accept", "application/dns-udpwireformat, application/json")
+	req.Header.Set("Accept", "message/dns, application/dns-udpwireformat, application/json")
 	req.Header.Set("User-Agent", "DNS-over-HTTPS/1.1 (+https://github.com/m13253/dns-over-https)")
 	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)
@@ -184,7 +185,7 @@ func (c *Client) parseResponseIETF(w dns.ResponseWriter, r *dns.Msg, isTCP bool,
 		log.Printf("HTTP error: %s\n", req.response.Status)
 		req.reply.Rcode = dns.RcodeServerFailure
 		contentType := req.response.Header.Get("Content-Type")
-		if contentType != "application/dns-udpwireformat" && !strings.HasPrefix(contentType, "application/dns-udpwireformat;") {
+		if contentType != "message/dns" && !strings.HasPrefix(contentType, "message/dns;") {
 			w.WriteMsg(req.reply)
 			return
 		}
