@@ -182,21 +182,21 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	if len(c.conf.UpstreamIETF) == 0 {
 		requestType = "application/dns-json"
 	} else if len(c.conf.UpstreamGoogle) == 0 {
-		requestType = "message/dns"
+		requestType = "application/dns-message"
 	} else {
 		numServers := len(c.conf.UpstreamGoogle) + len(c.conf.UpstreamIETF)
 		random := rand.Intn(numServers)
 		if random < len(c.conf.UpstreamGoogle) {
 			requestType = "application/dns-json"
 		} else {
-			requestType = "message/dns"
+			requestType = "application/dns-message"
 		}
 	}
 
 	var req *DNSRequest
 	if requestType == "application/dns-json" {
 		req = c.generateRequestGoogle(w, r, isTCP)
-	} else if requestType == "message/dns" {
+	} else if requestType == "application/dns-message" {
 		req = c.generateRequestIETF(w, r, isTCP)
 	} else {
 		panic("Unknown request Content-Type")
@@ -210,21 +210,21 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	candidateType := strings.SplitN(req.response.Header.Get("Content-Type"), ";", 2)[0]
 	if candidateType == "application/json" {
 		contentType = "application/json"
-	} else if candidateType == "message/dns" {
-		contentType = "message/dns"
+	} else if candidateType == "application/dns-message" {
+		contentType = "application/dns-message"
 	} else if candidateType == "application/dns-udpwireformat" {
-		contentType = "message/dns"
+		contentType = "application/dns-message"
 	} else {
 		if requestType == "application/dns-json" {
 			contentType = "application/json"
-		} else if requestType == "message/dns" {
-			contentType = "message/dns"
+		} else if requestType == "application/dns-message" {
+			contentType = "application/dns-message"
 		}
 	}
 
 	if contentType == "application/json" {
 		c.parseResponseGoogle(w, r, isTCP, req)
-	} else if contentType == "message/dns" {
+	} else if contentType == "application/dns-message" {
 		c.parseResponseIETF(w, r, isTCP, req)
 	} else {
 		panic("Unknown response Content-Type")

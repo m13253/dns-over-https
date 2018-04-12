@@ -45,7 +45,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 			errtext: fmt.Sprintf("Invalid argument value: \"dns\" = %q", requestBase64),
 		}
 	}
-	if len(requestBinary) == 0 && (r.Header.Get("Content-Type") == "message/dns" || r.Header.Get("Content-Type") == "application/dns-udpwireformat") {
+	if len(requestBinary) == 0 && (r.Header.Get("Content-Type") == "application/dns-message" || r.Header.Get("Content-Type") == "application/dns-udpwireformat") {
 		requestBinary, err = ioutil.ReadAll(r.Body)
 		if err != nil {
 			return &DNSRequest{
@@ -144,7 +144,7 @@ func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, re
 		return
 	}
 
-	w.Header().Set("Content-Type", "message/dns")
+	w.Header().Set("Content-Type", "application/dns-message")
 	now := time.Now().UTC().Format(http.TimeFormat)
 	w.Header().Set("Date", now)
 	w.Header().Set("Last-Modified", now)

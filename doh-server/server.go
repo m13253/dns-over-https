@@ -98,7 +98,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		if r.FormValue("name") != "" {
 			contentType = "application/dns-json"
 		} else if r.FormValue("dns") != "" {
-			contentType = "message/dns"
+			contentType = "application/dns-message"
 		}
 	}
 	var responseType string
@@ -108,10 +108,10 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 			responseType = "application/json"
 			break
 		} else if responseCandidate == "application/dns-udpwireformat" {
-			responseType = "message/dns"
+			responseType = "application/dns-message"
 			break
-		} else if responseCandidate == "message/dns" {
-			responseType = "message/dns"
+		} else if responseCandidate == "application/dns-message" {
+			responseType = "application/dns-message"
 			break
 		}
 	}
@@ -119,17 +119,17 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		// Guess response Content-Type based on request Content-Type
 		if contentType == "application/dns-json" {
 			responseType = "application/json"
-		} else if contentType == "message/dns" {
-			responseType = "message/dns"
+		} else if contentType == "application/dns-message" {
+			responseType = "application/dns-message"
 		} else if contentType == "application/dns-udpwireformat" {
-			responseType = "message/dns"
+			responseType = "application/dns-message"
 		}
 	}
 
 	var req *DNSRequest
 	if contentType == "application/dns-json" {
 		req = s.parseRequestGoogle(w, r)
-	} else if contentType == "message/dns" {
+	} else if contentType == "application/dns-message" {
 		req = s.parseRequestIETF(w, r)
 	} else if contentType == "application/dns-udpwireformat" {
 		req = s.parseRequestIETF(w, r)
@@ -151,7 +151,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 
 	if responseType == "application/json" {
 		s.generateResponseGoogle(w, r, req)
-	} else if responseType == "message/dns" {
+	} else if responseType == "application/dns-message" {
 		s.generateResponseIETF(w, r, req)
 	} else {
 		panic("Unknown response Content-Type")
