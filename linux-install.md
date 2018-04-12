@@ -2,14 +2,14 @@
 > Tested on a clean install of `Ubuntu 16.04 LTS`
 
 ## Intalling go
-Install `Go-Lang >= 1.7`
+Install `Go >= 1.9`
 
 ```bash
-apt update
-apt install golang-1.10 -y
+sudo apt update
+sudo apt install golang-1.10 -y
 ```
 
-Add the newly install `go-lang` to the path
+Add the newly install `go` to the path
 
 ```bash
 export PATH=$PATH:/usr/lib/go-1.10/bin
@@ -44,8 +44,8 @@ cd dns-over-https
 make and install
 
 ```bash
-make && make install
-```
-
+make
+sudo make install
+```	
 
 
