@@ -1,7 +1,8 @@
 .PHONY: all clean install uninstall deps
 
-GOBUILD=go build
-GOGET=go get -d -v
+GOBUILD=$(GOHOME)/bin/go build
+GOGET=$(GOHOME)/bin/go get -d -v
+
 PREFIX=/usr/local
 ifeq ($(shell uname),Darwin)
 	CONFDIR=/usr/local/etc/dns-over-https
