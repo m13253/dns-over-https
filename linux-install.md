@@ -9,16 +9,16 @@ sudo apt update
 sudo apt install golang-1.10 -y
 ```
 
-Add the newly install `go` to the path
+Set `$GOPATH` to the location of the newly added location
 
 ```bash
-export PATH=$PATH:/usr/lib/go-1.10/bin
+export GOHOME=/usr/lib/go-1.10/
 ```
 
 Test to make sure that you can execute `go`
 
 ```bash
-go version
+$GOHOME/go version
 ```
 which should output something like
 
@@ -46,6 +46,5 @@ make and install
 ```bash
 make
 sudo make install
-```	
-
+```
 
