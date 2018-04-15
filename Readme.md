@@ -12,6 +12,7 @@ First create an empty directory, used for `$GOPATH`:
 
     mkdir ~/gopath
     export GOPATH=~/gopath
+    export GOHOME=/usr/lib/go-1.9/
 
 To build the program, type:
 

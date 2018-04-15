@@ -1,0 +1,14 @@
+Source: dns-over-https
+Priority: optional
+Maintainer: Joubin Jabbari <joubin@jabbari.io>
+Build-Depends: debhelper (>=9), golang-1.10-go  
+Standards-Version: 3.9.6
+Homepage: https://github.com/m13253/dns-over-https
+#Vcs-Git: git://anonscm.debian.org/collab-maint/dns-over-https.git
+#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/dns-over-https.git
+
+Package: dns-over-https
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>

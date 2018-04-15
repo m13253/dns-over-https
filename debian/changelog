@@ -1,0 +1,5 @@
+dns-over-https (1.2.0-1) unstable; urgency=medium
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Joubin Jabbari <joubin@unknown>  Thu, 12 Apr 2018 15:58:01 -0700
