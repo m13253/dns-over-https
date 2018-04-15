@@ -1,0 +1,11 @@
+Source: dns-over-https
+Maintainer: Joubin Jabbari <joubin@jabbari.io>
+Section: misc
+Priority: optional
+Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 9)
+
+Package: dns-over-https
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Client and server software to query DNS over HTTPS, using Google DNS-over-HTTPS protocol and draft-ietf-doh-dns-over-https.

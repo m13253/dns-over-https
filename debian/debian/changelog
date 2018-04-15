@@ -1,0 +1,5 @@
+dns-over-https (1.2-1) UNRELEASED; urgency=medium
+
+  * Initial release. 
+
+ -- joubin <joubin@jabbari.io>  Tue, 10 Apr 2018 10:40:48 -0700
