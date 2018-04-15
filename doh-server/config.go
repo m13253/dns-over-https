@@ -30,7 +30,7 @@ import (
 )
 
 type config struct {
-	Listen   string   `toml:"listen"`
+	Listen   []string `toml:"listen"`
 	Cert     string   `toml:"cert"`
 	Key      string   `toml:"key"`
 	Path     string   `toml:"path"`
@@ -51,9 +51,10 @@ func loadConfig(path string) (*config, error) {
 		return nil, &configError{fmt.Sprintf("unknown option %q", key.String())}
 	}
 
-	if conf.Listen == "" {
-		conf.Listen = "127.0.0.1:8053"
+	if len(conf.Listen) == 0 {
+		conf.Listen = []string{"127.0.0.1:8053"}
 	}
+
 	if conf.Path == "" {
 		conf.Path = "/dns-query"
 	}
