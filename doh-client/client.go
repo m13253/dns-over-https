@@ -42,8 +42,8 @@ import (
 type Client struct {
 	conf              *config
 	bootstrap         []string
-	udpServer         *dns.Server
-	tcpServer         *dns.Server
+	udpServers        []*dns.Server
+	tcpServers        []*dns.Server
 	bootstrapResolver *net.Resolver
 	cookieJar         *cookiejar.Jar
 	httpClientMux     *sync.RWMutex
@@ -64,16 +64,21 @@ func NewClient(conf *config) (c *Client, err error) {
 	c = &Client{
 		conf: conf,
 	}
-	c.udpServer = &dns.Server{
-		Addr:    conf.Listen,
-		Net:     "udp",
-		Handler: dns.HandlerFunc(c.udpHandlerFunc),
-		UDPSize: 4096,
-	}
-	c.tcpServer = &dns.Server{
-		Addr:    conf.Listen,
-		Net:     "tcp",
-		Handler: dns.HandlerFunc(c.tcpHandlerFunc),
+
+	udpH := dns.HandlerFunc(c.udpHandlerFunc)
+	tcpH := dns.HandlerFunc(c.tcpHandlerFunc)
+	for _, addr := range conf.Listen {
+		c.udpServers = append(c.udpServers, &dns.Server{
+			Addr:    addr,
+			Net:     "udp",
+			Handler: udpH,
+			UDPSize: 4096,
+		})
+		c.tcpServers = append(c.tcpServers, &dns.Server{
+			Addr:    addr,
+			Net:     "tcp",
+			Handler: tcpH,
+		})
 	}
 	c.bootstrapResolver = net.DefaultResolver
 	if len(conf.Bootstrap) != 0 {
@@ -149,27 +154,25 @@ func (c *Client) newHTTPClient() error {
 }
 
 func (c *Client) Start() error {
-	result := make(chan error)
-	go func() {
-		err := c.udpServer.ListenAndServe()
-		if err != nil {
-			log.Println(err)
-		}
-		result <- err
-	}()
-	go func() {
-		err := c.tcpServer.ListenAndServe()
-		if err != nil {
-			log.Println(err)
-		}
-		result <- err
-	}()
-	err := <-result
-	if err != nil {
-		return err
+	result := make(chan error, len(c.udpServers)+len(c.tcpServers))
+	for _, srv := range append(c.udpServers, c.tcpServers...) {
+		go func(srv *dns.Server) {
+			err := srv.ListenAndServe()
+			if err != nil {
+				log.Println(err)
+			}
+			result <- err
+		}(srv)
 	}
-	err = <-result
-	return err
+
+	for i := 0; i < cap(result); i++ {
+		err := <-result
+		if err != nil {
+			return err
+		}
+	}
+	close(result)
+	return nil
 }
 
 func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
