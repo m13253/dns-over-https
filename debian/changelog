@@ -1,5 +1,5 @@
-dns-over-https (1.2-1) UNRELEASED; urgency=medium
+dns-over-https (1.2.0-1) unstable; urgency=medium
 
-  * Initial release. 
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
 
- -- joubin <joubin@jabbari.io>  Tue, 10 Apr 2018 10:40:48 -0700
+ -- Joubin Jabbari <joubin@unknown>  Thu, 12 Apr 2018 15:58:01 -0700
