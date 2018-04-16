@@ -4,6 +4,10 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 1.3.2
+
+- Fix version string in HTTP User-Agent
+
 ## Version 1.3.1
 
 - Fix the "address already in use" issue
