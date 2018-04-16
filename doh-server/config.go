@@ -52,7 +52,7 @@ func loadConfig(path string) (*config, error) {
 	}
 
 	if len(conf.Listen) == 0 {
-		conf.Listen = []string{"127.0.0.1:8053"}
+		conf.Listen = []string{"127.0.0.1:8053", "[::1]:8053"}
 	}
 
 	if conf.Path == "" {

@@ -51,7 +51,7 @@ func loadConfig(path string) (*config, error) {
 	}
 
 	if len(conf.Listen) == 0 {
-		conf.Listen = []string{"127.0.0.1:53"}
+		conf.Listen = []string{"127.0.0.1:53", "[::1]:53"}
 	}
 	if len(conf.UpstreamGoogle) == 0 && len(conf.UpstreamIETF) == 0 {
 		conf.UpstreamGoogle = []string{"https://dns.google.com/resolve"}
