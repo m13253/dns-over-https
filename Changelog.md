@@ -4,6 +4,10 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 1.3.1
+
+- Fix the "address already in use" issue
+
 ## Version 1.3.0
 
 - Breaking change: Add client / server support for multiple listen address
