@@ -43,8 +43,5 @@ func main() {
 	}
 
 	server := NewServer(conf)
-	err = server.Start()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	_ = server.Start()
 }

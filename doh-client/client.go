@@ -154,24 +154,24 @@ func (c *Client) newHTTPClient() error {
 }
 
 func (c *Client) Start() error {
-	result := make(chan error, len(c.udpServers)+len(c.tcpServers))
+	results := make(chan error, len(c.udpServers)+len(c.tcpServers))
 	for _, srv := range append(c.udpServers, c.tcpServers...) {
 		go func(srv *dns.Server) {
 			err := srv.ListenAndServe()
 			if err != nil {
 				log.Println(err)
 			}
-			result <- err
+			results <- err
 		}(srv)
 	}
 
-	for i := 0; i < cap(result); i++ {
-		err := <-result
+	for i := 0; i < cap(results); i++ {
+		err := <-results
 		if err != nil {
 			return err
 		}
 	}
-	close(result)
+	close(results)
 	return nil
 }
 

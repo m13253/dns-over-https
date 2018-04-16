@@ -75,26 +75,29 @@ func (s *Server) Start() error {
 	if s.conf.Verbose {
 		servemux = handlers.CombinedLoggingHandler(os.Stdout, servemux)
 	}
-	listeners := make(chan error, len(s.conf.Listen))
+	results := make(chan error, len(s.conf.Listen))
 	for _, addr := range s.conf.Listen {
-		if s.conf.Cert != "" || s.conf.Key != "" {
-			go func() {
-				listeners <- http.ListenAndServeTLS(addr, s.conf.Cert, s.conf.Key, servemux)
-			}()
-			continue
-		}
-		go func() {
-			listeners <- http.ListenAndServe(addr, servemux)
-		}()
+		go func(addr string) {
+			var err error
+			if s.conf.Cert != "" || s.conf.Key != "" {
+				err = http.ListenAndServeTLS(addr, s.conf.Cert, s.conf.Key, servemux)
+			} else {
+				err = http.ListenAndServe(addr, servemux)
+			}
+			if err != nil {
+				log.Println(err)
+			}
+			results <- err
+		}(addr)
 	}
 	// wait for all handlers
-	for i := 0; i < cap(listeners); i++ {
-		err := <-listeners
+	for i := 0; i < cap(results); i++ {
+		err := <-results
 		if err != nil {
 			return err
 		}
 	}
-	close(listeners)
+	close(results)
 	return nil
 }
 
