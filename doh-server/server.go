@@ -102,8 +102,8 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Server", "DNS-over-HTTPS/1.1 (+https://github.com/m13253/dns-over-https)")
-	w.Header().Set("X-Powered-By", "DNS-over-HTTPS/1.1 (+https://github.com/m13253/dns-over-https)")
+	w.Header().Set("Server", jsonDNS.USER_AGENT)
+	w.Header().Set("X-Powered-By", jsonDNS.USER_AGENT)
 
 	if r.Form == nil {
 		const maxMemory = 32 << 20 // 32 MB
