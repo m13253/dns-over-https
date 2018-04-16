@@ -2,6 +2,7 @@
 
 GOBUILD=go build
 GOGET=go get -d -v
+GOGET_UPDATE=go get -d -u -v
 PREFIX=/usr/local
 ifeq ($(shell uname),Darwin)
 	CONFDIR=/usr/local/etc/dns-over-https
@@ -40,6 +41,8 @@ uninstall:
 	fi
 
 deps:
+	@# I am not sure if it is the correct way to keep the common library updated
+	$(GOGET_UPDATE) github.com/m13253/dns-over-https/json-dns
 	$(GOGET) ./doh-client ./doh-server
 
 doh-client/doh-client: deps doh-client/client.go doh-client/config.go doh-client/google.go doh-client/ietf.go doh-client/main.go json-dns/error.go json-dns/globalip.go json-dns/marshal.go json-dns/response.go json-dns/unmarshal.go
