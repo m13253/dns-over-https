@@ -95,7 +95,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 		opt.Hdr.Rrtype = dns.TypeOPT
 		opt.SetUDPSize(dns.DefaultMsgSize)
 		opt.SetDo(false)
-		msg.Extra = append(msg.Extra, opt)
+		msg.Extra = append([]dns.RR{opt}, msg.Extra...)
 	}
 	var edns0Subnet *dns.EDNS0_SUBNET
 	for _, option := range opt.Option {

@@ -75,7 +75,7 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 		opt.Hdr.Rrtype = dns.TypeOPT
 		opt.SetUDPSize(dns.DefaultMsgSize)
 		opt.SetDo(false)
-		r.Extra = append(r.Extra, opt)
+		r.Extra = append([]dns.RR{opt}, r.Extra...)
 	} else {
 		udpSize = opt.UDPSize()
 	}
