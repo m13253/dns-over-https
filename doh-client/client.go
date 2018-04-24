@@ -65,19 +65,19 @@ func NewClient(conf *config) (c *Client, err error) {
 		conf: conf,
 	}
 
-	udpH := dns.HandlerFunc(c.udpHandlerFunc)
-	tcpH := dns.HandlerFunc(c.tcpHandlerFunc)
+	udpHandler := dns.HandlerFunc(c.udpHandlerFunc)
+	tcpHandler := dns.HandlerFunc(c.tcpHandlerFunc)
 	for _, addr := range conf.Listen {
 		c.udpServers = append(c.udpServers, &dns.Server{
 			Addr:    addr,
 			Net:     "udp",
-			Handler: udpH,
+			Handler: udpHandler,
 			UDPSize: 4096,
 		})
 		c.tcpServers = append(c.tcpServers, &dns.Server{
 			Addr:    addr,
 			Net:     "tcp",
-			Handler: tcpH,
+			Handler: tcpHandler,
 		})
 	}
 	c.bootstrapResolver = net.DefaultResolver
