@@ -58,6 +58,7 @@ func NewServer(conf *config) (s *Server) {
 		conf: conf,
 		udpClient: &dns.Client{
 			Net:     "udp",
+			UDPSize: 4096,
 			Timeout: time.Duration(conf.Timeout) * time.Second,
 		},
 		tcpClient: &dns.Client{
