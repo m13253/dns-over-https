@@ -72,7 +72,7 @@ func NewClient(conf *config) (c *Client, err error) {
 			Addr:    addr,
 			Net:     "udp",
 			Handler: udpHandler,
-			UDPSize: 4096,
+			UDPSize: dns.DefaultMsgSize,
 		})
 		c.tcpServers = append(c.tcpServers, &dns.Server{
 			Addr:    addr,

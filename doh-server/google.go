@@ -150,7 +150,7 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 	opt := new(dns.OPT)
 	opt.Hdr.Name = "."
 	opt.Hdr.Rrtype = dns.TypeOPT
-	opt.SetUDPSize(4096)
+	opt.SetUDPSize(dns.DefaultMsgSize)
 	opt.SetDo(true)
 	if ednsClientAddress != nil {
 		edns0Subnet := new(dns.EDNS0_SUBNET)

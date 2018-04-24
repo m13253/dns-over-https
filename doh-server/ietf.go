@@ -93,7 +93,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 		opt = new(dns.OPT)
 		opt.Hdr.Name = "."
 		opt.Hdr.Rrtype = dns.TypeOPT
-		opt.SetUDPSize(4096)
+		opt.SetUDPSize(dns.DefaultMsgSize)
 		opt.SetDo(false)
 		msg.Extra = append(msg.Extra, opt)
 	}
