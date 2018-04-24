@@ -4,6 +4,10 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 1.3.3
+
+- Take User-Agent out of common library, that would be better for packaging
+
 ## Version 1.3.2
 
 - Fix version string in HTTP User-Agent

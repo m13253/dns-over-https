@@ -154,7 +154,7 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 		req.Header.Set("Content-Type", "application/dns-message")
 	}
 	req.Header.Set("Accept", "application/dns-message, application/dns-udpwireformat, application/json")
-	req.Header.Set("User-Agent", jsonDNS.USER_AGENT)
+	req.Header.Set("User-Agent", USER_AGENT)
 	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)
 	c.httpClientMux.RUnlock()

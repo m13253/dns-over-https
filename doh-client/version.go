@@ -21,7 +21,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-package jsonDNS
+package main
 
-const VERSION = "1.3.2"
+const VERSION = "1.3.3"
 const USER_AGENT = "DNS-over-HTTPS/" + VERSION + " (+https://github.com/m13253/dns-over-https)"
