@@ -45,8 +45,8 @@ deps:
 	$(GOGET_UPDATE) github.com/m13253/dns-over-https/json-dns
 	$(GOGET) ./doh-client ./doh-server
 
-doh-client/doh-client: deps doh-client/client.go doh-client/config.go doh-client/google.go doh-client/ietf.go doh-client/main.go json-dns/error.go json-dns/globalip.go json-dns/marshal.go json-dns/response.go json-dns/unmarshal.go
+doh-client/doh-client: deps doh-client/client.go doh-client/config.go doh-client/google.go doh-client/ietf.go doh-client/main.go doh-client/version.go json-dns/error.go json-dns/globalip.go json-dns/marshal.go json-dns/response.go json-dns/unmarshal.go
 	cd doh-client && $(GOBUILD)
 
-doh-server/doh-server: deps doh-server/config.go doh-server/google.go doh-server/ietf.go doh-server/main.go doh-server/server.go json-dns/error.go json-dns/globalip.go json-dns/marshal.go json-dns/response.go json-dns/unmarshal.go
+doh-server/doh-server: deps doh-server/config.go doh-server/google.go doh-server/ietf.go doh-server/main.go doh-server/server.go doh-server/version.go json-dns/error.go json-dns/globalip.go json-dns/marshal.go json-dns/response.go json-dns/unmarshal.go
 	cd doh-server && $(GOBUILD)
