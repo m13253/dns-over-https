@@ -70,6 +70,9 @@ The following is a typical DNS-over-HTTPS architecture:
 Although DNS-over-HTTPS can work alone, a HTTP service muxer would be useful as
 you can host DNS-over-HTTPS along with other HTTPS services.
 
+HTTP/2 with at least TLS v1.3 is recommended. OSCP stapling must be enabled,
+otherwise DNS recursion may happen.
+
 ## DNSSEC
 
 DNS-over-HTTPS is compatible with DNSSEC, and requests DNSSEC signatures by
@@ -90,8 +93,10 @@ EDNS0-Client-Subnet is affecting your privacy, you can set `no_ecs = true` in
 `/etc/dns-over-https/doh-client.conf`, with the cost of slower video streaming
 or software downloading speed.
 
-If your server is backed by `unbound` or `bind`, you probably want to enable
-the EDNS0-Client-Subnet feature in their configuration files as well.
+To ultilize ECS, `X-Forwarded-For` or `X-Real-IP` should be enabled on your
+HTTP service muxer. If your server is backed by `unbound` or `bind`, you
+probably want to configure it to enable the EDNS0-Client-Subnet feature as
+well.
 
 ## Protocol compatibility
 
