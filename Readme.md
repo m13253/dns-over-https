@@ -70,7 +70,7 @@ The following is a typical DNS-over-HTTPS architecture:
 Although DNS-over-HTTPS can work alone, a HTTP service muxer would be useful as
 you can host DNS-over-HTTPS along with other HTTPS services.
 
-HTTP/2 with at least TLS v1.3 is recommended. OSCP stapling must be enabled,
+HTTP/2 with at least TLS v1.3 is recommended. OCSP stapling must be enabled,
 otherwise DNS recursion may happen.
 
 ## DNSSEC
