@@ -134,9 +134,8 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 	if len(requestURL) < 2048 {
 		req, err = http.NewRequest("GET", requestURL, nil)
 		if err != nil {
+			// Do not respond, silently fail to prevent caching of SERVFAIL
 			log.Println(err)
-			reply.Rcode = dns.RcodeServerFailure
-			w.WriteMsg(reply)
 			return &DNSRequest{
 				err: err,
 			}
@@ -144,9 +143,8 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 	} else {
 		req, err = http.NewRequest("POST", upstream, bytes.NewReader(requestBinary))
 		if err != nil {
+			// Do not respond, silently fail to prevent caching of SERVFAIL
 			log.Println(err)
-			reply.Rcode = dns.RcodeServerFailure
-			w.WriteMsg(reply)
 			return &DNSRequest{
 				err: err,
 			}
