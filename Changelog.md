@@ -4,6 +4,13 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 1.3.4
+
+- doh-client now silently fails in case of network error to prevent caching of SERVFAIL
+- EDNS0 is now inserted to the beginning of OPT section, to ensure DNSSEC signatures are at the end
+- Improve building system
+- Update documents
+
 ## Version 1.3.3
 
 - Take User-Agent out of common library, that would be better for packaging
