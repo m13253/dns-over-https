@@ -4,6 +4,10 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 1.3.5
+
+- Limit the frequency of creating HTTP client on bad network condition
+
 ## Version 1.3.4
 
 - doh-client now silently fails in case of network error to prevent caching of SERVFAIL
