@@ -40,15 +40,16 @@ import (
 )
 
 type Client struct {
-	conf              *config
-	bootstrap         []string
-	udpServers        []*dns.Server
-	tcpServers        []*dns.Server
-	bootstrapResolver *net.Resolver
-	cookieJar         *cookiejar.Jar
-	httpClientMux     *sync.RWMutex
-	httpTransport     *http.Transport
-	httpClient        *http.Client
+	conf                 *config
+	bootstrap            []string
+	udpServers           []*dns.Server
+	tcpServers           []*dns.Server
+	bootstrapResolver    *net.Resolver
+	cookieJar            *cookiejar.Jar
+	httpClientMux        *sync.RWMutex
+	httpTransport        *http.Transport
+	httpClient           *http.Client
+	httpClientLastCreate time.Time
 }
 
 type DNSRequest struct {
@@ -124,6 +125,9 @@ func NewClient(conf *config) (c *Client, err error) {
 func (c *Client) newHTTPClient() error {
 	c.httpClientMux.Lock()
 	defer c.httpClientMux.Unlock()
+	if !c.httpClientLastCreate.IsZero() && time.Now().Sub(c.httpClientLastCreate) < time.Duration(c.conf.Timeout)*time.Second {
+		return nil
+	}
 	if c.httpTransport != nil {
 		c.httpTransport.CloseIdleConnections()
 	}
@@ -150,6 +154,7 @@ func (c *Client) newHTTPClient() error {
 		Transport: c.httpTransport,
 		Jar:       c.cookieJar,
 	}
+	c.httpClientLastCreate = time.Now()
 	return nil
 }
 
