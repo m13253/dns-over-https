@@ -6,6 +6,8 @@
 		<string>org.eu.starlab.doh.client</string>
 		<key>ProgramArguments</key>
 		<array>
+			<string>/usr/local/bin/doh-logger</string>
+			<string>doh-client</string>
 			<string>/usr/local/bin/doh-client</string>
 			<string>-conf</string>
 			<string>/usr/local/etc/dns-over-https/doh-client.conf</string>

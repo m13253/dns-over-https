@@ -11,9 +11,15 @@ else
 endif
 
 all: doh-client/doh-client doh-server/doh-server
+	if [ "`uname`" = "Darwin" ]; then \
+		$(MAKE) -C darwin-wrapper; \
+	fi
 
 clean:
 	rm -f doh-client/doh-client doh-server/doh-server
+	if [ "`uname`" = "Darwin" ]; then \
+		$(MAKE) -C darwin-wrapper clean; \
+	fi
 
 install:
 	[ -e doh-client/doh-client ] || $(MAKE) doh-client/doh-client
@@ -28,6 +34,7 @@ install:
 		$(MAKE) -C systemd install "DESTDIR=$(DESTDIR)"; \
 		$(MAKE) -C NetworkManager install "DESTDIR=$(DESTDIR)"; \
 	elif [ "`uname`" = "Darwin" ]; then \
+		$(MAKE) -C darwin-wrapper install "DESTDIR=$(DESTDIR)" "PREFIX=$(PREFIX)"; \
 		$(MAKE) -C launchd install "DESTDIR=$(DESTDIR)"; \
 	fi
 
