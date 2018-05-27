@@ -4,6 +4,11 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 1.3.6
+
+- We have a logger for macOS platform now, so logs can be sent to Console.app
+- Add an option to disable IPv6, this option is available to client only
+
 ## Version 1.3.5
 
 - Limit the frequency of creating HTTP client on bad network condition
