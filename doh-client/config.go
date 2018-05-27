@@ -37,6 +37,7 @@ type config struct {
 	Timeout        uint     `toml:"timeout"`
 	NoCookies      bool     `toml:"no_cookies"`
 	NoECS          bool     `toml:"no_ecs"`
+	NoIPv6         bool     `toml:"no_ipv6"`
 	Verbose        bool     `toml:"verbose"`
 }
 

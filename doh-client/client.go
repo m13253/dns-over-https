@@ -131,13 +131,14 @@ func (c *Client) newHTTPClient() error {
 	if c.httpTransport != nil {
 		c.httpTransport.CloseIdleConnections()
 	}
+	dialer := &net.Dialer{
+		Timeout:   time.Duration(c.conf.Timeout) * time.Second,
+		KeepAlive: 30 * time.Second,
+		DualStack: true,
+		Resolver:  c.bootstrapResolver,
+	}
 	c.httpTransport = &http.Transport{
-		DialContext: (&net.Dialer{
-			Timeout:   time.Duration(c.conf.Timeout) * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-			Resolver:  c.bootstrapResolver,
-		}).DialContext,
+		DialContext:           dialer.DialContext,
 		ExpectContinueTimeout: 1 * time.Second,
 		IdleConnTimeout:       90 * time.Second,
 		MaxIdleConns:          100,
@@ -145,6 +146,14 @@ func (c *Client) newHTTPClient() error {
 		Proxy:                 http.ProxyFromEnvironment,
 		ResponseHeaderTimeout: time.Duration(c.conf.Timeout) * time.Second,
 		TLSHandshakeTimeout:   time.Duration(c.conf.Timeout) * time.Second,
+	}
+	if c.conf.NoIPv6 {
+		c.httpTransport.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+			if strings.HasPrefix(network, "tcp") {
+				network = "tcp4"
+			}
+			return dialer.DialContext(ctx, network, address)
+		}
 	}
 	err := http2.ConfigureTransport(c.httpTransport)
 	if err != nil {
