@@ -58,6 +58,7 @@ type DNSRequest struct {
 	udpSize           uint16
 	ednsClientAddress net.IP
 	ednsClientNetmask uint8
+	currentUpstream   string
 	err               error
 }
 

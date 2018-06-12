@@ -175,12 +175,13 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 		udpSize:           udpSize,
 		ednsClientAddress: ednsClientAddress,
 		ednsClientNetmask: ednsClientNetmask,
+		currentUpstream:   upstream,
 	}
 }
 
 func (c *Client) parseResponseIETF(w dns.ResponseWriter, r *dns.Msg, isTCP bool, req *DNSRequest) {
 	if req.response.StatusCode != 200 {
-		log.Printf("HTTP error: %s\n", req.response.Status)
+		log.Printf("HTTP error from upstream %s: %s\n", req.currentUpstream, req.response.Status)
 		req.reply.Rcode = dns.RcodeServerFailure
 		contentType := req.response.Header.Get("Content-Type")
 		if contentType != "application/dns-message" && !strings.HasPrefix(contentType, "application/dns-message;") {

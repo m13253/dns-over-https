@@ -115,12 +115,13 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 		udpSize:           udpSize,
 		ednsClientAddress: ednsClientAddress,
 		ednsClientNetmask: ednsClientNetmask,
+		currentUpstream:   upstream,
 	}
 }
 
 func (c *Client) parseResponseGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool, req *DNSRequest) {
 	if req.response.StatusCode != 200 {
-		log.Printf("HTTP error: %s\n", req.response.Status)
+		log.Printf("HTTP error from upstream %s: %s\n", req.currentUpstream, req.response.Status)
 		req.reply.Rcode = dns.RcodeServerFailure
 		contentType := req.response.Header.Get("Content-Type")
 		if contentType != "application/json" && !strings.HasPrefix(contentType, "application/json;") {

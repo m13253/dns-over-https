@@ -46,11 +46,12 @@ type Server struct {
 }
 
 type DNSRequest struct {
-	request    *dns.Msg
-	response   *dns.Msg
-	isTailored bool
-	errcode    int
-	errtext    string
+	request         *dns.Msg
+	response        *dns.Msg
+	currentUpstream string
+	isTailored      bool
+	errcode         int
+	errtext         string
 }
 
 func NewServer(conf *config) (s *Server) {
@@ -164,7 +165,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var err error
-	req.response, err = s.doDNSQuery(req.request)
+	req, err = s.doDNSQuery(req)
 	if err != nil {
 		jsonDNS.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 503)
 		return
@@ -208,23 +209,23 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 	return nil
 }
 
-func (s *Server) doDNSQuery(msg *dns.Msg) (resp *dns.Msg, err error) {
+func (s *Server) doDNSQuery(req *DNSRequest) (resp *DNSRequest, err error) {
 	numServers := len(s.conf.Upstream)
 	for i := uint(0); i < s.conf.Tries; i++ {
-		server := s.conf.Upstream[rand.Intn(numServers)]
+		req.currentUpstream = s.conf.Upstream[rand.Intn(numServers)]
 		if !s.conf.TCPOnly {
-			resp, _, err = s.udpClient.Exchange(msg, server)
+			req.response, _, err = s.udpClient.Exchange(req.request, req.currentUpstream)
 			if err == dns.ErrTruncated {
 				log.Println(err)
-				resp, _, err = s.tcpClient.Exchange(msg, server)
+				req.response, _, err = s.tcpClient.Exchange(req.request, req.currentUpstream)
 			}
 		} else {
-			resp, _, err = s.tcpClient.Exchange(msg, server)
+			req.response, _, err = s.tcpClient.Exchange(req.request, req.currentUpstream)
 		}
 		if err == nil {
-			return
+			return req, nil
 		}
-		log.Println(err)
+		log.Printf("DNS error from upstream %s: %s\n", req.currentUpstream, err.Error())
 	}
-	return
+	return req, err
 }
