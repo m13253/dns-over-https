@@ -28,6 +28,8 @@ install:
 	install -m0755 doh-client/doh-client "$(DESTDIR)$(PREFIX)/bin/doh-client"
 	install -m0755 doh-server/doh-server "$(DESTDIR)$(PREFIX)/bin/doh-server"
 	mkdir -p "$(DESTDIR)$(CONFDIR)/"
+	install -m0644 doh-client/doh-client.conf "$(DESTDIR)$(CONFDIR)/doh-client.conf.example"
+	install -m0644 doh-client/doh-server.conf "$(DESTDIR)$(CONFDIR)/doh-server.conf.example"
 	[ -e "$(DESTDIR)$(CONFDIR)/doh-client.conf" ] || install -m0644 doh-client/doh-client.conf "$(DESTDIR)$(CONFDIR)/doh-client.conf"
 	[ -e "$(DESTDIR)$(CONFDIR)/doh-server.conf" ] || install -m0644 doh-server/doh-server.conf "$(DESTDIR)$(CONFDIR)/doh-server.conf"
 	if [ "`uname`" = "Linux" ]; then \
@@ -39,7 +41,7 @@ install:
 	fi
 
 uninstall:
-	rm -f "$(DESTDIR)$(PREFIX)/bin/doh-client" "$(DESTDIR)$(PREFIX)/bin/doh-server"
+	rm -f "$(DESTDIR)$(PREFIX)/bin/doh-client" "$(DESTDIR)$(PREFIX)/bin/doh-server" "$(DESTDIR)$(CONFDIR)/doh-client.conf.example" "$(DESTDIR)$(CONFDIR)/doh-server.conf.example"
 	if [ "`uname`" = "Linux" ]; then \
 		$(MAKE) -C systemd uninstall "DESTDIR=$(DESTDIR)"; \
 		$(MAKE) -C NetworkManager uninstall "DESTDIR=$(DESTDIR)"; \
