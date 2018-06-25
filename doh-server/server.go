@@ -164,6 +164,8 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req = s.patchRootRD(req)
+
 	var err error
 	req, err = s.doDNSQuery(req)
 	if err != nil {
@@ -207,6 +209,16 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 		return ip
 	}
 	return nil
+}
+
+// Workaround a bug causing Unbound to refuse returning anything about the root
+func (s *Server) patchRootRD(req *DNSRequest) *DNSRequest {
+	for _, question := range req.request.Question {
+		if question.Name == "." {
+			req.request.RecursionDesired = true
+		}
+	}
+	return req
 }
 
 func (s *Server) doDNSQuery(req *DNSRequest) (resp *DNSRequest, err error) {
