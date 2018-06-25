@@ -4,6 +4,14 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 1.3.7
+
+- Add CloudFlare DNS resolver for Tor to the preset
+- It is now able to print upstream information if error happens
+- Updated default configuration files are now installed to `*.conf.example`
+- Workaround a bug causing Unbound to refuse returning anything about the root
+- Workaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe
+
 ## Version 1.3.6
 
 - We have a logger for macOS platform now, so logs can be sent to Console.app
