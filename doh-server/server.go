@@ -159,6 +159,9 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		jsonDNS.FormatError(w, fmt.Sprintf("Invalid argument value: \"ct\" = %q", contentType), 415)
 		return
 	}
+	if req.errcode == 444 {
+		return
+	}
 	if req.errcode != 0 {
 		jsonDNS.FormatError(w, req.errtext, req.errcode)
 		return

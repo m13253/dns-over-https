@@ -24,6 +24,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -60,6 +61,13 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 			errtext: fmt.Sprintf("Invalid argument value: \"dns\""),
 		}
 	}
+
+	if s.patchDNSCryptProxyReqID(requestBinary, w) {
+		return &DNSRequest{
+			errcode: 444,
+		}
+	}
+
 	msg := new(dns.Msg)
 	err = msg.Unpack(requestBinary)
 	if err != nil {
@@ -160,4 +168,17 @@ func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, re
 		w.WriteHeader(503)
 	}
 	w.Write(respBytes)
+}
+
+// Workaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe
+func (s *Server) patchDNSCryptProxyReqID(requestBinary []byte, w http.ResponseWriter) bool {
+	if bytes.Equal(requestBinary, []byte("\xca\xfe\x01\x00\x00\x01\x00\x00\x00\x00\x00\x01\x00\x00\x02\x00\x01\x00\x00\x29\x10\x00\x00\x00\x80\x00\x00\x00")) {
+		log.Println("DNSCrypt-Proxy detected. Patching response.")
+		w.Header().Set("Content-Type", "application/octet-stream")
+		now := time.Now().UTC().Format(http.TimeFormat)
+		w.Header().Set("Date", now)
+		w.Write([]byte("\xca\xfe\x81\x01\x00\x01\r\nWorkaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe\r\nDo you know it is a violation of the protocol you fxxking DNSCrypt-Proxy?!\r\n"))
+		return true
+	}
+	return false
 }
