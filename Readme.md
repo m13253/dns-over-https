@@ -125,7 +125,7 @@ Currently supported features are:
 
 This project is named "DNS-over-HTTPS" because it was written before the IETF DoH project. Although this project is compatible with IETF DoH, the project is not affiliated with IETF.
 
-To avoid confusion, you may also call this project "m13253/DNS-over-HTTPS".
+To avoid confusion, you may also call this project "m13253/DNS-over-HTTPS" or anything you like.
 
 ## License
 
