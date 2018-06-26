@@ -177,7 +177,7 @@ func (s *Server) patchDNSCryptProxyReqID(requestBinary []byte, w http.ResponseWr
 		w.Header().Set("Content-Type", "application/octet-stream")
 		now := time.Now().UTC().Format(http.TimeFormat)
 		w.Header().Set("Date", now)
-		w.Write([]byte("\xca\xfe\x81\x01\x00\x01\r\nWorkaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe\r\nDo you know it is a violation of the protocol you fxxking DNSCrypt-Proxy?!\r\n"))
+		w.Write([]byte("\xca\xfe\x81\x01\x00\x01\r\nWorkaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe\r\nRefer to https://github.com/jedisct1/dnscrypt-proxy/issues/526 for details.\r\n"))
 		return true
 	}
 	return false
