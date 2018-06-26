@@ -174,10 +174,10 @@ func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, re
 func (s *Server) patchDNSCryptProxyReqID(requestBinary []byte, w http.ResponseWriter) bool {
 	if bytes.Equal(requestBinary, []byte("\xca\xfe\x01\x00\x00\x01\x00\x00\x00\x00\x00\x01\x00\x00\x02\x00\x01\x00\x00\x29\x10\x00\x00\x00\x80\x00\x00\x00")) {
 		log.Println("DNSCrypt-Proxy detected. Patching response.")
-		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Type", "application/dns-message")
 		now := time.Now().UTC().Format(http.TimeFormat)
 		w.Header().Set("Date", now)
-		w.Write([]byte("\xca\xfe\x81\x01\x00\x01\r\nWorkaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe\r\nRefer to https://github.com/jedisct1/dnscrypt-proxy/issues/526 for details.\r\n"))
+		w.Write([]byte("\xca\xfe\x81\x05\x00\x01\x00\x01\x00\x00\x00\x00\x00\x00\x02\x00\x01\x00\x00\x10\x00\x01\x00\x00\x00\x00\x00\xa8\xa7\r\nWorkaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe\r\nRefer to https://github.com/jedisct1/dnscrypt-proxy/issues/526 for details."))
 		return true
 	}
 	return false
