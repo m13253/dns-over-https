@@ -48,6 +48,7 @@ type Server struct {
 type DNSRequest struct {
 	request         *dns.Msg
 	response        *dns.Msg
+	transactionID   uint16
 	currentUpstream string
 	isTailored      bool
 	errcode         int

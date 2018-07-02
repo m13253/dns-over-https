@@ -95,6 +95,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 		fmt.Printf("%s - - [%s] \"%s %s %s\"\n", r.RemoteAddr, time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
 	}
 
+	transactionID := msg.Id
 	msg.Id = dns.Id()
 	opt := msg.IsEdns0()
 	if opt == nil {
@@ -137,14 +138,15 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 	}
 
 	return &DNSRequest{
-		request:    msg,
-		isTailored: isTailored,
+		request:       msg,
+		transactionID: transactionID,
+		isTailored:    isTailored,
 	}
 }
 
 func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, req *DNSRequest) {
 	respJSON := jsonDNS.Marshal(req.response)
-	req.response.Id = 0
+	req.response.Id = req.transactionID
 	respBytes, err := req.response.Pack()
 	if err != nil {
 		log.Println(err)
