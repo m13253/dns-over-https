@@ -4,6 +4,14 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 1.3.8
+
+- Workaround a bug causing Firefox 61-62 to reject responses with Content-Type = application/dns-message
+- Workaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe
+- TransactionID is now preserved to maintain compatibility with some clients
+- Turn on `no_cookies` by default according to the IETF draft
+- Update Documentation
+
 ## Version 1.3.7
 
 - Add CloudFlare DNS resolver for Tor to the preset
