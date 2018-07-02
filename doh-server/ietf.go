@@ -31,6 +31,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/m13253/dns-over-https/json-dns"
@@ -62,7 +63,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 		}
 	}
 
-	if s.patchDNSCryptProxyReqID(requestBinary, w) {
+	if s.patchDNSCryptProxyReqID(w, r, requestBinary) {
 		return &DNSRequest{
 			errcode: 444,
 		}
@@ -166,6 +167,9 @@ func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, re
 		}
 		w.Header().Set("Expires", respJSON.EarliestExpires.Format(http.TimeFormat))
 	}
+
+	_ = s.patchFirefoxContentType(w, r)
+
 	if respJSON.Status == dns.RcodeServerFailure {
 		w.WriteHeader(503)
 	}
@@ -173,13 +177,22 @@ func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, re
 }
 
 // Workaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe
-func (s *Server) patchDNSCryptProxyReqID(requestBinary []byte, w http.ResponseWriter) bool {
-	if bytes.Equal(requestBinary, []byte("\xca\xfe\x01\x00\x00\x01\x00\x00\x00\x00\x00\x01\x00\x00\x02\x00\x01\x00\x00\x29\x10\x00\x00\x00\x80\x00\x00\x00")) {
+func (s *Server) patchDNSCryptProxyReqID(w http.ResponseWriter, r *http.Request, requestBinary []byte) bool {
+	if strings.Contains(r.UserAgent(), "dnscrypt-proxy") && bytes.Equal(requestBinary, []byte("\xca\xfe\x01\x00\x00\x01\x00\x00\x00\x00\x00\x01\x00\x00\x02\x00\x01\x00\x00\x29\x10\x00\x00\x00\x80\x00\x00\x00")) {
 		log.Println("DNSCrypt-Proxy detected. Patching response.")
 		w.Header().Set("Content-Type", "application/dns-message")
 		now := time.Now().UTC().Format(http.TimeFormat)
 		w.Header().Set("Date", now)
 		w.Write([]byte("\xca\xfe\x81\x05\x00\x01\x00\x01\x00\x00\x00\x00\x00\x00\x02\x00\x01\x00\x00\x10\x00\x01\x00\x00\x00\x00\x00\xa8\xa7\r\nWorkaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe\r\nRefer to https://github.com/jedisct1/dnscrypt-proxy/issues/526 for details."))
+		return true
+	}
+	return false
+}
+
+// Workaround a bug causing Firefox 61-62 to reject responses with Content-Type = application/dns-message
+func (s *Server) patchFirefoxContentType(w http.ResponseWriter, r *http.Request) bool {
+	if strings.Contains(r.UserAgent(), "Firefox") && strings.Contains(r.Header.Get("Accept"), "application/dns-udpwireformat") && !strings.Contains(r.Header.Get("Accept"), "application/dns-message") {
+		w.Header().Set("Content-Type", "application/dns-udpwireformat")
 		return true
 	}
 	return false
