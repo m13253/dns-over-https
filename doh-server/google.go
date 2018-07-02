@@ -46,7 +46,6 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 			errtext: "Invalid argument value: \"name\"",
 		}
 	}
-	name = strings.ToLower(name)
 	if punycode, err := idna.ToASCII(name); err == nil {
 		name = punycode
 	} else {
