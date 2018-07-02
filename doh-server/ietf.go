@@ -192,6 +192,8 @@ func (s *Server) patchDNSCryptProxyReqID(w http.ResponseWriter, r *http.Request,
 // Workaround a bug causing Firefox 61-62 to reject responses with Content-Type = application/dns-message
 func (s *Server) patchFirefoxContentType(w http.ResponseWriter, r *http.Request) bool {
 	if strings.Contains(r.UserAgent(), "Firefox") && strings.Contains(r.Header.Get("Accept"), "application/dns-udpwireformat") && !strings.Contains(r.Header.Get("Accept"), "application/dns-message") {
+		log.Println("Firefox 61-62 detected. Patching response.")
+		w.Header().Set("Vary", "Accept, User-Agent")
 		w.Header().Set("Content-Type", "application/dns-udpwireformat")
 		return true
 	}
