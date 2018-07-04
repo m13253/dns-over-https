@@ -45,7 +45,7 @@ type Client struct {
 	udpServers           []*dns.Server
 	tcpServers           []*dns.Server
 	bootstrapResolver    *net.Resolver
-	cookieJar            *cookiejar.Jar
+	cookieJar            http.CookieJar
 	httpClientMux        *sync.RWMutex
 	httpTransport        *http.Transport
 	httpClient           *http.Client
