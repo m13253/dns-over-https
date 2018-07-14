@@ -267,6 +267,16 @@ func (c *Client) findClientIP(w dns.ResponseWriter, r *dns.Msg) (ednsClientAddre
 	if c.conf.NoECS {
 		return net.IPv4(0, 0, 0, 0), 0
 	}
+	if ip, _, err := net.ParseCIDR(c.conf.EDNSSubnet); err == nil {
+		if ipv4 := ip.To4(); ipv4 != nil {
+			ednsClientAddress = ipv4.Mask(ipv4Mask24)
+			ednsClientNetmask = 24
+		} else {
+			ednsClientAddress = ip.Mask(ipv6Mask48)
+			ednsClientNetmask = 48
+		}
+		return
+	}
 	if opt := r.IsEdns0(); opt != nil {
 		for _, option := range opt.Option {
 			if option.Option() == dns.EDNS0SUBNET {
