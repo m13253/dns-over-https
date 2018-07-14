@@ -121,6 +121,12 @@ Currently supported features are:
 - [X] EDNS0 large UDP packet (4 KiB by default)
 - [X] EDNS0-Client-Subnet (/24 for IPv4, /48 for IPv6 by default)
 
+## The name of the project
+
+This project is named "DNS-over-HTTPS" because it was written before the IETF DoH project. Although this project is compatible with IETF DoH, the project is not affiliated with IETF.
+
+To avoid confusion, you may also call this project "m13253/DNS-over-HTTPS" or anything you like.
+
 ## License
 
 DNS-over-HTTPS is licensed under the [MIT License](LICENSE). You are encouraged

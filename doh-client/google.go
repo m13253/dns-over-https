@@ -51,8 +51,7 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 		}
 	}
 	question := &r.Question[0]
-	// knot-resolver scrambles capitalization, I think it is unfriendly to cache
-	questionName := strings.ToLower(question.Name)
+	questionName := question.Name
 	questionType := ""
 	if qtype, ok := dns.TypeToString[question.Qtype]; ok {
 		questionType = qtype
