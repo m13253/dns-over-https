@@ -277,18 +277,25 @@ func (c *Client) findClientIP(w dns.ResponseWriter, r *dns.Msg) (ednsClientAddre
 			}
 		}
 	}
-	remoteAddr, err := net.ResolveUDPAddr("udp", w.RemoteAddr().String())
+	var ip net.IP
+	var err error
+	ip, _, err = net.ParseCIDR(c.conf.EDNSSubnet)
 	if err != nil {
-		return
-	}
-	if ip := remoteAddr.IP; jsonDNS.IsGlobalIP(ip) {
-		if ipv4 := ip.To4(); ipv4 != nil {
-			ednsClientAddress = ipv4.Mask(ipv4Mask24)
-			ednsClientNetmask = 24
-		} else {
-			ednsClientAddress = ip.Mask(ipv6Mask48)
-			ednsClientNetmask = 48
+		remoteAddr, err := net.ResolveUDPAddr("udp", w.RemoteAddr().String())
+		if err != nil {
+			return
 		}
+		ip = remoteAddr.IP
+		if !jsonDNS.IsGlobalIP(ip) {
+			return
+		}
+	}
+	if ipv4 := ip.To4(); ipv4 != nil {
+		ednsClientAddress = ipv4.Mask(ipv4Mask24)
+		ednsClientNetmask = 24
+	} else {
+		ednsClientAddress = ip.Mask(ipv6Mask48)
+		ednsClientNetmask = 48
 	}
 	return
 }
