@@ -126,7 +126,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 				ednsClientNetmask = 24
 			} else {
 				ednsClientFamily = 2
-				ednsClientNetmask = 48
+				ednsClientNetmask = 56
 			}
 			edns0Subnet = new(dns.EDNS0_SUBNET)
 			edns0Subnet.Code = dns.EDNS0SUBNET

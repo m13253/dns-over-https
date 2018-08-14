@@ -119,7 +119,7 @@ func Unmarshal(msg *dns.Msg, resp *Response, udpSize uint16, ednsClientNetmask u
 			if ednsClientFamily == 1 {
 				ednsClientNetmask = 24
 			} else {
-				ednsClientNetmask = 48
+				ednsClientNetmask = 56
 			}
 		}
 		edns0Subnet := new(dns.EDNS0_SUBNET)

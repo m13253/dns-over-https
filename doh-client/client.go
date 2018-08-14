@@ -259,7 +259,7 @@ func (c *Client) tcpHandlerFunc(w dns.ResponseWriter, r *dns.Msg) {
 
 var (
 	ipv4Mask24 = net.IPMask{255, 255, 255, 0}
-	ipv6Mask48 = net.CIDRMask(48, 128)
+	ipv6Mask56 = net.CIDRMask(56, 128)
 )
 
 func (c *Client) findClientIP(w dns.ResponseWriter, r *dns.Msg) (ednsClientAddress net.IP, ednsClientNetmask uint8) {
@@ -286,8 +286,8 @@ func (c *Client) findClientIP(w dns.ResponseWriter, r *dns.Msg) (ednsClientAddre
 			ednsClientAddress = ipv4.Mask(ipv4Mask24)
 			ednsClientNetmask = 24
 		} else {
-			ednsClientAddress = ip.Mask(ipv6Mask48)
-			ednsClientNetmask = 48
+			ednsClientAddress = ip.Mask(ipv6Mask56)
+			ednsClientNetmask = 56
 		}
 	}
 	return

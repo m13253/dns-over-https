@@ -104,7 +104,7 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 				ednsClientNetmask = 24
 			} else {
 				ednsClientFamily = 2
-				ednsClientNetmask = 48
+				ednsClientNetmask = 56
 			}
 		} else {
 			ednsClientAddress = net.ParseIP(ednsClientSubnet[:slash])
@@ -139,7 +139,7 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 			ednsClientNetmask = 24
 		} else {
 			ednsClientFamily = 2
-			ednsClientNetmask = 48
+			ednsClientNetmask = 56
 		}
 	}
 
