@@ -4,6 +4,13 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 1.3.9
+
+- Fix client crash with `no_cookies = true`
+- Add 5380 as an additional default doh-client port
+- If `$GOROOT` is defined, Makefile now respects the value for the convenience of Debian/Ubuntu users
+- Change the ECS prefix length from /48 to /56 for IPv6, per RFC 7871
+
 ## Version 1.3.8
 
 - Workaround a bug causing Firefox 61-62 to reject responses with Content-Type = application/dns-message
