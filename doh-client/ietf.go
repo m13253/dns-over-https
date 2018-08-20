@@ -126,8 +126,7 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 
 	numServers := len(c.conf.UpstreamIETF)
 	upstream := c.conf.UpstreamIETF[rand.Intn(numServers)]
-	requestURL := fmt.Sprintf("%s?ct=application/dns-udpwireformat&dns=%s", upstream, requestBase64)
-	//requestURL := fmt.Sprintf("%s?ct=application/dns-message&dns=%s", upstream, requestBase64)
+	requestURL := fmt.Sprintf("%s?ct=application/dns-message&dns=%s", upstream, requestBase64)
 
 	var req *http.Request
 	if len(requestURL) < 2048 {
