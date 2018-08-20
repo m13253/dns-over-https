@@ -4,6 +4,10 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 1.3.10
+
+- Enable application/dns-message (draft-13) by default, since Google has finally supported it
+
 ## Version 1.3.9
 
 - Fix client crash with `no_cookies = true`
