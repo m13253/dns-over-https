@@ -34,10 +34,11 @@ type config struct {
 	Cert     string   `toml:"cert"`
 	Key      string   `toml:"key"`
 	Path     string   `toml:"path"`
-	Upstream []string `toml:"upstream"`
+	SkipIpv6 bool	  `toml:"skipipv6"`
 	Timeout  uint     `toml:"timeout"`
 	Tries    uint     `toml:"tries"`
 	TCPOnly  bool     `toml:"tcp_only"`
+	Upstream []string `toml:"upstream"`
 	Verbose  bool     `toml:"verbose"`
 }
 
