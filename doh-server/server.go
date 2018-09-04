@@ -70,6 +70,7 @@ func NewServer(conf *config) (s *Server) {
 		servemux: http.NewServeMux(),
 	}
 	s.servemux.HandleFunc(conf.Path, s.handlerFunc)
+	fmt.Printf("Listening on %s...\n", conf.Listen)
 	return
 }
 

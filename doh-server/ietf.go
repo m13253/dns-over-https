@@ -93,6 +93,14 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 		} else {
 			questionType = strconv.Itoa(int(question.Qtype))
 		}
+		if s.conf.SkipIpv6 && questionType == "AAAA" {
+			fmt.Printf("Skippig type: %s \n", questionType)
+			return &DNSRequest{
+				errcode: 400,
+				errtext: "no IPv6",
+			}
+
+		}
 		fmt.Printf("%s - - [%s] \"%s %s %s\"\n", r.RemoteAddr, time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
 	}
 
