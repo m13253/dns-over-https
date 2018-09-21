@@ -6,7 +6,7 @@ PREFIX = /usr/local
 all: doh-logger
 
 doh-logger: doh-logger.swift
-	$(SWIFTC) -o $@ -O $<
+	$(SWIFTC) -o $@ -O -static-stdlib $<
 
 clean:
 	rm -f doh-logger
