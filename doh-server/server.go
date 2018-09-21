@@ -112,6 +112,13 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		const maxMemory = 32 << 20 // 32 MB
 		r.ParseMultipartForm(maxMemory)
 	}
+
+	for _, header := range s.conf.DebugHTTPHeaders {
+		if value:= r.Header.Get(header); value != "" {
+			log.Printf("%s: %s\n", header, value)
+		}
+	}
+
 	contentType := r.Header.Get("Content-Type")
 	if ct := r.FormValue("ct"); ct != "" {
 		contentType = ct

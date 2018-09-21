@@ -30,15 +30,16 @@ import (
 )
 
 type config struct {
-	Listen         []string `toml:"listen"`
-	UpstreamGoogle []string `toml:"upstream_google"`
-	UpstreamIETF   []string `toml:"upstream_ietf"`
-	Bootstrap      []string `toml:"bootstrap"`
-	Timeout        uint     `toml:"timeout"`
-	NoCookies      bool     `toml:"no_cookies"`
-	NoECS          bool     `toml:"no_ecs"`
-	NoIPv6         bool     `toml:"no_ipv6"`
-	Verbose        bool     `toml:"verbose"`
+	Listen           []string `toml:"listen"`
+	UpstreamGoogle   []string `toml:"upstream_google"`
+	UpstreamIETF     []string `toml:"upstream_ietf"`
+	Bootstrap        []string `toml:"bootstrap"`
+	Timeout          uint     `toml:"timeout"`
+	NoCookies        bool     `toml:"no_cookies"`
+	NoECS            bool     `toml:"no_ecs"`
+	NoIPv6           bool     `toml:"no_ipv6"`
+	Verbose          bool     `toml:"verbose"`
+	DebugHTTPHeaders []string `toml:"debug_http_headers"`
 }
 
 func loadConfig(path string) (*config, error) {

@@ -30,15 +30,16 @@ import (
 )
 
 type config struct {
-	Listen   []string `toml:"listen"`
-	Cert     string   `toml:"cert"`
-	Key      string   `toml:"key"`
-	Path     string   `toml:"path"`
-	Upstream []string `toml:"upstream"`
-	Timeout  uint     `toml:"timeout"`
-	Tries    uint     `toml:"tries"`
-	TCPOnly  bool     `toml:"tcp_only"`
-	Verbose  bool     `toml:"verbose"`
+	Listen           []string `toml:"listen"`
+	Cert             string   `toml:"cert"`
+	Key              string   `toml:"key"`
+	Path             string   `toml:"path"`
+	Upstream         []string `toml:"upstream"`
+	Timeout          uint     `toml:"timeout"`
+	Tries            uint     `toml:"tries"`
+	TCPOnly          bool     `toml:"tcp_only"`
+	Verbose          bool     `toml:"verbose"`
+	DebugHTTPHeaders []string `toml:"debug_http_headers"`
 }
 
 func loadConfig(path string) (*config, error) {
