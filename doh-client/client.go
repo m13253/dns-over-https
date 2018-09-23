@@ -114,7 +114,10 @@ func NewClient(conf *config) (c *Client, err error) {
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		c.cookieJar = nil;
 	}
+
 	c.httpClientMux = new(sync.RWMutex)
 	err = c.newHTTPClient()
 	if err != nil {
