@@ -223,9 +223,11 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		panic("Unknown request Content-Type")
 	}
 
-	for _, header := range c.conf.DebugHTTPHeaders {
-		if value:= req.response.Header.Get(header); value != "" {
-			log.Printf("%s: %s\n", header, value)
+	if req.response != nil {
+		for _, header := range c.conf.DebugHTTPHeaders {
+			if value := req.response.Header.Get(header); value != "" {
+				log.Printf("%s: %s\n", header, value)
+			}
 		}
 	}
 	if req.err != nil {
