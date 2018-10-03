@@ -8,7 +8,7 @@ and [draft-ietf-doh-dns-over-https](https://github.com/dohwg/draft-ietf-doh-dns-
 
 [Tutorial to setup your own DNS-over-HTTPS (DoH) server](https://www.aaflalo.me/2018/10/tutorial-setup-dns-over-https-server/). (Thanks to Antoine Aflalo)
 
-## Easy start
+## Installing
 
 Install [Go](https://golang.org), at least version 1.9.
 
