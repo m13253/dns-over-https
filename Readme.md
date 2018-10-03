@@ -4,6 +4,10 @@ DNS-over-HTTPS
 Client and server software to query DNS over HTTPS, using [Google DNS-over-HTTPS protocol](https://developers.google.com/speed/public-dns/docs/dns-over-https)
 and [draft-ietf-doh-dns-over-https](https://github.com/dohwg/draft-ietf-doh-dns-over-https).
 
+## Guide
+
+[Tutorial to setup your own DNS-over-HTTPS (DoH) server](https://www.aaflalo.me/2018/10/tutorial-setup-dns-over-https-server/). (Thanks to Antoine Aflalo)
+
 ## Easy start
 
 Install [Go](https://golang.org), at least version 1.9.
