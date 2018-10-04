@@ -10,7 +10,7 @@ and [draft-ietf-doh-dns-over-https](https://github.com/dohwg/draft-ietf-doh-dns-
 
 ## Installing
 
-Install [Go](https://golang.org), at least version 1.9.
+Install [Go](https://golang.org), at least version 1.10.
 
 (Note for Debian/Ubuntu users: You need to set `$GOROOT` if you could not get your new version of Go selected by the Makefile.)
 
