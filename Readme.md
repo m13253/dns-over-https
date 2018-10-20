@@ -2,7 +2,7 @@ DNS-over-HTTPS
 ==============
 
 Client and server software to query DNS over HTTPS, using [Google DNS-over-HTTPS protocol](https://developers.google.com/speed/public-dns/docs/dns-over-https)
-and [IETF RFC 8484](https://www.rfc-editor.org/rfc/rfc8484.txt).
+and [IETF DNS-over-HTTPS (RFC 8484)](https://www.rfc-editor.org/rfc/rfc8484.txt).
 
 ## Guide
 
@@ -115,7 +115,7 @@ API.
 
 ### IETF DNS-over-HTTPS Protocol
 
-DNS-over-HTTPS uses a protocol compatible to [IETF RFC 8484](https://www.rfc-editor.org/rfc/rfc8484.txt).
+DNS-over-HTTPS uses a protocol compatible to [IETF DNS-over-HTTPS (RFC 8484)](https://www.rfc-editor.org/rfc/rfc8484.txt).
 
 ### Supported features
 
