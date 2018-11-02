@@ -71,9 +71,9 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 
 	cdStr := r.FormValue("cd")
 	cd := false
-	if cdStr == "1" || cdStr == "true" {
+	if cdStr == "1" || strings.EqualFold(cdStr, "true") {
 		cd = true
-	} else if cdStr == "0" || cdStr == "false" || cdStr == "" {
+	} else if cdStr == "0" || strings.EqualFold(cdStr, "false") || cdStr == "" {
 	} else {
 		return &DNSRequest{
 			errcode: 400,
