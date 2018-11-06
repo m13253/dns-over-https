@@ -224,6 +224,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	}
 
 	if req.response != nil {
+		defer req.response.Body.Close()
 		for _, header := range c.conf.DebugHTTPHeaders {
 			if value := req.response.Header.Get(header); value != "" {
 				log.Printf("%s: %s\n", header, value)
