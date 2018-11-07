@@ -90,7 +90,7 @@ func Marshal(msg *dns.Msg) *Response {
 					} else if ipv4 := clientAddress.To4(); ipv4 != nil {
 						clientAddress = ipv4
 					}
-					resp.EdnsClientSubnet = clientAddress.String() + "/" + strconv.Itoa(int(edns0.SourceScope))
+					resp.EdnsClientSubnet = clientAddress.String() + "/" + strconv.FormatUint(uint64(edns0.SourceScope), 10)
 				}
 			}
 			continue

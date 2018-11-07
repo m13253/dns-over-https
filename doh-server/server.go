@@ -245,7 +245,7 @@ func (s *Server) doDNSQuery(req *DNSRequest) (resp *DNSRequest, err error) {
 		} else {
 			req.response, _, err = s.tcpClient.Exchange(req.request, req.currentUpstream)
 		}
-		if err == nil {
+		if err == nil || err == dns.ErrTruncated {
 			return req, nil
 		}
 		log.Printf("DNS error from upstream %s: %s\n", req.currentUpstream, err.Error())

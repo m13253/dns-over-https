@@ -25,11 +25,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -37,11 +39,15 @@ import (
 	"github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 	"golang.org/x/net/http2"
+	"golang.org/x/net/idna"
 )
 
 type Client struct {
 	conf                 *config
 	bootstrap            []string
+	passthrough          []string
+	udpClient            *dns.Client
+	tcpClient            *dns.Client
 	udpServers           []*dns.Server
 	tcpServers           []*dns.Server
 	bootstrapResolver    *net.Resolver
@@ -69,6 +75,15 @@ func NewClient(conf *config) (c *Client, err error) {
 
 	udpHandler := dns.HandlerFunc(c.udpHandlerFunc)
 	tcpHandler := dns.HandlerFunc(c.tcpHandlerFunc)
+	c.udpClient = &dns.Client{
+		Net:     "udp",
+		UDPSize: dns.DefaultMsgSize,
+		Timeout: time.Duration(conf.Timeout) * time.Second,
+	}
+	c.tcpClient = &dns.Client{
+		Net:     "tcp",
+		Timeout: time.Duration(conf.Timeout) * time.Second,
+	}
 	for _, addr := range conf.Listen {
 		c.udpServers = append(c.udpServers, &dns.Server{
 			Addr:    addr,
@@ -105,6 +120,15 @@ func NewClient(conf *config) (c *Client, err error) {
 				return conn, err
 			},
 		}
+		if len(conf.Passthrough) != 0 {
+			c.passthrough = make([]string, len(conf.Passthrough))
+			for i, passthrough := range conf.Passthrough {
+				if punycode, err := idna.ToASCII(passthrough); err != nil {
+					passthrough = punycode
+				}
+				c.passthrough[i] = "." + strings.ToLower(strings.Trim(passthrough, ".")) + "."
+			}
+		}
 	}
 	// Most CDNs require Cookie support to prevent DDoS attack.
 	// Disabling Cookie does not effectively prevent tracking,
@@ -115,7 +139,7 @@ func NewClient(conf *config) (c *Client, err error) {
 			return nil, err
 		}
 	} else {
-		c.cookieJar = nil;
+		c.cookieJar = nil
 	}
 
 	c.httpClientMux = new(sync.RWMutex)
@@ -196,6 +220,65 @@ func (c *Client) Start() error {
 func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	if r.Response == true {
 		log.Println("Received a response packet")
+		return
+	}
+
+	if len(r.Question) != 1 {
+		log.Println("Number of questions is not 1")
+		reply := jsonDNS.PrepareReply(r)
+		reply.Rcode = dns.RcodeFormatError
+		w.WriteMsg(reply)
+		return
+	}
+	question := &r.Question[0]
+	questionName := question.Name
+	questionClass := ""
+	if qclass, ok := dns.ClassToString[question.Qclass]; ok {
+		questionClass = qclass
+	} else {
+		questionClass = strconv.FormatUint(uint64(question.Qclass), 10)
+	}
+	questionType := ""
+	if qtype, ok := dns.TypeToString[question.Qtype]; ok {
+		questionType = qtype
+	} else {
+		questionType = strconv.FormatUint(uint64(question.Qtype), 10)
+	}
+	if c.conf.Verbose {
+		fmt.Printf("%s - - [%s] \"%s %s %s\"\n", w.RemoteAddr(), time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
+	}
+
+	shouldPassthrough := false
+	passthroughQuestionName := questionName
+	if punycode, err := idna.ToASCII(passthroughQuestionName); err != nil {
+		passthroughQuestionName = punycode
+	}
+	passthroughQuestionName = "." + strings.ToLower(strings.Trim(passthroughQuestionName, ".")) + "."
+	for _, passthrough := range c.passthrough {
+		if strings.HasSuffix(passthroughQuestionName, passthrough) {
+			shouldPassthrough = true
+			break
+		}
+	}
+	if shouldPassthrough {
+		numServers := len(c.bootstrap)
+		upstream := c.bootstrap[rand.Intn(numServers)]
+		log.Printf("Request %s %s %s is passed through %s.\n", questionName, questionClass, questionType, upstream)
+		var reply *dns.Msg
+		var err error
+		if !isTCP {
+			reply, _, err = c.udpClient.Exchange(r, upstream)
+		} else {
+			reply, _, err = c.tcpClient.Exchange(r, upstream)
+		}
+		if err == nil || err == dns.ErrTruncated {
+			w.WriteMsg(reply)
+			return
+		}
+		log.Println(err)
+		reply = jsonDNS.PrepareReply(r)
+		reply.Rcode = dns.RcodeServerFailure
+		w.WriteMsg(reply)
 		return
 	}
 

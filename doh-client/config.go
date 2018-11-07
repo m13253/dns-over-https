@@ -34,6 +34,7 @@ type config struct {
 	UpstreamGoogle   []string `toml:"upstream_google"`
 	UpstreamIETF     []string `toml:"upstream_ietf"`
 	Bootstrap        []string `toml:"bootstrap"`
+	Passthrough      []string `toml:"passthrough"`
 	Timeout          uint     `toml:"timeout"`
 	NoCookies        bool     `toml:"no_cookies"`
 	NoECS            bool     `toml:"no_ecs"`

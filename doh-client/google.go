@@ -33,34 +33,28 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
 func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool) *DNSRequest {
-	reply := jsonDNS.PrepareReply(r)
-
-	if len(r.Question) != 1 {
-		log.Println("Number of questions is not 1")
+	question := &r.Question[0]
+	questionName := question.Name
+	questionClass := question.Qclass
+	if questionClass != dns.ClassINET {
+		reply := jsonDNS.PrepareReply(r)
 		reply.Rcode = dns.RcodeFormatError
 		w.WriteMsg(reply)
 		return &DNSRequest{
 			err: &dns.Error{},
 		}
 	}
-	question := &r.Question[0]
-	questionName := question.Name
 	questionType := ""
 	if qtype, ok := dns.TypeToString[question.Qtype]; ok {
 		questionType = qtype
 	} else {
-		questionType = strconv.Itoa(int(question.Qtype))
-	}
-
-	if c.conf.Verbose {
-		fmt.Printf("%s - - [%s] \"%s IN %s\"\n", w.RemoteAddr(), time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionType)
+		questionType = strconv.FormatUint(uint64(question.Qtype), 10)
 	}
 
 	numServers := len(c.conf.UpstreamGoogle)
@@ -84,6 +78,7 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 	req, err := http.NewRequest("GET", requestURL, nil)
 	if err != nil {
 		log.Println(err)
+		reply := jsonDNS.PrepareReply(r)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
 		return &DNSRequest{
@@ -97,6 +92,7 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 	c.httpClientMux.RUnlock()
 	if err != nil {
 		log.Println(err)
+		reply := jsonDNS.PrepareReply(r)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
 		err1 := c.newHTTPClient()
@@ -110,7 +106,7 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 
 	return &DNSRequest{
 		response:          resp,
-		reply:             reply,
+		reply:             jsonDNS.PrepareReply(r),
 		udpSize:           udpSize,
 		ednsClientAddress: ednsClientAddress,
 		ednsClientNetmask: ednsClientNetmask,

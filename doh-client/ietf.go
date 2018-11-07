@@ -32,7 +32,6 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -41,31 +40,6 @@ import (
 )
 
 func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP bool) *DNSRequest {
-	reply := jsonDNS.PrepareReply(r)
-
-	if len(r.Question) != 1 {
-		log.Println("Number of questions is not 1")
-		reply.Rcode = dns.RcodeFormatError
-		w.WriteMsg(reply)
-		return &DNSRequest{
-			err: &dns.Error{},
-		}
-	}
-
-	question := &r.Question[0]
-	questionName := question.Name
-	questionType := ""
-	if qtype, ok := dns.TypeToString[question.Qtype]; ok {
-		questionType = qtype
-	} else {
-		questionType = strconv.Itoa(int(question.Qtype))
-	}
-
-	if c.conf.Verbose {
-		fmt.Printf("%s - - [%s] \"%s IN %s\"\n", w.RemoteAddr(), time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionType)
-	}
-
-	question.Name = questionName
 	opt := r.IsEdns0()
 	udpSize := uint16(512)
 	if opt == nil {
@@ -115,6 +89,7 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 	requestBinary, err := r.Pack()
 	if err != nil {
 		log.Println(err)
+		reply := jsonDNS.PrepareReply(r)
 		reply.Rcode = dns.RcodeFormatError
 		w.WriteMsg(reply)
 		return &DNSRequest{
@@ -156,6 +131,7 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 	c.httpClientMux.RUnlock()
 	if err != nil {
 		log.Println(err)
+		reply := jsonDNS.PrepareReply(r)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
 		err1 := c.newHTTPClient()
@@ -169,7 +145,7 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 
 	return &DNSRequest{
 		response:          resp,
-		reply:             reply,
+		reply:             jsonDNS.PrepareReply(r),
 		udpSize:           udpSize,
 		ednsClientAddress: ednsClientAddress,
 		ednsClientNetmask: ednsClientNetmask,
@@ -220,7 +196,7 @@ func (c *Client) parseResponseIETF(w dns.ResponseWriter, r *dns.Msg, isTCP bool,
 
 	fullReply := new(dns.Msg)
 	err = fullReply.Unpack(body)
-	if err != nil {
+	if err != nil && err != dns.ErrTruncated {
 		log.Println(err)
 		req.reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(req.reply)

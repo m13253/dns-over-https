@@ -85,13 +85,13 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 		if qclass, ok := dns.ClassToString[question.Qclass]; ok {
 			questionClass = qclass
 		} else {
-			questionClass = strconv.Itoa(int(question.Qclass))
+			questionClass = strconv.FormatUint(uint64(question.Qclass), 10)
 		}
 		questionType := ""
 		if qtype, ok := dns.TypeToString[question.Qtype]; ok {
 			questionType = qtype
 		} else {
-			questionType = strconv.Itoa(int(question.Qtype))
+			questionType = strconv.FormatUint(uint64(question.Qtype), 10)
 		}
 		fmt.Printf("%s - - [%s] \"%s %s %s\"\n", r.RemoteAddr, time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
 	}
@@ -165,9 +165,9 @@ func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, re
 
 	if respJSON.HaveTTL {
 		if req.isTailored {
-			w.Header().Set("Cache-Control", "private, max-age="+strconv.Itoa(int(respJSON.LeastTTL)))
+			w.Header().Set("Cache-Control", "private, max-age="+strconv.FormatUint(uint64(respJSON.LeastTTL), 10))
 		} else {
-			w.Header().Set("Cache-Control", "public, max-age="+strconv.Itoa(int(respJSON.LeastTTL)))
+			w.Header().Set("Cache-Control", "public, max-age="+strconv.FormatUint(uint64(respJSON.LeastTTL), 10))
 		}
 		w.Header().Set("Expires", respJSON.EarliestExpires.Format(http.TimeFormat))
 	}
