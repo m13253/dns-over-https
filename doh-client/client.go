@@ -263,7 +263,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	if shouldPassthrough {
 		numServers := len(c.bootstrap)
 		upstream := c.bootstrap[rand.Intn(numServers)]
-		log.Printf("Request %s %s %s is passed through %s.\n", questionName, questionClass, questionType, upstream)
+		log.Printf("Request \"%s %s %s\" is passed through %s.\n", questionName, questionClass, questionType, upstream)
 		var reply *dns.Msg
 		var err error
 		if !isTCP {
