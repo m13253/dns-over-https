@@ -90,11 +90,11 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 	req.Header.Set("Accept", "application/json, application/dns-message, application/dns-udpwireformat")
 	req.Header.Set("User-Agent", USER_AGENT)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.conf.Timeout)*time.Second)
-	defer cancel()
 	req = req.WithContext(ctx)
 	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)
 	c.httpClientMux.RUnlock()
+	cancel()
 	if err != nil {
 		log.Println(err)
 		reply := jsonDNS.PrepareReply(r)

@@ -128,11 +128,11 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 	req.Header.Set("Accept", "application/dns-message, application/dns-udpwireformat, application/json")
 	req.Header.Set("User-Agent", USER_AGENT)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.conf.Timeout)*time.Second)
-	defer cancel()
 	req = req.WithContext(ctx)
 	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)
 	c.httpClientMux.RUnlock()
+	cancel()
 	if err != nil {
 		log.Println(err)
 		reply := jsonDNS.PrepareReply(r)
