@@ -46,7 +46,7 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 	questionClass := question.Qclass
 	if questionClass != dns.ClassINET {
 		reply := jsonDNS.PrepareReply(r)
-		reply.Rcode = dns.RcodeFormatError
+		reply.Rcode = dns.RcodeRefused
 		w.WriteMsg(reply)
 		return &DNSRequest{
 			err: &dns.Error{},
