@@ -108,8 +108,10 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 	if len(requestURL) < 2048 {
 		req, err = http.NewRequest("GET", requestURL, nil)
 		if err != nil {
-			// Do not respond, silently fail to prevent caching of SERVFAIL
 			log.Println(err)
+			reply := jsonDNS.PrepareReply(r)
+			reply.Rcode = dns.RcodeServerFailure
+			w.WriteMsg(reply)
 			return &DNSRequest{
 				err: err,
 			}
@@ -117,8 +119,10 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 	} else {
 		req, err = http.NewRequest("POST", upstream, bytes.NewReader(requestBinary))
 		if err != nil {
-			// Do not respond, silently fail to prevent caching of SERVFAIL
 			log.Println(err)
+			reply := jsonDNS.PrepareReply(r)
+			reply.Rcode = dns.RcodeServerFailure
+			w.WriteMsg(reply)
 			return &DNSRequest{
 				err: err,
 			}
@@ -131,6 +135,13 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)
 	c.httpClientMux.RUnlock()
+	if err == context.DeadlineExceeded {
+		// Do not respond, silently fail to prevent caching of SERVFAIL
+		log.Println(err)
+		return &DNSRequest{
+			err: err,
+		}
+	}
 	if err != nil {
 		log.Println(err)
 		reply := jsonDNS.PrepareReply(r)

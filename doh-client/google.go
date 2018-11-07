@@ -92,6 +92,13 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)
 	c.httpClientMux.RUnlock()
+	if err == context.DeadlineExceeded {
+		// Do not respond, silently fail to prevent caching of SERVFAIL
+		log.Println(err)
+		return &DNSRequest{
+			err: err,
+		}
+	}
 	if err != nil {
 		log.Println(err)
 		reply := jsonDNS.PrepareReply(r)
