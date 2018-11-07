@@ -25,6 +25,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
@@ -38,7 +39,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRequest {
+func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r *http.Request) *DNSRequest {
 	requestBase64 := r.FormValue("dns")
 	requestBinary, err := base64.RawURLEncoding.DecodeString(requestBase64)
 	if err != nil {
@@ -145,7 +146,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 	}
 }
 
-func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, req *DNSRequest) {
+func (s *Server) generateResponseIETF(ctx context.Context, w http.ResponseWriter, r *http.Request, req *DNSRequest) {
 	respJSON := jsonDNS.Marshal(req.response)
 	req.response.Id = req.transactionID
 	respBytes, err := req.response.Pack()

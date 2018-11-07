@@ -217,6 +217,9 @@ func (c *Client) Start() error {
 }
 
 func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.conf.Timeout)*time.Second)
+	defer cancel()
+
 	if r.Response == true {
 		log.Println("Received a response packet")
 		return
@@ -298,9 +301,9 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 
 	var req *DNSRequest
 	if requestType == "application/dns-json" {
-		req = c.generateRequestGoogle(w, r, isTCP)
+		req = c.generateRequestGoogle(ctx, w, r, isTCP)
 	} else if requestType == "application/dns-message" {
-		req = c.generateRequestIETF(w, r, isTCP)
+		req = c.generateRequestIETF(ctx, w, r, isTCP)
 	} else {
 		panic("Unknown request Content-Type")
 	}
@@ -334,9 +337,9 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	}
 
 	if contentType == "application/json" {
-		c.parseResponseGoogle(w, r, isTCP, req)
+		c.parseResponseGoogle(ctx, w, r, isTCP, req)
 	} else if contentType == "application/dns-message" {
-		c.parseResponseIETF(w, r, isTCP, req)
+		c.parseResponseIETF(ctx, w, r, isTCP, req)
 	} else {
 		panic("Unknown response Content-Type")
 	}

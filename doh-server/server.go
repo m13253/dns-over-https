@@ -24,6 +24,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math/rand"
@@ -105,6 +106,8 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	w.Header().Set("Server", USER_AGENT)
 	w.Header().Set("X-Powered-By", USER_AGENT)
 
@@ -158,11 +161,11 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 
 	var req *DNSRequest
 	if contentType == "application/dns-json" {
-		req = s.parseRequestGoogle(w, r)
+		req = s.parseRequestGoogle(ctx, w, r)
 	} else if contentType == "application/dns-message" {
-		req = s.parseRequestIETF(w, r)
+		req = s.parseRequestIETF(ctx, w, r)
 	} else if contentType == "application/dns-udpwireformat" {
-		req = s.parseRequestIETF(w, r)
+		req = s.parseRequestIETF(ctx, w, r)
 	} else {
 		jsonDNS.FormatError(w, fmt.Sprintf("Invalid argument value: \"ct\" = %q", contentType), 415)
 		return
@@ -178,16 +181,16 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	req = s.patchRootRD(req)
 
 	var err error
-	req, err = s.doDNSQuery(req)
+	req, err = s.doDNSQuery(ctx, req)
 	if err != nil {
 		jsonDNS.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 503)
 		return
 	}
 
 	if responseType == "application/json" {
-		s.generateResponseGoogle(w, r, req)
+		s.generateResponseGoogle(ctx, w, r, req)
 	} else if responseType == "application/dns-message" {
-		s.generateResponseIETF(w, r, req)
+		s.generateResponseIETF(ctx, w, r, req)
 	} else {
 		panic("Unknown response Content-Type")
 	}
@@ -232,7 +235,8 @@ func (s *Server) patchRootRD(req *DNSRequest) *DNSRequest {
 	return req
 }
 
-func (s *Server) doDNSQuery(req *DNSRequest) (resp *DNSRequest, err error) {
+func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (resp *DNSRequest, err error) {
+	// TODO(m13253): Make ctx work. Waiting for a patch for ExchangeContext from miekg/dns.
 	numServers := len(s.conf.Upstream)
 	for i := uint(0); i < s.conf.Tries; i++ {
 		req.currentUpstream = s.conf.Upstream[rand.Intn(numServers)]

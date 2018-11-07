@@ -24,6 +24,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -38,7 +39,7 @@ import (
 	"golang.org/x/net/idna"
 )
 
-func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNSRequest {
+func (s *Server) parseRequestGoogle(ctx context.Context, w http.ResponseWriter, r *http.Request) *DNSRequest {
 	name := r.FormValue("name")
 	if name == "" {
 		return &DNSRequest{
@@ -168,7 +169,7 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 	}
 }
 
-func (s *Server) generateResponseGoogle(w http.ResponseWriter, r *http.Request, req *DNSRequest) {
+func (s *Server) generateResponseGoogle(ctx context.Context, w http.ResponseWriter, r *http.Request, req *DNSRequest) {
 	respJSON := jsonDNS.Marshal(req.response)
 	respStr, err := json.Marshal(respJSON)
 	if err != nil {

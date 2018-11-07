@@ -40,7 +40,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP bool) *DNSRequest {
+func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool) *DNSRequest {
 	opt := r.IsEdns0()
 	udpSize := uint16(512)
 	if opt == nil {
@@ -127,12 +127,10 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 	}
 	req.Header.Set("Accept", "application/dns-message, application/dns-udpwireformat, application/json")
 	req.Header.Set("User-Agent", USER_AGENT)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.conf.Timeout)*time.Second)
 	req = req.WithContext(ctx)
 	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)
 	c.httpClientMux.RUnlock()
-	cancel()
 	if err != nil {
 		log.Println(err)
 		reply := jsonDNS.PrepareReply(r)
@@ -153,7 +151,7 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 	}
 }
 
-func (c *Client) parseResponseIETF(w dns.ResponseWriter, r *dns.Msg, isTCP bool, req *DNSRequest) {
+func (c *Client) parseResponseIETF(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool, req *DNSRequest) {
 	if req.response.StatusCode != 200 {
 		log.Printf("HTTP error from upstream %s: %s\n", req.currentUpstream, req.response.Status)
 		req.reply.Rcode = dns.RcodeServerFailure

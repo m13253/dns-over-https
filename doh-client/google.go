@@ -34,13 +34,12 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
-func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool) *DNSRequest {
+func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool) *DNSRequest {
 	question := &r.Question[0]
 	questionName := question.Name
 	questionClass := question.Qclass
@@ -89,12 +88,10 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 	}
 	req.Header.Set("Accept", "application/json, application/dns-message, application/dns-udpwireformat")
 	req.Header.Set("User-Agent", USER_AGENT)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.conf.Timeout)*time.Second)
 	req = req.WithContext(ctx)
 	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)
 	c.httpClientMux.RUnlock()
-	cancel()
 	if err != nil {
 		log.Println(err)
 		reply := jsonDNS.PrepareReply(r)
@@ -115,7 +112,7 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 	}
 }
 
-func (c *Client) parseResponseGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP bool, req *DNSRequest) {
+func (c *Client) parseResponseGoogle(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool, req *DNSRequest) {
 	if req.response.StatusCode != 200 {
 		log.Printf("HTTP error from upstream %s: %s\n", req.currentUpstream, req.response.Status)
 		req.reply.Rcode = dns.RcodeServerFailure
