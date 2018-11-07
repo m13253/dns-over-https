@@ -24,6 +24,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -33,6 +34,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
@@ -87,6 +89,9 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 	}
 	req.Header.Set("Accept", "application/json, application/dns-message, application/dns-udpwireformat")
 	req.Header.Set("User-Agent", USER_AGENT)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.conf.Timeout)*time.Second)
+	defer cancel()
+	req = req.WithContext(ctx)
 	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)
 	c.httpClientMux.RUnlock()
@@ -95,10 +100,6 @@ func (c *Client) generateRequestGoogle(w dns.ResponseWriter, r *dns.Msg, isTCP b
 		reply := jsonDNS.PrepareReply(r)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
-		err1 := c.newHTTPClient()
-		if err1 != nil {
-			log.Fatalln(err1)
-		}
 		return &DNSRequest{
 			err: err,
 		}

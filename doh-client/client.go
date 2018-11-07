@@ -172,7 +172,6 @@ func (c *Client) newHTTPClient() error {
 		MaxIdleConns:          100,
 		MaxIdleConnsPerHost:   10,
 		Proxy:                 http.ProxyFromEnvironment,
-		ResponseHeaderTimeout: time.Duration(c.conf.Timeout) * time.Second,
 		TLSHandshakeTimeout:   time.Duration(c.conf.Timeout) * time.Second,
 	}
 	if c.conf.NoIPv6 {
