@@ -6,7 +6,7 @@ Not all changes are recorded. Please check git log for details.
 
 ## Version 1.4.1
 
-- Add a configuration option: `debug_http_headers` (e.g. Add `CF-Ray` to diagnose CloudFlare's resolver)
+- Add a configuration option: `debug_http_headers` (e.g. Add `CF-Ray` to diagnose Cloudflare's resolver)
 - Add a configuration option: `passrthrough`
 - macOS logger is rebuilt with static libswiftCore
 - Fix a segfault when `no_cookies=true`
