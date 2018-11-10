@@ -9,7 +9,6 @@ Not all changes are recorded. Please check git log for details.
 - Add a configuration option: `debug_http_headers` (e.g. Add `CF-Ray` to diagnose Cloudflare's resolver)
 - Add a configuration option: `passrthrough`
 - macOS logger is rebuilt with static libswiftCore
-- Fix a segfault when `no_cookies=true`
 - Fix HTTP stream leaking problem, which may cause massive half-open connections if HTTP/1 is in use
 - Utilize Go's cancelable context to detect timeouts more reliably.
 - Fix interoperation problems with gDNS
