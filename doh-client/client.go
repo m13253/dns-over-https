@@ -153,7 +153,7 @@ func NewClient(conf *config) (c *Client, err error) {
 func (c *Client) newHTTPClient() error {
 	c.httpClientMux.Lock()
 	defer c.httpClientMux.Unlock()
-	if !c.httpClientLastCreate.IsZero() && time.Now().Sub(c.httpClientLastCreate) < time.Duration(c.conf.Timeout)*time.Second {
+	if !c.httpClientLastCreate.IsZero() && time.Since(c.httpClientLastCreate) < time.Duration(c.conf.Timeout)*time.Second {
 		return nil
 	}
 	if c.httpTransport != nil {
@@ -220,7 +220,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.conf.Timeout)*time.Second)
 	defer cancel()
 
-	if r.Response == true {
+	if r.Response {
 		log.Println("Received a response packet")
 		return
 	}
