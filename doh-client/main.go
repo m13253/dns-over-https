@@ -79,7 +79,8 @@ func main() {
 	// process tracking. But I understand some cloud service providers have
 	// their own monitoring system. So this feature is only enabled on Linux and
 	// BSD series platforms which lacks functionality similar to cgroup.
-	if runtime.GOOS == "dragonfly" || runtime.GOOS == "freebsd" || runtime.GOOS == "linux" || runtime.GOOS == "netbsd" || runtime.GOOS == "openbsd" {
+	switch runtime.GOOS {
+	case "dragonfly", "freebsd", "linux", "netbsd", "openbsd":
 		pidFile = flag.String("pid-file", "", "PID file for legacy supervision systems lacking support for reliable cgroup-based process tracking")
 	}
 
