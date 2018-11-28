@@ -273,7 +273,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		} else {
 			reply, _, err = c.tcpClient.Exchange(r, upstream)
 		}
-		if err == nil || err == dns.ErrTruncated {
+		if err == nil {
 			w.WriteMsg(reply)
 			return
 		}

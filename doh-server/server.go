@@ -251,14 +251,14 @@ func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (resp *DNSRequ
 		req.currentUpstream = s.conf.Upstream[rand.Intn(numServers)]
 		if !s.conf.TCPOnly {
 			req.response, _, err = s.udpClient.Exchange(req.request, req.currentUpstream)
-			if err == dns.ErrTruncated {
+			if err == nil && req.response != nil && req.response.Truncated {
 				log.Println(err)
 				req.response, _, err = s.tcpClient.Exchange(req.request, req.currentUpstream)
 			}
 		} else {
 			req.response, _, err = s.tcpClient.Exchange(req.request, req.currentUpstream)
 		}
-		if err == nil || err == dns.ErrTruncated {
+		if err == nil {
 			return req, nil
 		}
 		log.Printf("DNS error from upstream %s: %s\n", req.currentUpstream, err.Error())

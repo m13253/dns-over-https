@@ -205,7 +205,7 @@ func (c *Client) parseResponseIETF(ctx context.Context, w dns.ResponseWriter, r 
 
 	fullReply := new(dns.Msg)
 	err = fullReply.Unpack(body)
-	if err != nil && err != dns.ErrTruncated {
+	if err != nil {
 		log.Println(err)
 		req.reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(req.reply)
