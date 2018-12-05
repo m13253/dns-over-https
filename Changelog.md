@@ -4,6 +4,11 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 1.4.2
+
+- Add PID file feature for systems which lacks a cgroup-based process tracker.
+- Remove dns.ErrTruncated according to <https://github.com/miekg/dns/pull/815>.
+
 ## Version 1.4.1
 
 - Add a configuration option: `debug_http_headers` (e.g. Add `CF-Ray` to diagnose Cloudflare's resolver)
