@@ -9,19 +9,19 @@ import (
 	"time"
 )
 
-type WeightRoundRobbinSelector struct {
+type WeightRoundRobinSelector struct {
 	upstreams atomic.Value // upstreamsInfo
 	client    http.Client  // http client to check the upstream
 }
 
-func NewWeightRoundRobbinSelector() *WeightRoundRobbinSelector {
-	selector := new(WeightRoundRobbinSelector)
+func NewWeightRoundRobinSelector() *WeightRoundRobinSelector {
+	selector := new(WeightRoundRobinSelector)
 	selector.upstreams.Store(make([]Upstream, 0))
 
 	return selector
 }
 
-func (ws *WeightRoundRobbinSelector) Add(url string, upstreamType UpstreamType, weight int) (err error) {
+func (ws *WeightRoundRobinSelector) Add(url string, upstreamType UpstreamType, weight int) (err error) {
 	upstreams := ws.upstreams.Load().([]Upstream)
 
 	switch upstreamType {
@@ -52,7 +52,7 @@ func (ws *WeightRoundRobbinSelector) Add(url string, upstreamType UpstreamType, 
 }
 
 // COW, avoid concurrent read write upstreams
-func (ws *WeightRoundRobbinSelector) Evaluate() {
+func (ws *WeightRoundRobinSelector) Evaluate() {
 	for {
 		originUpstreams := ws.upstreams.Load().([]Upstream)
 		upstreams := make([]Upstream, 0, len(originUpstreams))
@@ -118,7 +118,7 @@ func (ws *WeightRoundRobbinSelector) Evaluate() {
 }
 
 // nginx wrr like
-func (ws *WeightRoundRobbinSelector) Get() Upstream {
+func (ws *WeightRoundRobinSelector) Get() Upstream {
 	var (
 		total             int
 		bestUpstreamIndex = -1
