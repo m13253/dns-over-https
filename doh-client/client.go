@@ -152,7 +152,8 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 	}
 
 	switch c.conf.Upstream.UpstreamSelector {
-	case config.Random:
+	default:
+		// if selector is invalid or random, use random selector, or should we stop program and let user knows he is wrong?
 		s := selector.NewRandomSelector()
 		for _, u := range c.conf.Upstream.UpstreamGoogle {
 			if err := s.Add(u.Url, selector.Google); err != nil {
