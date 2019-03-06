@@ -21,7 +21,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-package main
+package config
 
 import (
 	"fmt"
@@ -34,28 +34,36 @@ const (
 	WeightedRandom = "weighted_random"
 )
 
-type upstreamCfg struct {
+type upstreamDetail struct {
 	Url    string `toml:"url"`
 	Weight int    `toml:"weight"`
 }
 
-type config struct {
-	Listen           []string      `toml:"listen"`
-	UpstreamGoogle   []upstreamCfg `toml:"upstream_google"`
-	UpstreamIETF     []upstreamCfg `toml:"upstream_ietf"`
-	Bootstrap        []string      `toml:"bootstrap"`
-	Passthrough      []string      `toml:"passthrough"`
-	Timeout          uint          `toml:"timeout"`
-	NoCookies        bool          `toml:"no_cookies"`
-	NoECS            bool          `toml:"no_ecs"`
-	NoIPv6           bool          `toml:"no_ipv6"`
-	Verbose          bool          `toml:"verbose"`
-	DebugHTTPHeaders []string      `toml:"debug_http_headers"`
-	UpstreamSelector string        `toml:"upstream_selector"` // usable: random or weighted_random
+type upstream struct {
+	UpstreamGoogle   []upstreamDetail `toml:"upstream_google"`
+	UpstreamIETF     []upstreamDetail `toml:"upstream_ietf"`
+	UpstreamSelector string           `toml:"upstream_selector"` // usable: random or weighted_random
 }
 
-func loadConfig(path string) (*config, error) {
-	conf := &config{}
+type others struct {
+	Bootstrap        []string `toml:"bootstrap"`
+	Passthrough      []string `toml:"passthrough"`
+	Timeout          uint     `toml:"timeout"`
+	NoCookies        bool     `toml:"no_cookies"`
+	NoECS            bool     `toml:"no_ecs"`
+	NoIPv6           bool     `toml:"no_ipv6"`
+	Verbose          bool     `toml:"verbose"`
+	DebugHTTPHeaders []string `toml:"debug_http_headers"`
+}
+
+type Config struct {
+	Listen   []string `toml:"listen"`
+	Upstream upstream `toml:"upstream"`
+	Other    others   `toml:"others"`
+}
+
+func LoadConfig(path string) (*Config, error) {
+	conf := &Config{}
 	metaData, err := toml.DecodeFile(path, conf)
 	if err != nil {
 		return nil, err
@@ -67,15 +75,15 @@ func loadConfig(path string) (*config, error) {
 	if len(conf.Listen) == 0 {
 		conf.Listen = []string{"127.0.0.1:53", "[::1]:53"}
 	}
-	if len(conf.UpstreamGoogle) == 0 && len(conf.UpstreamIETF) == 0 {
-		conf.UpstreamGoogle = []upstreamCfg{{Url: "https://dns.google.com/resolve", Weight: 50}}
+	if len(conf.Upstream.UpstreamGoogle) == 0 && len(conf.Upstream.UpstreamIETF) == 0 {
+		conf.Upstream.UpstreamGoogle = []upstreamDetail{{Url: "https://dns.google.com/resolve", Weight: 50}}
 	}
-	if conf.Timeout == 0 {
-		conf.Timeout = 10
+	if conf.Other.Timeout == 0 {
+		conf.Other.Timeout = 10
 	}
 
-	if conf.UpstreamSelector == "" {
-		conf.UpstreamSelector = Random
+	if conf.Upstream.UpstreamSelector == "" {
+		conf.Upstream.UpstreamSelector = Random
 	}
 
 	return conf, nil
