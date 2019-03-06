@@ -15,13 +15,14 @@ var typeMap = map[UpstreamType]string{
 }
 
 type Upstream struct {
-	Type          UpstreamType
-	Url           string
-	RequestType   string
-	Weight        int
-	CurrentWeight int
+	Type            UpstreamType
+	Url             string
+	RequestType     string
+	weight          int
+	effectiveWeight int
+	currentWeight   int
 }
 
-func (u *Upstream) String() string {
-	return fmt.Sprintf("upstream type: %s upstream url %s", typeMap[u.Type], u.Url)
+func (u Upstream) String() string {
+	return fmt.Sprintf("upstream type: %s, upstream url: %s", typeMap[u.Type], u.Url)
 }
