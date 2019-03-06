@@ -200,8 +200,8 @@ func (c *Client) newHTTPClient() error {
 	dialer := &net.Dialer{
 		Timeout:   time.Duration(c.conf.Other.Timeout) * time.Second,
 		KeepAlive: 30 * time.Second,
-		DualStack: true,
-		Resolver:  c.bootstrapResolver,
+		// DualStack: true,
+		Resolver: c.bootstrapResolver,
 	}
 	c.httpTransport = &http.Transport{
 		DialContext:           dialer.DialContext,
