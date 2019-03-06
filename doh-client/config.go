@@ -29,18 +29,29 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+const (
+	Random         = "random"
+	WeightedRandom = "weighted_random"
+)
+
+type upstreamCfg struct {
+	Url    string `toml:"url"`
+	Weight int    `toml:"weight"`
+}
+
 type config struct {
-	Listen           []string `toml:"listen"`
-	UpstreamGoogle   []string `toml:"upstream_google"`
-	UpstreamIETF     []string `toml:"upstream_ietf"`
-	Bootstrap        []string `toml:"bootstrap"`
-	Passthrough      []string `toml:"passthrough"`
-	Timeout          uint     `toml:"timeout"`
-	NoCookies        bool     `toml:"no_cookies"`
-	NoECS            bool     `toml:"no_ecs"`
-	NoIPv6           bool     `toml:"no_ipv6"`
-	Verbose          bool     `toml:"verbose"`
-	DebugHTTPHeaders []string `toml:"debug_http_headers"`
+	Listen           []string      `toml:"listen"`
+	UpstreamGoogle   []upstreamCfg `toml:"upstream_google"`
+	UpstreamIETF     []upstreamCfg `toml:"upstream_ietf"`
+	Bootstrap        []string      `toml:"bootstrap"`
+	Passthrough      []string      `toml:"passthrough"`
+	Timeout          uint          `toml:"timeout"`
+	NoCookies        bool          `toml:"no_cookies"`
+	NoECS            bool          `toml:"no_ecs"`
+	NoIPv6           bool          `toml:"no_ipv6"`
+	Verbose          bool          `toml:"verbose"`
+	DebugHTTPHeaders []string      `toml:"debug_http_headers"`
+	UpstreamSelector string        `toml:"upstream_selector"` // usable: random or weighted_random
 }
 
 func loadConfig(path string) (*config, error) {
@@ -57,10 +68,14 @@ func loadConfig(path string) (*config, error) {
 		conf.Listen = []string{"127.0.0.1:53", "[::1]:53"}
 	}
 	if len(conf.UpstreamGoogle) == 0 && len(conf.UpstreamIETF) == 0 {
-		conf.UpstreamGoogle = []string{"https://dns.google.com/resolve"}
+		conf.UpstreamGoogle = []upstreamCfg{{Url: "https://dns.google.com/resolve", Weight: 50}}
 	}
 	if conf.Timeout == 0 {
 		conf.Timeout = 10
+	}
+
+	if conf.UpstreamSelector == "" {
+		conf.UpstreamSelector = Random
 	}
 
 	return conf, nil

@@ -30,17 +30,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/m13253/dns-over-https/doh-client/selector"
 	"github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
-func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool) *DNSRequest {
+func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool, upstream selector.Upstream) *DNSRequest {
 	opt := r.IsEdns0()
 	udpSize := uint16(512)
 	if opt == nil {
@@ -100,9 +100,9 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 	r.Id = requestID
 	requestBase64 := base64.RawURLEncoding.EncodeToString(requestBinary)
 
-	numServers := len(c.conf.UpstreamIETF)
-	upstream := c.conf.UpstreamIETF[rand.Intn(numServers)]
-	requestURL := fmt.Sprintf("%s?ct=application/dns-message&dns=%s", upstream, requestBase64)
+	// numServers := len(c.conf.UpstreamIETF)
+	// upstream := c.conf.UpstreamIETF[rand.Intn(numServers)]
+	requestURL := fmt.Sprintf("%s?ct=application/dns-message&dns=%s", upstream.Url, requestBase64)
 
 	var req *http.Request
 	if len(requestURL) < 2048 {
@@ -117,7 +117,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 			}
 		}
 	} else {
-		req, err = http.NewRequest("POST", upstream, bytes.NewReader(requestBinary))
+		req, err = http.NewRequest("POST", upstream.Url, bytes.NewReader(requestBinary))
 		if err != nil {
 			log.Println(err)
 			reply := jsonDNS.PrepareReply(r)
@@ -158,7 +158,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 		udpSize:           udpSize,
 		ednsClientAddress: ednsClientAddress,
 		ednsClientNetmask: ednsClientNetmask,
-		currentUpstream:   upstream,
+		currentUpstream:   upstream.Url,
 	}
 }
 

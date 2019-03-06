@@ -36,6 +36,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/m13253/dns-over-https/doh-client/selector"
 	"github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 	"golang.org/x/net/http2"
@@ -56,6 +57,7 @@ type Client struct {
 	httpTransport        *http.Transport
 	httpClient           *http.Client
 	httpClientLastCreate time.Time
+	Selector             selector.Selector
 }
 
 type DNSRequest struct {
@@ -147,6 +149,41 @@ func NewClient(conf *config) (c *Client, err error) {
 	if err != nil {
 		return nil, err
 	}
+
+	switch c.conf.UpstreamSelector {
+	case Random:
+		s := selector.NewRandomSelector()
+		for _, u := range c.conf.UpstreamGoogle {
+			if err := s.Add(u.Url, selector.Google); err != nil {
+				return nil, err
+			}
+		}
+
+		for _, u := range c.conf.UpstreamIETF {
+			if err := s.Add(u.Url, selector.IETF); err != nil {
+				return nil, err
+			}
+		}
+
+		c.Selector = s
+
+	case WeightedRandom:
+		s := selector.NewWeightRandomSelector()
+		for _, u := range c.conf.UpstreamGoogle {
+			if err := s.Add(u.Url, selector.Google, u.Weight); err != nil {
+				return nil, err
+			}
+		}
+
+		for _, u := range c.conf.UpstreamIETF {
+			if err := s.Add(u.Url, selector.IETF, u.Weight); err != nil {
+				return nil, err
+			}
+		}
+
+		c.Selector = s
+	}
+
 	return c, nil
 }
 
@@ -213,6 +250,10 @@ func (c *Client) Start() error {
 		}
 	}
 	close(results)
+
+	// start evaluate goroutine
+	go c.Selector.Evaluate()
+
 	return nil
 }
 
@@ -284,26 +325,18 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		return
 	}
 
-	requestType := ""
-	if len(c.conf.UpstreamIETF) == 0 {
-		requestType = "application/dns-json"
-	} else if len(c.conf.UpstreamGoogle) == 0 {
-		requestType = "application/dns-message"
-	} else {
-		numServers := len(c.conf.UpstreamGoogle) + len(c.conf.UpstreamIETF)
-		random := rand.Intn(numServers)
-		if random < len(c.conf.UpstreamGoogle) {
-			requestType = "application/dns-json"
-		} else {
-			requestType = "application/dns-message"
-		}
+	upstream := c.Selector.Get()
+	requestType := upstream.RequestType
+
+	if c.conf.Verbose {
+		log.Println("choose upstream:", upstream)
 	}
 
 	var req *DNSRequest
 	if requestType == "application/dns-json" {
-		req = c.generateRequestGoogle(ctx, w, r, isTCP)
+		req = c.generateRequestGoogle(ctx, w, r, isTCP, upstream)
 	} else if requestType == "application/dns-message" {
-		req = c.generateRequestIETF(ctx, w, r, isTCP)
+		req = c.generateRequestIETF(ctx, w, r, isTCP, upstream)
 	} else {
 		panic("Unknown request Content-Type")
 	}

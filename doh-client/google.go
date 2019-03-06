@@ -29,17 +29,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
+	"github.com/m13253/dns-over-https/doh-client/selector"
 	"github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
-func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool) *DNSRequest {
+func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool, upstream selector.Upstream) *DNSRequest {
 	question := &r.Question[0]
 	questionName := question.Name
 	questionClass := question.Qclass
@@ -58,9 +58,9 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 		questionType = strconv.FormatUint(uint64(question.Qtype), 10)
 	}
 
-	numServers := len(c.conf.UpstreamGoogle)
-	upstream := c.conf.UpstreamGoogle[rand.Intn(numServers)]
-	requestURL := fmt.Sprintf("%s?ct=application/dns-json&name=%s&type=%s", upstream, url.QueryEscape(questionName), url.QueryEscape(questionType))
+	// numServers := len(c.conf.UpstreamGoogle)
+	// upstream := c.conf.UpstreamGoogle[rand.Intn(numServers)]
+	requestURL := fmt.Sprintf("%s?ct=application/dns-json&name=%s&type=%s", upstream.Url, url.QueryEscape(questionName), url.QueryEscape(questionType))
 
 	if r.CheckingDisabled {
 		requestURL += "&cd=1"
@@ -115,7 +115,7 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 		udpSize:           udpSize,
 		ednsClientAddress: ednsClientAddress,
 		ednsClientNetmask: ednsClientNetmask,
-		currentUpstream:   upstream,
+		currentUpstream:   upstream.Url,
 	}
 }
 
