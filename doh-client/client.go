@@ -36,6 +36,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/m13253/dns-over-https/doh-client/config"
 	"github.com/m13253/dns-over-https/doh-client/selector"
 	"github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
@@ -44,7 +45,7 @@ import (
 )
 
 type Client struct {
-	conf                 *config
+	conf                 *config.Config
 	bootstrap            []string
 	passthrough          []string
 	udpClient            *dns.Client
@@ -70,7 +71,7 @@ type DNSRequest struct {
 	err               error
 }
 
-func NewClient(conf *config) (c *Client, err error) {
+func NewClient(conf *config.Config) (c *Client, err error) {
 	c = &Client{
 		conf: conf,
 	}
@@ -80,11 +81,11 @@ func NewClient(conf *config) (c *Client, err error) {
 	c.udpClient = &dns.Client{
 		Net:     "udp",
 		UDPSize: dns.DefaultMsgSize,
-		Timeout: time.Duration(conf.Timeout) * time.Second,
+		Timeout: time.Duration(conf.Other.Timeout) * time.Second,
 	}
 	c.tcpClient = &dns.Client{
 		Net:     "tcp",
-		Timeout: time.Duration(conf.Timeout) * time.Second,
+		Timeout: time.Duration(conf.Other.Timeout) * time.Second,
 	}
 	for _, addr := range conf.Listen {
 		c.udpServers = append(c.udpServers, &dns.Server{
@@ -100,9 +101,9 @@ func NewClient(conf *config) (c *Client, err error) {
 		})
 	}
 	c.bootstrapResolver = net.DefaultResolver
-	if len(conf.Bootstrap) != 0 {
-		c.bootstrap = make([]string, len(conf.Bootstrap))
-		for i, bootstrap := range conf.Bootstrap {
+	if len(conf.Other.Bootstrap) != 0 {
+		c.bootstrap = make([]string, len(conf.Other.Bootstrap))
+		for i, bootstrap := range conf.Other.Bootstrap {
 			bootstrapAddr, err := net.ResolveUDPAddr("udp", bootstrap)
 			if err != nil {
 				bootstrapAddr, err = net.ResolveUDPAddr("udp", "["+bootstrap+"]:53")
@@ -122,9 +123,9 @@ func NewClient(conf *config) (c *Client, err error) {
 				return conn, err
 			},
 		}
-		if len(conf.Passthrough) != 0 {
-			c.passthrough = make([]string, len(conf.Passthrough))
-			for i, passthrough := range conf.Passthrough {
+		if len(conf.Other.Passthrough) != 0 {
+			c.passthrough = make([]string, len(conf.Other.Passthrough))
+			for i, passthrough := range conf.Other.Passthrough {
 				if punycode, err := idna.ToASCII(passthrough); err != nil {
 					passthrough = punycode
 				}
@@ -135,7 +136,7 @@ func NewClient(conf *config) (c *Client, err error) {
 	// Most CDNs require Cookie support to prevent DDoS attack.
 	// Disabling Cookie does not effectively prevent tracking,
 	// so I will leave it on to make anti-DDoS services happy.
-	if !c.conf.NoCookies {
+	if !c.conf.Other.NoCookies {
 		c.cookieJar, err = cookiejar.New(nil)
 		if err != nil {
 			return nil, err
@@ -150,16 +151,16 @@ func NewClient(conf *config) (c *Client, err error) {
 		return nil, err
 	}
 
-	switch c.conf.UpstreamSelector {
-	case Random:
+	switch c.conf.Upstream.UpstreamSelector {
+	case config.Random:
 		s := selector.NewRandomSelector()
-		for _, u := range c.conf.UpstreamGoogle {
+		for _, u := range c.conf.Upstream.UpstreamGoogle {
 			if err := s.Add(u.Url, selector.Google); err != nil {
 				return nil, err
 			}
 		}
 
-		for _, u := range c.conf.UpstreamIETF {
+		for _, u := range c.conf.Upstream.UpstreamIETF {
 			if err := s.Add(u.Url, selector.IETF); err != nil {
 				return nil, err
 			}
@@ -167,15 +168,15 @@ func NewClient(conf *config) (c *Client, err error) {
 
 		c.Selector = s
 
-	case WeightedRandom:
-		s := selector.NewWeightRandomSelector()
-		for _, u := range c.conf.UpstreamGoogle {
+	case config.WeightedRandom:
+		s := selector.NewWeightRoundRobbinSelector()
+		for _, u := range c.conf.Upstream.UpstreamGoogle {
 			if err := s.Add(u.Url, selector.Google, u.Weight); err != nil {
 				return nil, err
 			}
 		}
 
-		for _, u := range c.conf.UpstreamIETF {
+		for _, u := range c.conf.Upstream.UpstreamIETF {
 			if err := s.Add(u.Url, selector.IETF, u.Weight); err != nil {
 				return nil, err
 			}
@@ -190,14 +191,14 @@ func NewClient(conf *config) (c *Client, err error) {
 func (c *Client) newHTTPClient() error {
 	c.httpClientMux.Lock()
 	defer c.httpClientMux.Unlock()
-	if !c.httpClientLastCreate.IsZero() && time.Since(c.httpClientLastCreate) < time.Duration(c.conf.Timeout)*time.Second {
+	if !c.httpClientLastCreate.IsZero() && time.Since(c.httpClientLastCreate) < time.Duration(c.conf.Other.Timeout)*time.Second {
 		return nil
 	}
 	if c.httpTransport != nil {
 		c.httpTransport.CloseIdleConnections()
 	}
 	dialer := &net.Dialer{
-		Timeout:   time.Duration(c.conf.Timeout) * time.Second,
+		Timeout:   time.Duration(c.conf.Other.Timeout) * time.Second,
 		KeepAlive: 30 * time.Second,
 		DualStack: true,
 		Resolver:  c.bootstrapResolver,
@@ -209,9 +210,9 @@ func (c *Client) newHTTPClient() error {
 		MaxIdleConns:          100,
 		MaxIdleConnsPerHost:   10,
 		Proxy:                 http.ProxyFromEnvironment,
-		TLSHandshakeTimeout:   time.Duration(c.conf.Timeout) * time.Second,
+		TLSHandshakeTimeout:   time.Duration(c.conf.Other.Timeout) * time.Second,
 	}
-	if c.conf.NoIPv6 {
+	if c.conf.Other.NoIPv6 {
 		c.httpTransport.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
 			if strings.HasPrefix(network, "tcp") {
 				network = "tcp4"
@@ -258,7 +259,7 @@ func (c *Client) Start() error {
 }
 
 func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.conf.Timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.conf.Other.Timeout)*time.Second)
 	defer cancel()
 
 	if r.Response {
@@ -287,7 +288,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	} else {
 		questionType = strconv.FormatUint(uint64(question.Qtype), 10)
 	}
-	if c.conf.Verbose {
+	if c.conf.Other.Verbose {
 		fmt.Printf("%s - - [%s] \"%s %s %s\"\n", w.RemoteAddr(), time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
 	}
 
@@ -328,7 +329,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	upstream := c.Selector.Get()
 	requestType := upstream.RequestType
 
-	if c.conf.Verbose {
+	if c.conf.Other.Verbose {
 		log.Println("choose upstream:", upstream)
 	}
 
@@ -343,7 +344,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 
 	if req.response != nil {
 		defer req.response.Body.Close()
-		for _, header := range c.conf.DebugHTTPHeaders {
+		for _, header := range c.conf.Other.DebugHTTPHeaders {
 			if value := req.response.Header.Get(header); value != "" {
 				log.Printf("%s: %s\n", header, value)
 			}
@@ -393,7 +394,7 @@ var (
 
 func (c *Client) findClientIP(w dns.ResponseWriter, r *dns.Msg) (ednsClientAddress net.IP, ednsClientNetmask uint8) {
 	ednsClientNetmask = 255
-	if c.conf.NoECS {
+	if c.conf.Other.NoECS {
 		return net.IPv4(0, 0, 0, 0), 0
 	}
 	if opt := r.IsEdns0(); opt != nil {
