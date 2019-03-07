@@ -18,9 +18,9 @@ type Upstream struct {
 	Type            UpstreamType
 	Url             string
 	RequestType     string
-	weight          int
-	effectiveWeight int
-	currentWeight   int
+	weight          int32
+	effectiveWeight int32
+	currentWeight   int32
 }
 
 func (u Upstream) String() string {

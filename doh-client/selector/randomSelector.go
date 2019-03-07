@@ -11,7 +11,7 @@ func init() {
 }
 
 type RandomSelector struct {
-	upstreams []Upstream
+	upstreams []*Upstream
 }
 
 func NewRandomSelector() *RandomSelector {
@@ -21,14 +21,14 @@ func NewRandomSelector() *RandomSelector {
 func (rs *RandomSelector) Add(url string, upstreamType UpstreamType) (err error) {
 	switch upstreamType {
 	case Google:
-		rs.upstreams = append(rs.upstreams, Upstream{
+		rs.upstreams = append(rs.upstreams, &Upstream{
 			Type:        Google,
 			Url:         url,
 			RequestType: "application/dns-json",
 		})
 
 	case IETF:
-		rs.upstreams = append(rs.upstreams, Upstream{
+		rs.upstreams = append(rs.upstreams, &Upstream{
 			Type:        IETF,
 			Url:         url,
 			RequestType: "application/dns-message",
@@ -41,8 +41,10 @@ func (rs *RandomSelector) Add(url string, upstreamType UpstreamType) (err error)
 	return nil
 }
 
-func (rs *RandomSelector) Get() Upstream {
+func (rs *RandomSelector) Get() *Upstream {
 	return rs.upstreams[rand.Intn(len(rs.upstreams)-1)]
 }
 
-func (rs *RandomSelector) Evaluate() {}
+func (rs *RandomSelector) StartEvaluate() {}
+
+func (rs *RandomSelector) ReportUpstreamError(upstream *Upstream, upstreamErr upstreamError) {}

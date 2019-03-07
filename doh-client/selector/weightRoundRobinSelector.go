@@ -9,24 +9,20 @@ import (
 )
 
 type WeightRoundRobinSelector struct {
-	upstreams atomic.Value // upstreamsInfo
-	client    http.Client  // http client to check the upstream
+	upstreams []*Upstream // upstreamsInfo
+	client    http.Client // http client to check the upstream
 }
 
 func NewWeightRoundRobinSelector(timeout time.Duration) *WeightRoundRobinSelector {
-	selector := new(WeightRoundRobinSelector)
-	selector.client.Timeout = timeout
-	selector.upstreams.Store(make([]Upstream, 0))
-
-	return selector
+	return &WeightRoundRobinSelector{
+		client: http.Client{Timeout: timeout},
+	}
 }
 
-func (ws *WeightRoundRobinSelector) Add(url string, upstreamType UpstreamType, weight int) (err error) {
-	upstreams := ws.upstreams.Load().([]Upstream)
-
+func (ws *WeightRoundRobinSelector) Add(url string, upstreamType UpstreamType, weight int32) (err error) {
 	switch upstreamType {
 	case Google:
-		upstreams = append(upstreams, Upstream{
+		ws.upstreams = append(ws.upstreams, &Upstream{
 			Type:            Google,
 			Url:             url,
 			RequestType:     "application/dns-json",
@@ -35,7 +31,7 @@ func (ws *WeightRoundRobinSelector) Add(url string, upstreamType UpstreamType, w
 		})
 
 	case IETF:
-		upstreams = append(upstreams, Upstream{
+		ws.upstreams = append(ws.upstreams, &Upstream{
 			Type:            IETF,
 			Url:             url,
 			RequestType:     "application/dns-message",
@@ -47,91 +43,99 @@ func (ws *WeightRoundRobinSelector) Add(url string, upstreamType UpstreamType, w
 		return errors.New("unknown upstream type")
 	}
 
-	ws.upstreams.Store(upstreams)
 	return nil
 }
 
 // COW, avoid concurrent read write upstreams
-func (ws *WeightRoundRobinSelector) Evaluate() {
-	for {
-		originUpstreams := ws.upstreams.Load().([]Upstream)
-		upstreams := make([]Upstream, 0, len(originUpstreams))
+func (ws *WeightRoundRobinSelector) StartEvaluate() {
+	go func() {
+		for {
+			/*originUpstreams := ws.upstreams.Load().([]Upstream)
+			upstreams := make([]Upstream, 0, len(originUpstreams))*/
 
-		for _, upstream := range originUpstreams {
-			upstreamUrl := upstream.Url
-			var acceptType string
+			for i := range ws.upstreams {
+				upstreamUrl := ws.upstreams[i].Url
+				var acceptType string
 
-			switch upstream.Type {
-			case Google:
-				upstreamUrl += "?name=www.example.com&type=A"
-				acceptType = "application/dns-json"
+				switch ws.upstreams[i].Type {
+				case Google:
+					upstreamUrl += "?name=www.example.com&type=A"
+					acceptType = "application/dns-json"
 
-			case IETF:
-				// www.example.com
-				upstreamUrl += "?dns=q80BAAABAAAAAAAAA3d3dwdleGFtcGxlA2NvbQAAAQAB"
-				acceptType = "application/dns-message"
-			}
-
-			req, err := http.NewRequest(http.MethodGet, upstreamUrl, nil)
-			if err != nil {
-				/*log.Println("upstream:", upstreamUrl, "type:", typeMap[upstream.Type], "check failed:", err)
-				continue*/
-
-				// should I only log it? But if there is an error, I think when query the server will return error too
-				panic("upstream: " + upstreamUrl + " type: " + typeMap[upstream.Type] + " check failed: " + err.Error())
-			}
-
-			req.Header.Set("accept", acceptType)
-
-			resp, err := ws.client.Do(req)
-			if err != nil {
-				// should I check error in detail?
-				upstream.effectiveWeight -= 5
-				if upstream.effectiveWeight < 0 {
-					upstream.effectiveWeight = 0
+				case IETF:
+					// www.example.com
+					upstreamUrl += "?dns=q80BAAABAAAAAAAAA3d3dwdleGFtcGxlA2NvbQAAAQAB"
+					acceptType = "application/dns-message"
 				}
-				upstreams = append(upstreams, upstream)
-				continue
+
+				req, err := http.NewRequest(http.MethodGet, upstreamUrl, nil)
+				if err != nil {
+					/*log.Println("upstream:", upstreamUrl, "type:", typeMap[upstream.Type], "check failed:", err)
+					continue*/
+
+					// should I only log it? But if there is an error, I think when query the server will return error too
+					panic("upstream: " + upstreamUrl + " type: " + typeMap[ws.upstreams[i].Type] + " check failed: " + err.Error())
+				}
+
+				req.Header.Set("accept", acceptType)
+
+				resp, err := ws.client.Do(req)
+				if err != nil {
+					// should I check error in detail?
+					if atomic.AddInt32(&ws.upstreams[i].effectiveWeight, -10) < 0 {
+						atomic.StoreInt32(&ws.upstreams[i].effectiveWeight, 0)
+					}
+					continue
+				}
+
+				switch ws.upstreams[i].Type {
+				case Google:
+					checkGoogleResponse(resp, ws.upstreams[i])
+
+				case IETF:
+					checkIETFResponse(resp, ws.upstreams[i])
+				}
 			}
 
-			switch upstream.Type {
-			case Google:
-				checkGoogleResponse(resp, &upstream)
-
-			case IETF:
-				checkIETFResponse(resp, &upstream)
-			}
-
-			upstreams = append(upstreams, upstream)
+			time.Sleep(30 * time.Second)
 		}
-
-		ws.upstreams.Store(upstreams)
-
-		time.Sleep(30 * time.Second)
-	}
+	}()
 }
 
 // nginx wrr like
-func (ws *WeightRoundRobinSelector) Get() Upstream {
+func (ws *WeightRoundRobinSelector) Get() *Upstream {
 	var (
-		total             int
+		total             int32
 		bestUpstreamIndex = -1
 	)
 
-	upstreams := ws.upstreams.Load().([]Upstream)
+	for i := range ws.upstreams {
+		effectiveWeight := atomic.LoadInt32(&ws.upstreams[i].effectiveWeight)
+		ws.upstreams[i].currentWeight += effectiveWeight
+		total += effectiveWeight
 
-	for i := range upstreams {
-		upstreams[i].currentWeight += upstreams[i].effectiveWeight
-		total += upstreams[i].effectiveWeight
-
-		if bestUpstreamIndex == -1 || upstreams[i].currentWeight > upstreams[bestUpstreamIndex].currentWeight {
+		if bestUpstreamIndex == -1 || ws.upstreams[i].currentWeight > ws.upstreams[bestUpstreamIndex].currentWeight {
 			bestUpstreamIndex = i
 		}
 	}
 
-	upstreams[bestUpstreamIndex].currentWeight -= total
+	ws.upstreams[bestUpstreamIndex].currentWeight -= total
 
-	return upstreams[bestUpstreamIndex]
+	return ws.upstreams[bestUpstreamIndex]
+}
+
+func (ws *WeightRoundRobinSelector) ReportUpstreamError(upstream *Upstream, upstreamErr upstreamError) {
+	switch upstreamErr {
+	case Serious:
+		if atomic.AddInt32(&upstream.effectiveWeight, -10) < 0 {
+			atomic.StoreInt32(&upstream.effectiveWeight, 0)
+		}
+
+	case Medium:
+		if atomic.AddInt32(&upstream.effectiveWeight, -5) < 0 {
+			atomic.StoreInt32(&upstream.effectiveWeight, 0)
+		}
+	}
 }
 
 func checkGoogleResponse(resp *http.Response, upstream *Upstream) {
@@ -139,9 +143,8 @@ func checkGoogleResponse(resp *http.Response, upstream *Upstream) {
 
 	if resp.StatusCode != http.StatusOK {
 		// server error
-		upstream.effectiveWeight -= 10
-		if upstream.effectiveWeight < 0 {
-			upstream.effectiveWeight = 0
+		if atomic.AddInt32(&upstream.effectiveWeight, -5) < 0 {
+			atomic.StoreInt32(&upstream.effectiveWeight, 0)
 		}
 		return
 	}
@@ -149,54 +152,35 @@ func checkGoogleResponse(resp *http.Response, upstream *Upstream) {
 	m := make(map[string]interface{})
 	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
 		// should I check error in detail?
-		upstream.effectiveWeight -= 1
-		if upstream.effectiveWeight < 0 {
-			upstream.effectiveWeight = 0
+		if atomic.AddInt32(&upstream.effectiveWeight, -1) < 0 {
+			atomic.StoreInt32(&upstream.effectiveWeight, 0)
 		}
 		return
 	}
 
 	if status, ok := m["status"]; ok {
 		if statusNum, ok := status.(int); ok && statusNum == 0 {
-			upstream.effectiveWeight += 5
-			if upstream.effectiveWeight > upstream.weight {
-				upstream.effectiveWeight = upstream.weight
-				return
+			if atomic.AddInt32(&upstream.effectiveWeight, 5) > upstream.weight {
+				atomic.StoreInt32(&upstream.effectiveWeight, upstream.weight)
 			}
+			return
 		}
 	}
 
 	// should I check error in detail?
-	upstream.effectiveWeight -= 1
-	if upstream.effectiveWeight < 0 {
-		upstream.effectiveWeight = 0
+	if atomic.AddInt32(&upstream.effectiveWeight, -1) < 0 {
+		atomic.StoreInt32(&upstream.effectiveWeight, 0)
 	}
 }
 
 func checkIETFResponse(resp *http.Response, upstream *Upstream) {
 	defer resp.Body.Close()
 
-	switch resp.StatusCode / 100 {
-	case 5:
+	if resp.StatusCode != http.StatusOK {
 		// server error
-		upstream.effectiveWeight -= 10
-		if upstream.effectiveWeight < 0 {
-			upstream.effectiveWeight = 0
+		if atomic.AddInt32(&upstream.effectiveWeight, -5) < 0 {
+			atomic.StoreInt32(&upstream.effectiveWeight, 0)
 		}
-
-	case 2:
-		upstream.effectiveWeight += 5
-		if upstream.effectiveWeight > upstream.weight {
-			upstream.effectiveWeight = upstream.weight
-		}
-
-		// TODO anything else?
+		return
 	}
-}
-
-func max(i, j int) int {
-	if i > j {
-		return i
-	}
-	return j
 }
