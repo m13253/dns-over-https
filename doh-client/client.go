@@ -31,6 +31,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -253,8 +254,8 @@ func (c *Client) Start() error {
 	}
 	close(results)
 
-	// start evaluate goroutine
-	go c.Selector.Evaluate()
+	// start evaluation poll
+	c.Selector.StartEvaluate()
 
 	return nil
 }
@@ -335,48 +336,64 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	}
 
 	var req *DNSRequest
-	if requestType == "application/dns-json" {
+	switch requestType {
+	case "application/dns-json":
 		req = c.generateRequestGoogle(ctx, w, r, isTCP, upstream)
-	} else if requestType == "application/dns-message" {
+
+	case "application/dns-message":
 		req = c.generateRequestIETF(ctx, w, r, isTCP, upstream)
-	} else {
+
+	default:
 		panic("Unknown request Content-Type")
 	}
 
-	if req.response != nil {
-		defer req.response.Body.Close()
-		for _, header := range c.conf.Other.DebugHTTPHeaders {
-			if value := req.response.Header.Get(header); value != "" {
-				log.Printf("%s: %s\n", header, value)
+	if req.err != nil {
+		if urlErr, ok := req.err.(*url.Error); ok {
+			// should we only check timeout?
+			if urlErr.Timeout() {
+				c.Selector.ReportUpstreamError(upstream, selector.Serious)
 			}
 		}
-	}
-	if req.err != nil {
+
 		return
 	}
 
-	contentType := ""
-	candidateType := strings.SplitN(req.response.Header.Get("Content-Type"), ";", 2)[0]
-	if candidateType == "application/json" {
-		contentType = "application/json"
-	} else if candidateType == "application/dns-message" {
-		contentType = "application/dns-message"
-	} else if candidateType == "application/dns-udpwireformat" {
-		contentType = "application/dns-message"
-	} else {
-		if requestType == "application/dns-json" {
-			contentType = "application/json"
-		} else if requestType == "application/dns-message" {
-			contentType = "application/dns-message"
+	// if req.err == nil, req.response != nil
+	defer req.response.Body.Close()
+
+	for _, header := range c.conf.Other.DebugHTTPHeaders {
+		if value := req.response.Header.Get(header); value != "" {
+			log.Printf("%s: %s\n", header, value)
 		}
 	}
 
-	if contentType == "application/json" {
+	candidateType := strings.SplitN(req.response.Header.Get("Content-Type"), ";", 2)[0]
+
+	switch candidateType {
+	case "application/json":
 		c.parseResponseGoogle(ctx, w, r, isTCP, req)
-	} else if contentType == "application/dns-message" {
+
+	case "application/dns-message", "application/dns-udpwireformat":
 		c.parseResponseIETF(ctx, w, r, isTCP, req)
-	} else {
-		panic("Unknown response Content-Type")
+
+	default:
+		switch requestType {
+		case "application/dns-json":
+			c.parseResponseGoogle(ctx, w, r, isTCP, req)
+
+		case "application/dns-message":
+			c.parseResponseIETF(ctx, w, r, isTCP, req)
+
+		default:
+			panic("Unknown response Content-Type")
+		}
+	}
+
+	// https://developers.cloudflare.com/1.1.1.1/dns-over-https/request-structure/ says
+	// returns code will be 200 / 400 / 413 / 415 / 504, some server will return 503, so
+	// I think if status code is 5xx, upstream must has some problems
+	if req.response.StatusCode/100 == 5 {
+		c.Selector.ReportUpstreamError(upstream, selector.Medium)
 	}
 }
 
