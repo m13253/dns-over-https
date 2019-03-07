@@ -36,7 +36,7 @@ const (
 
 type upstreamDetail struct {
 	Url    string `toml:"url"`
-	Weight int    `toml:"weight"`
+	Weight int32  `toml:"weight"`
 }
 
 type upstream struct {
