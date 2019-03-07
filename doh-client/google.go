@@ -39,7 +39,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool, upstream selector.Upstream) *DNSRequest {
+func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool, upstream *selector.Upstream) *DNSRequest {
 	question := &r.Question[0]
 	questionName := question.Name
 	questionClass := question.Qclass
@@ -58,8 +58,6 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 		questionType = strconv.FormatUint(uint64(question.Qtype), 10)
 	}
 
-	// numServers := len(c.conf.UpstreamGoogle)
-	// upstream := c.conf.UpstreamGoogle[rand.Intn(numServers)]
 	requestURL := fmt.Sprintf("%s?ct=application/dns-json&name=%s&type=%s", upstream.Url, url.QueryEscape(questionName), url.QueryEscape(questionType))
 
 	if r.CheckingDisabled {
@@ -76,7 +74,7 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 		requestURL += fmt.Sprintf("&edns_client_subnet=%s/%d", ednsClientAddress.String(), ednsClientNetmask)
 	}
 
-	req, err := http.NewRequest("GET", requestURL, nil)
+	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {
 		log.Println(err)
 		reply := jsonDNS.PrepareReply(r)
@@ -86,19 +84,24 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 			err: err,
 		}
 	}
+
 	req.Header.Set("Accept", "application/json, application/dns-message, application/dns-udpwireformat")
 	req.Header.Set("User-Agent", USER_AGENT)
 	req = req.WithContext(ctx)
+
 	c.httpClientMux.RLock()
 	resp, err := c.httpClient.Do(req)
 	c.httpClientMux.RUnlock()
-	if err == context.DeadlineExceeded {
+
+	// if http Client.Do returns non-nil error, it always *url.Error
+	/*if err == context.DeadlineExceeded {
 		// Do not respond, silently fail to prevent caching of SERVFAIL
 		log.Println(err)
 		return &DNSRequest{
 			err: err,
 		}
-	}
+	}*/
+
 	if err != nil {
 		log.Println(err)
 		reply := jsonDNS.PrepareReply(r)
@@ -120,7 +123,7 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 }
 
 func (c *Client) parseResponseGoogle(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool, req *DNSRequest) {
-	if req.response.StatusCode != 200 {
+	if req.response.StatusCode != http.StatusOK {
 		log.Printf("HTTP error from upstream %s: %s\n", req.currentUpstream, req.response.Status)
 		req.reply.Rcode = dns.RcodeServerFailure
 		contentType := req.response.Header.Get("Content-Type")
