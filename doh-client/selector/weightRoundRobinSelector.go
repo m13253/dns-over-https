@@ -1,7 +1,6 @@
 package selector
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -14,8 +13,9 @@ type WeightRoundRobinSelector struct {
 	client    http.Client  // http client to check the upstream
 }
 
-func NewWeightRoundRobinSelector() *WeightRoundRobinSelector {
+func NewWeightRoundRobinSelector(timeout time.Duration) *WeightRoundRobinSelector {
 	selector := new(WeightRoundRobinSelector)
+	selector.client.Timeout = timeout
 	selector.upstreams.Store(make([]Upstream, 0))
 
 	return selector
@@ -83,10 +83,6 @@ func (ws *WeightRoundRobinSelector) Evaluate() {
 
 			req.Header.Set("accept", acceptType)
 
-			timeout, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-
-			req = req.WithContext(timeout)
-
 			resp, err := ws.client.Do(req)
 			if err != nil {
 				// should I check error in detail?
@@ -107,8 +103,6 @@ func (ws *WeightRoundRobinSelector) Evaluate() {
 			}
 
 			upstreams = append(upstreams, upstream)
-
-			cancel()
 		}
 
 		ws.upstreams.Store(upstreams)

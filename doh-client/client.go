@@ -170,7 +170,7 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 		c.Selector = s
 
 	case config.WeightedRoundRobin:
-		s := selector.NewWeightRoundRobinSelector()
+		s := selector.NewWeightRoundRobinSelector(time.Duration(c.conf.Other.Timeout) * time.Second)
 		for _, u := range c.conf.Upstream.UpstreamGoogle {
 			if err := s.Add(u.Url, selector.Google, u.Weight); err != nil {
 				return nil, err
