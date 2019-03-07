@@ -30,8 +30,8 @@ import (
 )
 
 const (
-	Random         = "random"
-	WeightedRandom = "weighted_random"
+	Random             = "random"
+	WeightedRoundRobin = "weighted_round_robin"
 )
 
 type upstreamDetail struct {

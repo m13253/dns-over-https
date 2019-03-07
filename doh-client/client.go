@@ -169,7 +169,7 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 
 		c.Selector = s
 
-	case config.WeightedRandom:
+	case config.WeightedRoundRobin:
 		s := selector.NewWeightRoundRobinSelector()
 		for _, u := range c.conf.Upstream.UpstreamGoogle {
 			if err := s.Add(u.Url, selector.Google, u.Weight); err != nil {
