@@ -59,7 +59,7 @@ type Client struct {
 	httpTransport        *http.Transport
 	httpClient           *http.Client
 	httpClientLastCreate time.Time
-	Selector             selector.Selector
+	selector             selector.Selector
 }
 
 type DNSRequest struct {
@@ -168,7 +168,7 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 			}
 		}
 
-		c.Selector = s
+		c.selector = s
 
 	case config.WeightedRoundRobin:
 		s := selector.NewWeightRoundRobinSelector(time.Duration(c.conf.Other.Timeout) * time.Second)
@@ -184,7 +184,7 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 			}
 		}
 
-		c.Selector = s
+		c.selector = s
 	}
 
 	return c, nil
@@ -255,7 +255,7 @@ func (c *Client) Start() error {
 	close(results)
 
 	// start evaluation poll
-	c.Selector.StartEvaluate()
+	c.selector.StartEvaluate()
 
 	return nil
 }
@@ -328,7 +328,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		return
 	}
 
-	upstream := c.Selector.Get()
+	upstream := c.selector.Get()
 	requestType := upstream.RequestType
 
 	if c.conf.Other.Verbose {
@@ -351,7 +351,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		if urlErr, ok := req.err.(*url.Error); ok {
 			// should we only check timeout?
 			if urlErr.Timeout() {
-				c.Selector.ReportUpstreamError(upstream, selector.Serious)
+				c.selector.ReportUpstreamError(upstream, selector.Serious)
 			}
 		}
 
@@ -393,7 +393,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	// returns code will be 200 / 400 / 413 / 415 / 504, some server will return 503, so
 	// I think if status code is 5xx, upstream must has some problems
 	if req.response.StatusCode/100 == 5 {
-		c.Selector.ReportUpstreamError(upstream, selector.Medium)
+		c.selector.ReportUpstreamError(upstream, selector.Medium)
 	}
 }
 
