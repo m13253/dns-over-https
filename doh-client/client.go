@@ -157,13 +157,13 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 		// if selector is invalid or random, use random selector, or should we stop program and let user knows he is wrong?
 		s := selector.NewRandomSelector()
 		for _, u := range c.conf.Upstream.UpstreamGoogle {
-			if err := s.Add(u.Url, selector.Google); err != nil {
+			if err := s.Add(u.URL, selector.Google); err != nil {
 				return nil, err
 			}
 		}
 
 		for _, u := range c.conf.Upstream.UpstreamIETF {
-			if err := s.Add(u.Url, selector.IETF); err != nil {
+			if err := s.Add(u.URL, selector.IETF); err != nil {
 				return nil, err
 			}
 		}
@@ -173,13 +173,13 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 	case config.WeightedRoundRobin:
 		s := selector.NewWeightRoundRobinSelector(time.Duration(c.conf.Other.Timeout) * time.Second)
 		for _, u := range c.conf.Upstream.UpstreamGoogle {
-			if err := s.Add(u.Url, selector.Google, u.Weight); err != nil {
+			if err := s.Add(u.URL, selector.Google, u.Weight); err != nil {
 				return nil, err
 			}
 		}
 
 		for _, u := range c.conf.Upstream.UpstreamIETF {
-			if err := s.Add(u.Url, selector.IETF, u.Weight); err != nil {
+			if err := s.Add(u.URL, selector.IETF, u.Weight); err != nil {
 				return nil, err
 			}
 		}

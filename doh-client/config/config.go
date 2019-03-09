@@ -35,7 +35,7 @@ const (
 )
 
 type upstreamDetail struct {
-	Url    string `toml:"URL"`
+	URL    string `toml:"url"`
 	Weight int32  `toml:"weight"`
 }
 
@@ -76,7 +76,7 @@ func LoadConfig(path string) (*Config, error) {
 		conf.Listen = []string{"127.0.0.1:53", "[::1]:53"}
 	}
 	if len(conf.Upstream.UpstreamGoogle) == 0 && len(conf.Upstream.UpstreamIETF) == 0 {
-		conf.Upstream.UpstreamGoogle = []upstreamDetail{{Url: "https://dns.google.com/resolve", Weight: 50}}
+		conf.Upstream.UpstreamGoogle = []upstreamDetail{{URL: "https://dns.google.com/resolve", Weight: 50}}
 	}
 	if conf.Other.Timeout == 0 {
 		conf.Other.Timeout = 10
