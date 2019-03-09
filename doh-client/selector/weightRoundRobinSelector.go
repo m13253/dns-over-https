@@ -50,9 +50,6 @@ func (ws *WeightRoundRobinSelector) Add(url string, upstreamType UpstreamType, w
 func (ws *WeightRoundRobinSelector) StartEvaluate() {
 	go func() {
 		for {
-			/*originUpstreams := ws.upstreams.Load().([]Upstream)
-			upstreams := make([]Upstream, 0, len(originUpstreams))*/
-
 			for i := range ws.upstreams {
 				upstreamUrl := ws.upstreams[i].Url
 				var acceptType string
@@ -137,7 +134,7 @@ func (ws *WeightRoundRobinSelector) ReportUpstreamStatus(upstream *Upstream, ups
 		}
 
 	case OK:
-		if atomic.AddInt32(&upstream.effectiveWeight, 5) > upstream.weight {
+		if atomic.AddInt32(&upstream.effectiveWeight, 2) > upstream.weight {
 			atomic.StoreInt32(&upstream.effectiveWeight, upstream.weight)
 		}
 	}
@@ -187,5 +184,9 @@ func checkIETFResponse(resp *http.Response, upstream *Upstream) {
 			atomic.StoreInt32(&upstream.effectiveWeight, 0)
 		}
 		return
+	}
+
+	if atomic.AddInt32(&upstream.effectiveWeight, 5) > upstream.weight {
+		atomic.StoreInt32(&upstream.effectiveWeight, upstream.weight)
 	}
 }
