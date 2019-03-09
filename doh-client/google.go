@@ -58,7 +58,7 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 		questionType = strconv.FormatUint(uint64(question.Qtype), 10)
 	}
 
-	requestURL := fmt.Sprintf("%s?ct=application/dns-json&name=%s&type=%s", upstream.Url, url.QueryEscape(questionName), url.QueryEscape(questionType))
+	requestURL := fmt.Sprintf("%s?ct=application/dns-json&name=%s&type=%s", upstream.URL, url.QueryEscape(questionName), url.QueryEscape(questionType))
 
 	if r.CheckingDisabled {
 		requestURL += "&cd=1"
@@ -118,7 +118,7 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 		udpSize:           udpSize,
 		ednsClientAddress: ednsClientAddress,
 		ednsClientNetmask: ednsClientNetmask,
-		currentUpstream:   upstream.Url,
+		currentUpstream:   upstream.URL,
 	}
 }
 

@@ -100,7 +100,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 	r.Id = requestID
 	requestBase64 := base64.RawURLEncoding.EncodeToString(requestBinary)
 
-	requestURL := fmt.Sprintf("%s?ct=application/dns-message&dns=%s", upstream.Url, requestBase64)
+	requestURL := fmt.Sprintf("%s?ct=application/dns-message&dns=%s", upstream.URL, requestBase64)
 
 	var req *http.Request
 	if len(requestURL) < 2048 {
@@ -115,7 +115,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 			}
 		}
 	} else {
-		req, err = http.NewRequest(http.MethodPost, upstream.Url, bytes.NewReader(requestBinary))
+		req, err = http.NewRequest(http.MethodPost, upstream.URL, bytes.NewReader(requestBinary))
 		if err != nil {
 			log.Println(err)
 			reply := jsonDNS.PrepareReply(r)
@@ -159,7 +159,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 		udpSize:           udpSize,
 		ednsClientAddress: ednsClientAddress,
 		ednsClientNetmask: ednsClientNetmask,
-		currentUpstream:   upstream.Url,
+		currentUpstream:   upstream.URL,
 	}
 }
 
