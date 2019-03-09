@@ -32,6 +32,8 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+
+	"github.com/m13253/dns-over-https/doh-client/config"
 )
 
 func checkPIDFile(pidFile string) (bool, error) {
@@ -101,13 +103,13 @@ func main() {
 		}
 	}
 
-	conf, err := loadConfig(*confPath)
+	conf, err := config.LoadConfig(*confPath)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	if *verbose {
-		conf.Verbose = true
+		conf.Other.Verbose = true
 	}
 
 	client, err := NewClient(conf)

@@ -21,7 +21,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-package main
+package config
 
 import (
 	"fmt"
@@ -29,10 +29,23 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-type config struct {
-	Listen           []string `toml:"listen"`
-	UpstreamGoogle   []string `toml:"upstream_google"`
-	UpstreamIETF     []string `toml:"upstream_ietf"`
+const (
+	Random             = "random"
+	WeightedRoundRobin = "weighted_round_robin"
+)
+
+type upstreamDetail struct {
+	URL    string `toml:"url"`
+	Weight int32  `toml:"weight"`
+}
+
+type upstream struct {
+	UpstreamGoogle   []upstreamDetail `toml:"upstream_google"`
+	UpstreamIETF     []upstreamDetail `toml:"upstream_ietf"`
+	UpstreamSelector string           `toml:"upstream_selector"` // usable: random or weighted_random
+}
+
+type others struct {
 	Bootstrap        []string `toml:"bootstrap"`
 	Passthrough      []string `toml:"passthrough"`
 	Timeout          uint     `toml:"timeout"`
@@ -43,8 +56,14 @@ type config struct {
 	DebugHTTPHeaders []string `toml:"debug_http_headers"`
 }
 
-func loadConfig(path string) (*config, error) {
-	conf := &config{}
+type Config struct {
+	Listen   []string `toml:"listen"`
+	Upstream upstream `toml:"upstream"`
+	Other    others   `toml:"others"`
+}
+
+func LoadConfig(path string) (*Config, error) {
+	conf := &Config{}
 	metaData, err := toml.DecodeFile(path, conf)
 	if err != nil {
 		return nil, err
@@ -56,11 +75,15 @@ func loadConfig(path string) (*config, error) {
 	if len(conf.Listen) == 0 {
 		conf.Listen = []string{"127.0.0.1:53", "[::1]:53"}
 	}
-	if len(conf.UpstreamGoogle) == 0 && len(conf.UpstreamIETF) == 0 {
-		conf.UpstreamGoogle = []string{"https://dns.google.com/resolve"}
+	if len(conf.Upstream.UpstreamGoogle) == 0 && len(conf.Upstream.UpstreamIETF) == 0 {
+		conf.Upstream.UpstreamGoogle = []upstreamDetail{{URL: "https://dns.google.com/resolve", Weight: 50}}
 	}
-	if conf.Timeout == 0 {
-		conf.Timeout = 10
+	if conf.Other.Timeout == 0 {
+		conf.Other.Timeout = 10
+	}
+
+	if conf.Upstream.UpstreamSelector == "" {
+		conf.Upstream.UpstreamSelector = Random
 	}
 
 	return conf, nil
