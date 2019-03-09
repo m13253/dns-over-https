@@ -351,7 +351,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 		if urlErr, ok := req.err.(*url.Error); ok {
 			// should we only check timeout?
 			if urlErr.Timeout() {
-				c.selector.ReportUpstreamError(upstream, selector.Serious)
+				c.selector.ReportUpstreamStatus(upstream, selector.Timeout)
 			}
 		}
 
@@ -392,8 +392,16 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 	// https://developers.cloudflare.com/1.1.1.1/dns-over-https/request-structure/ says
 	// returns code will be 200 / 400 / 413 / 415 / 504, some server will return 503, so
 	// I think if status code is 5xx, upstream must has some problems
-	if req.response.StatusCode/100 == 5 {
-		c.selector.ReportUpstreamError(upstream, selector.Medium)
+	/*if req.response.StatusCode/100 == 5 {
+		c.selector.ReportUpstreamStatus(upstream, selector.Medium)
+	}*/
+
+	switch req.response.StatusCode / 100 {
+	case 5:
+		c.selector.ReportUpstreamStatus(upstream, selector.Error)
+
+	case 2:
+		c.selector.ReportUpstreamStatus(upstream, selector.OK)
 	}
 }
 

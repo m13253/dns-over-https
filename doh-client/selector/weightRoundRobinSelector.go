@@ -124,16 +124,21 @@ func (ws *WeightRoundRobinSelector) Get() *Upstream {
 	return ws.upstreams[bestUpstreamIndex]
 }
 
-func (ws *WeightRoundRobinSelector) ReportUpstreamError(upstream *Upstream, upstreamErr upstreamError) {
-	switch upstreamErr {
-	case Serious:
+func (ws *WeightRoundRobinSelector) ReportUpstreamStatus(upstream *Upstream, upstreamStatus upstreamStatus) {
+	switch upstreamStatus {
+	case Timeout:
 		if atomic.AddInt32(&upstream.effectiveWeight, -10) < 0 {
 			atomic.StoreInt32(&upstream.effectiveWeight, 0)
 		}
 
-	case Medium:
+	case Error:
 		if atomic.AddInt32(&upstream.effectiveWeight, -5) < 0 {
 			atomic.StoreInt32(&upstream.effectiveWeight, 0)
+		}
+
+	case OK:
+		if atomic.AddInt32(&upstream.effectiveWeight, 5) > upstream.weight {
+			atomic.StoreInt32(&upstream.effectiveWeight, upstream.weight)
 		}
 	}
 }

@@ -47,4 +47,4 @@ func (rs *RandomSelector) Get() *Upstream {
 
 func (rs *RandomSelector) StartEvaluate() {}
 
-func (rs *RandomSelector) ReportUpstreamError(upstream *Upstream, upstreamErr upstreamError) {}
+func (rs *RandomSelector) ReportUpstreamStatus(upstream *Upstream, upstreamStatus upstreamStatus) {}

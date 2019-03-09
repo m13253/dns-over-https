@@ -7,6 +7,6 @@ type Selector interface {
 	// StartEvaluate start upstream evaluation loop
 	StartEvaluate()
 
-	// ReportUpstreamError report upstream error
-	ReportUpstreamError(upstream *Upstream, upstreamErr upstreamError)
+	// ReportUpstreamStatus report upstream status
+	ReportUpstreamStatus(upstream *Upstream, upstreamStatus upstreamStatus)
 }
