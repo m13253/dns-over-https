@@ -16,7 +16,7 @@ var typeMap = map[UpstreamType]string{
 
 type Upstream struct {
 	Type            UpstreamType
-	Url             string
+	URL             string
 	RequestType     string
 	weight          int32
 	effectiveWeight int32
@@ -24,5 +24,5 @@ type Upstream struct {
 }
 
 func (u Upstream) String() string {
-	return fmt.Sprintf("upstream type: %s, upstream url: %s", typeMap[u.Type], u.Url)
+	return fmt.Sprintf("upstream type: %s, upstream url: %s", typeMap[u.Type], u.URL)
 }

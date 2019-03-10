@@ -23,14 +23,14 @@ func (rs *RandomSelector) Add(url string, upstreamType UpstreamType) (err error)
 	case Google:
 		rs.upstreams = append(rs.upstreams, &Upstream{
 			Type:        Google,
-			Url:         url,
+			URL:         url,
 			RequestType: "application/dns-json",
 		})
 
 	case IETF:
 		rs.upstreams = append(rs.upstreams, &Upstream{
 			Type:        IETF,
-			Url:         url,
+			URL:         url,
 			RequestType: "application/dns-message",
 		})
 

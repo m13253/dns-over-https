@@ -24,7 +24,7 @@ func (ws *WeightRoundRobinSelector) Add(url string, upstreamType UpstreamType, w
 	case Google:
 		ws.upstreams = append(ws.upstreams, &Upstream{
 			Type:            Google,
-			Url:             url,
+			URL:             url,
 			RequestType:     "application/dns-json",
 			weight:          weight,
 			effectiveWeight: weight,
@@ -33,7 +33,7 @@ func (ws *WeightRoundRobinSelector) Add(url string, upstreamType UpstreamType, w
 	case IETF:
 		ws.upstreams = append(ws.upstreams, &Upstream{
 			Type:            IETF,
-			Url:             url,
+			URL:             url,
 			RequestType:     "application/dns-message",
 			weight:          weight,
 			effectiveWeight: weight,
@@ -51,27 +51,27 @@ func (ws *WeightRoundRobinSelector) StartEvaluate() {
 	go func() {
 		for {
 			for i := range ws.upstreams {
-				upstreamUrl := ws.upstreams[i].Url
+				upstreamURL := ws.upstreams[i].URL
 				var acceptType string
 
 				switch ws.upstreams[i].Type {
 				case Google:
-					upstreamUrl += "?name=www.example.com&type=A"
+					upstreamURL += "?name=www.example.com&type=A"
 					acceptType = "application/dns-json"
 
 				case IETF:
 					// www.example.com
-					upstreamUrl += "?dns=q80BAAABAAAAAAAAA3d3dwdleGFtcGxlA2NvbQAAAQAB"
+					upstreamURL += "?dns=q80BAAABAAAAAAAAA3d3dwdleGFtcGxlA2NvbQAAAQAB"
 					acceptType = "application/dns-message"
 				}
 
-				req, err := http.NewRequest(http.MethodGet, upstreamUrl, nil)
+				req, err := http.NewRequest(http.MethodGet, upstreamURL, nil)
 				if err != nil {
-					/*log.Println("upstream:", upstreamUrl, "type:", typeMap[upstream.Type], "check failed:", err)
+					/*log.Println("upstream:", upstreamURL, "type:", typeMap[upstream.Type], "check failed:", err)
 					continue*/
 
 					// should I only log it? But if there is an error, I think when query the server will return error too
-					panic("upstream: " + upstreamUrl + " type: " + typeMap[ws.upstreams[i].Type] + " check failed: " + err.Error())
+					panic("upstream: " + upstreamURL + " type: " + typeMap[ws.upstreams[i].Type] + " check failed: " + err.Error())
 				}
 
 				req.Header.Set("accept", acceptType)
