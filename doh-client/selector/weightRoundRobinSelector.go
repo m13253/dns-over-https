@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -50,51 +51,61 @@ func (ws *WeightRoundRobinSelector) Add(url string, upstreamType UpstreamType, w
 func (ws *WeightRoundRobinSelector) StartEvaluate() {
 	go func() {
 		for {
+			wg := sync.WaitGroup{}
+
 			for i := range ws.upstreams {
-				upstreamURL := ws.upstreams[i].URL
-				var acceptType string
+				wg.Add(1)
 
-				switch ws.upstreams[i].Type {
-				case Google:
-					upstreamURL += "?name=www.example.com&type=A"
-					acceptType = "application/dns-json"
+				go func(i int) {
+					upstreamURL := ws.upstreams[i].URL
+					var acceptType string
 
-				case IETF:
-					// www.example.com
-					upstreamURL += "?dns=q80BAAABAAAAAAAAA3d3dwdleGFtcGxlA2NvbQAAAQAB"
-					acceptType = "application/dns-message"
-				}
+					switch ws.upstreams[i].Type {
+					case Google:
+						upstreamURL += "?name=www.example.com&type=A"
+						acceptType = "application/dns-json"
 
-				req, err := http.NewRequest(http.MethodGet, upstreamURL, nil)
-				if err != nil {
-					/*log.Println("upstream:", upstreamURL, "type:", typeMap[upstream.Type], "check failed:", err)
-					continue*/
-
-					// should I only log it? But if there is an error, I think when query the server will return error too
-					panic("upstream: " + upstreamURL + " type: " + typeMap[ws.upstreams[i].Type] + " check failed: " + err.Error())
-				}
-
-				req.Header.Set("accept", acceptType)
-
-				resp, err := ws.client.Do(req)
-				if err != nil {
-					// should I check error in detail?
-					if atomic.AddInt32(&ws.upstreams[i].effectiveWeight, -10) < 0 {
-						atomic.StoreInt32(&ws.upstreams[i].effectiveWeight, 0)
+					case IETF:
+						// www.example.com
+						upstreamURL += "?dns=q80BAAABAAAAAAAAA3d3dwdleGFtcGxlA2NvbQAAAQAB"
+						acceptType = "application/dns-message"
 					}
-					continue
-				}
 
-				switch ws.upstreams[i].Type {
-				case Google:
-					checkGoogleResponse(resp, ws.upstreams[i])
+					req, err := http.NewRequest(http.MethodGet, upstreamURL, nil)
+					if err != nil {
+						/*log.Println("upstream:", upstreamURL, "type:", typeMap[upstream.Type], "check failed:", err)
+						continue*/
 
-				case IETF:
-					checkIETFResponse(resp, ws.upstreams[i])
-				}
+						// should I only log it? But if there is an error, I think when query the server will return error too
+						panic("upstream: " + upstreamURL + " type: " + typeMap[ws.upstreams[i].Type] + " check failed: " + err.Error())
+					}
+
+					req.Header.Set("accept", acceptType)
+
+					resp, err := ws.client.Do(req)
+					if err != nil {
+						// should I check error in detail?
+						if atomic.AddInt32(&ws.upstreams[i].effectiveWeight, -10) < 0 {
+							atomic.StoreInt32(&ws.upstreams[i].effectiveWeight, 0)
+						}
+						return
+					}
+
+					switch ws.upstreams[i].Type {
+					case Google:
+						checkGoogleResponse(resp, ws.upstreams[i])
+
+					case IETF:
+						checkIETFResponse(resp, ws.upstreams[i])
+					}
+
+					wg.Done()
+				}(i)
 			}
 
-			time.Sleep(30 * time.Second)
+			wg.Wait()
+
+			time.Sleep(15 * time.Second)
 		}
 	}()
 }
