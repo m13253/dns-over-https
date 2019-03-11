@@ -10,3 +10,8 @@ type Selector interface {
 	// ReportUpstreamStatus report upstream status
 	ReportUpstreamStatus(upstream *Upstream, upstreamStatus upstreamStatus)
 }
+
+type DebugReporter interface {
+	// ReportWeights starts a goroutine to report all upstream weights, recommend interval is 15s
+	ReportWeights()
+}
