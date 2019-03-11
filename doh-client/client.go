@@ -153,7 +153,51 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 	}
 
 	switch c.conf.Upstream.UpstreamSelector {
+	case config.NginxWRR:
+		if c.conf.Other.Verbose {
+			log.Println(config.NginxWRR, " mode start")
+		}
+
+		s := selector.NewNginxWRRSelector(time.Duration(c.conf.Other.Timeout) * time.Second)
+		for _, u := range c.conf.Upstream.UpstreamGoogle {
+			if err := s.Add(u.URL, selector.Google, u.Weight); err != nil {
+				return nil, err
+			}
+		}
+
+		for _, u := range c.conf.Upstream.UpstreamIETF {
+			if err := s.Add(u.URL, selector.IETF, u.Weight); err != nil {
+				return nil, err
+			}
+		}
+
+		c.selector = s
+
+	case config.LVSWRR:
+		if c.conf.Other.Verbose {
+			log.Println(config.LVSWRR, " mode start")
+		}
+
+		s := selector.NewLVSWRRSelector(time.Duration(c.conf.Other.Timeout) * time.Second)
+		for _, u := range c.conf.Upstream.UpstreamGoogle {
+			if err := s.Add(u.URL, selector.Google, u.Weight); err != nil {
+				return nil, err
+			}
+		}
+
+		for _, u := range c.conf.Upstream.UpstreamIETF {
+			if err := s.Add(u.URL, selector.IETF, u.Weight); err != nil {
+				return nil, err
+			}
+		}
+
+		c.selector = s
+
 	default:
+		if c.conf.Other.Verbose {
+			log.Println(config.Random, " mode start")
+		}
+
 		// if selector is invalid or random, use random selector, or should we stop program and let user knows he is wrong?
 		s := selector.NewRandomSelector()
 		for _, u := range c.conf.Upstream.UpstreamGoogle {
@@ -169,22 +213,12 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 		}
 
 		c.selector = s
+	}
 
-	case config.WeightedRoundRobin:
-		s := selector.NewWeightRoundRobinSelector(time.Duration(c.conf.Other.Timeout) * time.Second)
-		for _, u := range c.conf.Upstream.UpstreamGoogle {
-			if err := s.Add(u.URL, selector.Google, u.Weight); err != nil {
-				return nil, err
-			}
+	if c.conf.Other.Verbose {
+		if reporter, ok := c.selector.(selector.DebugReporter); ok {
+			reporter.ReportWeights()
 		}
-
-		for _, u := range c.conf.Upstream.UpstreamIETF {
-			if err := s.Add(u.URL, selector.IETF, u.Weight); err != nil {
-				return nil, err
-			}
-		}
-
-		c.selector = s
 	}
 
 	return c, nil
@@ -246,6 +280,11 @@ func (c *Client) Start() error {
 		}(srv)
 	}
 
+	log.Println("start evaluation loop")
+
+	// start evaluation loop
+	c.selector.StartEvaluate()
+
 	for i := 0; i < cap(results); i++ {
 		err := <-results
 		if err != nil {
@@ -253,9 +292,6 @@ func (c *Client) Start() error {
 		}
 	}
 	close(results)
-
-	// start evaluation poll
-	c.selector.StartEvaluate()
 
 	return nil
 }
