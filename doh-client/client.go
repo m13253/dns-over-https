@@ -280,8 +280,6 @@ func (c *Client) Start() error {
 		}(srv)
 	}
 
-	log.Println("start evaluation loop")
-
 	// start evaluation loop
 	c.selector.StartEvaluate()
 
