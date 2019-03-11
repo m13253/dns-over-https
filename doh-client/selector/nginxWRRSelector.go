@@ -3,24 +3,25 @@ package selector
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
-type WeightRoundRobinSelector struct {
+type NginxWRRSelector struct {
 	upstreams []*Upstream // upstreamsInfo
 	client    http.Client // http client to check the upstream
 }
 
-func NewWeightRoundRobinSelector(timeout time.Duration) *WeightRoundRobinSelector {
-	return &WeightRoundRobinSelector{
+func NewNginxWRRSelector(timeout time.Duration) *NginxWRRSelector {
+	return &NginxWRRSelector{
 		client: http.Client{Timeout: timeout},
 	}
 }
 
-func (ws *WeightRoundRobinSelector) Add(url string, upstreamType UpstreamType, weight int32) (err error) {
+func (ws *NginxWRRSelector) Add(url string, upstreamType UpstreamType, weight int32) (err error) {
 	switch upstreamType {
 	case Google:
 		ws.upstreams = append(ws.upstreams, &Upstream{
@@ -47,8 +48,7 @@ func (ws *WeightRoundRobinSelector) Add(url string, upstreamType UpstreamType, w
 	return nil
 }
 
-// COW, avoid concurrent read write upstreams
-func (ws *WeightRoundRobinSelector) StartEvaluate() {
+func (ws *NginxWRRSelector) StartEvaluate() {
 	go func() {
 		for {
 			wg := sync.WaitGroup{}
@@ -57,6 +57,8 @@ func (ws *WeightRoundRobinSelector) StartEvaluate() {
 				wg.Add(1)
 
 				go func(i int) {
+					defer wg.Done()
+
 					upstreamURL := ws.upstreams[i].URL
 					var acceptType string
 
@@ -85,21 +87,19 @@ func (ws *WeightRoundRobinSelector) StartEvaluate() {
 					resp, err := ws.client.Do(req)
 					if err != nil {
 						// should I check error in detail?
-						if atomic.AddInt32(&ws.upstreams[i].effectiveWeight, -10) < 0 {
-							atomic.StoreInt32(&ws.upstreams[i].effectiveWeight, 0)
+						if atomic.AddInt32(&ws.upstreams[i].effectiveWeight, -10) < 1 {
+							atomic.StoreInt32(&ws.upstreams[i].effectiveWeight, 1)
 						}
 						return
 					}
 
 					switch ws.upstreams[i].Type {
 					case Google:
-						checkGoogleResponse(resp, ws.upstreams[i])
+						ws.checkGoogleResponse(resp, ws.upstreams[i])
 
 					case IETF:
-						checkIETFResponse(resp, ws.upstreams[i])
+						ws.checkIETFResponse(resp, ws.upstreams[i])
 					}
-
-					wg.Done()
 				}(i)
 			}
 
@@ -111,7 +111,7 @@ func (ws *WeightRoundRobinSelector) StartEvaluate() {
 }
 
 // nginx wrr like
-func (ws *WeightRoundRobinSelector) Get() *Upstream {
+func (ws *NginxWRRSelector) Get() *Upstream {
 	var (
 		total             int32
 		bestUpstreamIndex = -1
@@ -119,45 +119,45 @@ func (ws *WeightRoundRobinSelector) Get() *Upstream {
 
 	for i := range ws.upstreams {
 		effectiveWeight := atomic.LoadInt32(&ws.upstreams[i].effectiveWeight)
-		ws.upstreams[i].currentWeight += effectiveWeight
+		atomic.AddInt32(&ws.upstreams[i].currentWeight, effectiveWeight)
 		total += effectiveWeight
 
-		if bestUpstreamIndex == -1 || ws.upstreams[i].currentWeight > ws.upstreams[bestUpstreamIndex].currentWeight {
+		if bestUpstreamIndex == -1 || atomic.LoadInt32(&ws.upstreams[i].currentWeight) > atomic.LoadInt32(&ws.upstreams[bestUpstreamIndex].currentWeight) {
 			bestUpstreamIndex = i
 		}
 	}
 
-	ws.upstreams[bestUpstreamIndex].currentWeight -= total
+	atomic.AddInt32(&ws.upstreams[bestUpstreamIndex].currentWeight, -total)
 
 	return ws.upstreams[bestUpstreamIndex]
 }
 
-func (ws *WeightRoundRobinSelector) ReportUpstreamStatus(upstream *Upstream, upstreamStatus upstreamStatus) {
+func (ws *NginxWRRSelector) ReportUpstreamStatus(upstream *Upstream, upstreamStatus upstreamStatus) {
 	switch upstreamStatus {
 	case Timeout:
-		if atomic.AddInt32(&upstream.effectiveWeight, -10) < 0 {
-			atomic.StoreInt32(&upstream.effectiveWeight, 0)
+		if atomic.AddInt32(&upstream.effectiveWeight, -5) < 1 {
+			atomic.StoreInt32(&upstream.effectiveWeight, 1)
 		}
 
 	case Error:
-		if atomic.AddInt32(&upstream.effectiveWeight, -5) < 0 {
-			atomic.StoreInt32(&upstream.effectiveWeight, 0)
+		if atomic.AddInt32(&upstream.effectiveWeight, -3) < 1 {
+			atomic.StoreInt32(&upstream.effectiveWeight, 1)
 		}
 
 	case OK:
-		if atomic.AddInt32(&upstream.effectiveWeight, 2) > upstream.weight {
+		if atomic.AddInt32(&upstream.effectiveWeight, 1) > upstream.weight {
 			atomic.StoreInt32(&upstream.effectiveWeight, upstream.weight)
 		}
 	}
 }
 
-func checkGoogleResponse(resp *http.Response, upstream *Upstream) {
+func (ws *NginxWRRSelector) checkGoogleResponse(resp *http.Response, upstream *Upstream) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		// server error
-		if atomic.AddInt32(&upstream.effectiveWeight, -5) < 0 {
-			atomic.StoreInt32(&upstream.effectiveWeight, 0)
+		if atomic.AddInt32(&upstream.effectiveWeight, -3) < 1 {
+			atomic.StoreInt32(&upstream.effectiveWeight, 1)
 		}
 		return
 	}
@@ -165,14 +165,14 @@ func checkGoogleResponse(resp *http.Response, upstream *Upstream) {
 	m := make(map[string]interface{})
 	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
 		// should I check error in detail?
-		if atomic.AddInt32(&upstream.effectiveWeight, -1) < 0 {
-			atomic.StoreInt32(&upstream.effectiveWeight, 0)
+		if atomic.AddInt32(&upstream.effectiveWeight, -2) < 1 {
+			atomic.StoreInt32(&upstream.effectiveWeight, 1)
 		}
 		return
 	}
 
-	if status, ok := m["status"]; ok {
-		if statusNum, ok := status.(int); ok && statusNum == 0 {
+	if status, ok := m["Status"]; ok {
+		if statusNum, ok := status.(float64); ok && statusNum == 0 {
 			if atomic.AddInt32(&upstream.effectiveWeight, 5) > upstream.weight {
 				atomic.StoreInt32(&upstream.effectiveWeight, upstream.weight)
 			}
@@ -181,18 +181,18 @@ func checkGoogleResponse(resp *http.Response, upstream *Upstream) {
 	}
 
 	// should I check error in detail?
-	if atomic.AddInt32(&upstream.effectiveWeight, -1) < 0 {
-		atomic.StoreInt32(&upstream.effectiveWeight, 0)
+	if atomic.AddInt32(&upstream.effectiveWeight, -2) < 1 {
+		atomic.StoreInt32(&upstream.effectiveWeight, 1)
 	}
 }
 
-func checkIETFResponse(resp *http.Response, upstream *Upstream) {
+func (ws *NginxWRRSelector) checkIETFResponse(resp *http.Response, upstream *Upstream) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		// server error
-		if atomic.AddInt32(&upstream.effectiveWeight, -5) < 0 {
-			atomic.StoreInt32(&upstream.effectiveWeight, 0)
+		if atomic.AddInt32(&upstream.effectiveWeight, -5) < 1 {
+			atomic.StoreInt32(&upstream.effectiveWeight, 1)
 		}
 		return
 	}
@@ -200,4 +200,16 @@ func checkIETFResponse(resp *http.Response, upstream *Upstream) {
 	if atomic.AddInt32(&upstream.effectiveWeight, 5) > upstream.weight {
 		atomic.StoreInt32(&upstream.effectiveWeight, upstream.weight)
 	}
+}
+
+func (ws *NginxWRRSelector) ReportWeights() {
+	go func() {
+		for {
+			time.Sleep(15 * time.Second)
+
+			for _, u := range ws.upstreams {
+				log.Printf("%s, effect weight: %d", u, atomic.LoadInt32(&u.effectiveWeight))
+			}
+		}
+	}()
 }
