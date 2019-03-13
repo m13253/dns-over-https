@@ -30,8 +30,9 @@ import (
 )
 
 const (
-	Random             = "random"
-	WeightedRoundRobin = "weighted_round_robin"
+	Random   = "random"
+	NginxWRR = "weighted_round_robin"
+	LVSWRR   = "lvs_weighted_round_robin"
 )
 
 type upstreamDetail struct {
