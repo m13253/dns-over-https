@@ -94,7 +94,11 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 		} else {
 			questionType = strconv.FormatUint(uint64(question.Qtype), 10)
 		}
-		fmt.Printf("%s - - [%s] \"%s %s %s\"\n", r.RemoteAddr, time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
+		if clientip := s.findClientIP(r); clientip != nil {
+		    fmt.Printf("%s %s - [%s] \"%s %s %s\"\n", r.RemoteAddr, clientip, time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
+        } else {
+		    fmt.Printf("%s - - [%s] \"%s %s %s\"\n", r.RemoteAddr, time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
+        }
 	}
 
 	transactionID := msg.Id
