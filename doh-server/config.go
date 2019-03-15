@@ -40,6 +40,7 @@ type config struct {
 	TCPOnly          bool     `toml:"tcp_only"`
 	Verbose          bool     `toml:"verbose"`
 	DebugHTTPHeaders []string `toml:"debug_http_headers"`
+	LogGuessedIP     bool     `toml:"log_guessed_client_ip"`
 }
 
 func loadConfig(path string) (*config, error) {
