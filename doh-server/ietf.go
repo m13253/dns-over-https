@@ -30,6 +30,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -94,7 +95,11 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 		} else {
 			questionType = strconv.FormatUint(uint64(question.Qtype), 10)
 		}
-		if clientip := s.findClientIP(r); clientip != nil {
+		var clientip net.IP = nil
+		if s.conf.LogGuessedIP {
+			clientip = s.findClientIP(r)
+		}
+		if clientip != nil {
 			fmt.Printf("%s - - [%s] \"%s %s %s\"\n", clientip, time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
 		} else {
 			fmt.Printf("%s - - [%s] \"%s %s %s\"\n", r.RemoteAddr, time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
