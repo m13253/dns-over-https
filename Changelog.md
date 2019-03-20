@@ -4,6 +4,13 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.0.0
+
+**This is a breaking change!** Please update the configuration file after upgrading.
+
+- Implemented two upstream server selector algorithms: `weighted_round_robin` and `lvs_weighted_round_robin`.
+- Add a configuration option for doh-server: `log_guessed_client_ip`.
+
 ## Version 1.4.2
 
 - Add PID file feature for systems which lacks a cgroup-based process tracker.
