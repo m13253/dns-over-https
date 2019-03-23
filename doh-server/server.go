@@ -56,17 +56,34 @@ type DNSRequest struct {
 	errtext         string
 }
 
-func NewServer(conf *config) (s *Server) {
+func NewServer(conf *config) (s *Server, err error) {
+	timeout := time.Duration(conf.Timeout) * time.Second
+	udpLocalAddr, err := net.ResolveUDPAddr("udp", conf.LocalAddr)
+	if err != nil {
+		return
+	}
+	tcpLocalAddr, err := net.ResolveTCPAddr("tcp", conf.LocalAddr)
+	if err != nil {
+		return
+	}
 	s = &Server{
 		conf: conf,
 		udpClient: &dns.Client{
 			Net:     "udp",
 			UDPSize: dns.DefaultMsgSize,
-			Timeout: time.Duration(conf.Timeout) * time.Second,
+			Timeout: timeout,
+			Dialer: &net.Dialer{
+				Timeout:   timeout,
+				LocalAddr: udpLocalAddr,
+			},
 		},
 		tcpClient: &dns.Client{
 			Net:     "tcp",
-			Timeout: time.Duration(conf.Timeout) * time.Second,
+			Timeout: timeout,
+			Dialer: &net.Dialer{
+				Timeout:   timeout,
+				LocalAddr: tcpLocalAddr,
+			},
 		},
 		servemux: http.NewServeMux(),
 	}

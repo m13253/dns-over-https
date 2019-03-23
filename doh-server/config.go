@@ -31,6 +31,7 @@ import (
 
 type config struct {
 	Listen           []string `toml:"listen"`
+	LocalAddr        string   `toml:"local_addr"`
 	Cert             string   `toml:"cert"`
 	Key              string   `toml:"key"`
 	Path             string   `toml:"path"`
@@ -55,6 +56,10 @@ func loadConfig(path string) (*config, error) {
 
 	if len(conf.Listen) == 0 {
 		conf.Listen = []string{"127.0.0.1:8053", "[::1]:8053"}
+	}
+
+	if conf.LocalAddr == "" {
+		conf.LocalAddr = conf.Listen[0]
 	}
 
 	if conf.Path == "" {
