@@ -58,10 +58,6 @@ func loadConfig(path string) (*config, error) {
 		conf.Listen = []string{"127.0.0.1:8053", "[::1]:8053"}
 	}
 
-	if conf.LocalAddr == "" {
-		conf.LocalAddr = conf.Listen[0]
-	}
-
 	if conf.Path == "" {
 		conf.Path = "/dns-query"
 	}

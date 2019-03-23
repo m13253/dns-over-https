@@ -56,36 +56,36 @@ type DNSRequest struct {
 	errtext         string
 }
 
-func NewServer(conf *config) (s *Server, err error) {
+func NewServer(conf *config) (s *Server) {
 	timeout := time.Duration(conf.Timeout) * time.Second
-	udpLocalAddr, err := net.ResolveUDPAddr("udp", conf.LocalAddr)
-	if err != nil {
-		return
-	}
-	tcpLocalAddr, err := net.ResolveTCPAddr("tcp", conf.LocalAddr)
-	if err != nil {
-		return
-	}
 	s = &Server{
 		conf: conf,
 		udpClient: &dns.Client{
 			Net:     "udp",
 			UDPSize: dns.DefaultMsgSize,
 			Timeout: timeout,
-			Dialer: &net.Dialer{
-				Timeout:   timeout,
-				LocalAddr: udpLocalAddr,
-			},
 		},
 		tcpClient: &dns.Client{
 			Net:     "tcp",
 			Timeout: timeout,
-			Dialer: &net.Dialer{
-				Timeout:   timeout,
-				LocalAddr: tcpLocalAddr,
-			},
 		},
 		servemux: http.NewServeMux(),
+	}
+	if conf.LocalAddr != "" {
+		udpLocalAddr, err := net.ResolveUDPAddr("udp", conf.LocalAddr)
+		if err == nil {
+			s.udpClient.Dialer = &net.Dialer{
+				Timeout:   timeout,
+				LocalAddr: udpLocalAddr,
+			}
+		}
+		tcpLocalAddr, err := net.ResolveTCPAddr("tcp", conf.LocalAddr)
+		if err == nil {
+			s.tcpClient.Dialer = &net.Dialer{
+				Timeout:   timeout,
+				LocalAddr: tcpLocalAddr,
+			}
+		}
 	}
 	s.servemux.HandleFunc(conf.Path, s.handlerFunc)
 	return

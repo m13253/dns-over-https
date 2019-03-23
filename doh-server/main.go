@@ -110,9 +110,6 @@ func main() {
 		conf.Verbose = true
 	}
 
-	server, err := NewServer(conf)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	server := NewServer(conf)
 	_ = server.Start()
 }
