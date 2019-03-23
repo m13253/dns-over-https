@@ -78,6 +78,8 @@ func NewServer(conf *config) (s *Server) {
 				Timeout:   timeout,
 				LocalAddr: udpLocalAddr,
 			}
+		} else {
+			log.Println(err)
 		}
 		tcpLocalAddr, err := net.ResolveTCPAddr("tcp", conf.LocalAddr)
 		if err == nil {
@@ -85,6 +87,8 @@ func NewServer(conf *config) (s *Server) {
 				Timeout:   timeout,
 				LocalAddr: tcpLocalAddr,
 			}
+		} else {
+			log.Println(err)
 		}
 	}
 	s.servemux.HandleFunc(conf.Path, s.handlerFunc)
