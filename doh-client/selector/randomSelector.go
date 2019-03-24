@@ -42,7 +42,7 @@ func (rs *RandomSelector) Add(url string, upstreamType UpstreamType) (err error)
 }
 
 func (rs *RandomSelector) Get() *Upstream {
-	return rs.upstreams[rand.Intn(len(rs.upstreams)-1)]
+	return rs.upstreams[rand.Intn(len(rs.upstreams))]
 }
 
 func (rs *RandomSelector) StartEvaluate() {}
