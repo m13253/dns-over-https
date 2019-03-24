@@ -56,9 +56,9 @@ type DNSRequest struct {
 	errtext         string
 }
 
-func NewServer(conf *config) (s *Server) {
+func NewServer(conf *config) (*Server, error) {
 	timeout := time.Duration(conf.Timeout) * time.Second
-	s = &Server{
+	s := &Server{
 		conf: conf,
 		udpClient: &dns.Client{
 			Net:     "udp",
@@ -73,26 +73,24 @@ func NewServer(conf *config) (s *Server) {
 	}
 	if conf.LocalAddr != "" {
 		udpLocalAddr, err := net.ResolveUDPAddr("udp", conf.LocalAddr)
-		if err == nil {
-			s.udpClient.Dialer = &net.Dialer{
-				Timeout:   timeout,
-				LocalAddr: udpLocalAddr,
-			}
-		} else {
-			log.Println(err)
+		if err != nil {
+			return nil, err
 		}
 		tcpLocalAddr, err := net.ResolveTCPAddr("tcp", conf.LocalAddr)
-		if err == nil {
-			s.tcpClient.Dialer = &net.Dialer{
-				Timeout:   timeout,
-				LocalAddr: tcpLocalAddr,
-			}
-		} else {
-			log.Println(err)
+		if err != nil {
+			return nil, err
+		}
+		s.udpClient.Dialer = &net.Dialer{
+			Timeout:   timeout,
+			LocalAddr: udpLocalAddr,
+		}
+		s.tcpClient.Dialer = &net.Dialer{
+			Timeout:   timeout,
+			LocalAddr: tcpLocalAddr,
 		}
 	}
 	s.servemux.HandleFunc(conf.Path, s.handlerFunc)
-	return
+	return s, nil
 }
 
 func (s *Server) Start() error {
