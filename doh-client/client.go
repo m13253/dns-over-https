@@ -155,7 +155,7 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 	switch c.conf.Upstream.UpstreamSelector {
 	case config.NginxWRR:
 		if c.conf.Other.Verbose {
-			log.Println(config.NginxWRR, " mode start")
+			log.Println(config.NginxWRR, "mode start")
 		}
 
 		s := selector.NewNginxWRRSelector(time.Duration(c.conf.Other.Timeout) * time.Second)
@@ -175,7 +175,7 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 
 	case config.LVSWRR:
 		if c.conf.Other.Verbose {
-			log.Println(config.LVSWRR, " mode start")
+			log.Println(config.LVSWRR, "mode start")
 		}
 
 		s := selector.NewLVSWRRSelector(time.Duration(c.conf.Other.Timeout) * time.Second)
@@ -195,7 +195,7 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 
 	default:
 		if c.conf.Other.Verbose {
-			log.Println(config.Random, " mode start")
+			log.Println(config.Random, "mode start")
 		}
 
 		// if selector is invalid or random, use random selector, or should we stop program and let user knows he is wrong?
