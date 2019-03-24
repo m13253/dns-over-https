@@ -31,6 +31,7 @@ import (
 
 type config struct {
 	Listen           []string `toml:"listen"`
+	LocalAddr        string   `toml:"local_addr"`
 	Cert             string   `toml:"cert"`
 	Key              string   `toml:"key"`
 	Path             string   `toml:"path"`
