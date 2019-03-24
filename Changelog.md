@@ -4,6 +4,10 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.0.1
+
+- Fix a crash with the random load balancing algorithm.
+
 ## Version 2.0.0
 
 **This is a breaking change!** Please update the configuration file after upgrading.
