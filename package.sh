@@ -42,6 +42,7 @@ function prepare_env() {
 
     echo "Creating directories"
 
+    mkdir -p "${BUILD_BINARIESDIRECTORY}/nm-dispatcher"
     mkdir -p "${BUILD_BINARIESDIRECTORY}/launchd"
     mkdir -p "${BUILD_BINARIESDIRECTORY}/systemd"
     mkdir -p "${BUILD_BINARIESDIRECTORY}/config"
@@ -50,6 +51,7 @@ function prepare_env() {
 }
 
 function build_common() {
+    cp NetworkManager/dispatcher.d/* "${BUILD_BINARIESDIRECTORY}"/nm-dispatcher
     cp launchd/*.plist "${BUILD_BINARIESDIRECTORY}"/launchd
     cp systemd/*.service "${BUILD_BINARIESDIRECTORY}"/systemd
     cp doh-server/doh-server.conf "${BUILD_BINARIESDIRECTORY}"/config
@@ -87,6 +89,9 @@ function package() {
 
     mkdir -p "${TMP_DIRECTORY}"/etc/dns-over-https
     cp "${BUILD_BINARIESDIRECTORY}"/config/"${EXE}".conf "${TMP_DIRECTORY}"/etc/dns-over-https
+
+    mkdir -p "${TMP_DIRECTORY}"/etc/NetworkManager/dispatcher.d
+    cp "${BUILD_BINARIESDIRECTORY}"/nm-dispatcher/"${EXE}" "${TMP_DIRECTORY}"/etc/NetworkManager/dispatcher.d
 
     # call fpm
     fpm --input-type dir \
