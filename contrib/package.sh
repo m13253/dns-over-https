@@ -10,6 +10,8 @@ set -euo pipefail
 #  * sudo with no password
 #  * go and fpm is pre-installed
 #  * rpmbuild is required if you need rpm packages
+#
+# Compatible with Azure DevOps hosted Ubuntu 16.04 agent
 
 export DEBIAN_FRONTEND="noninteractive"
 export DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -32,7 +34,7 @@ function prepare_env() {
     fi
 
     if ! [ -x "$(command -v rpmbuild)" ]; then
-        # TODO: currectly install rpmbuild
+        # TODO: correctly install rpmbuild
         ! sudo apt-get -y install rpmbuild
     fi
 
@@ -137,6 +139,7 @@ build linux arm64 linux-arm64
 package linux arm64 linux-arm64 deb
 ! package linux arm64 linux-arm64 rpm
 package linux arm64 linux-arm64 pacman
+
 # build darwin amd64 darwin-amd64
 # build windows 386 windows-x86.exe
 # build windows amd64 windows-amd64.exe
