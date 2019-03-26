@@ -112,7 +112,7 @@ function package() {
         .
 }
 
-cd "${DIR}"
+cd "${DIR}"/..
 prepare_env
 make deps
 build_common
