@@ -14,7 +14,7 @@ set -euo pipefail
 # Compatible with Azure DevOps hosted Ubuntu 16.04 agent
 
 export DEBIAN_FRONTEND="noninteractive"
-export DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"/..
 export BUILD_BINARIESDIRECTORY="${BUILD_BINARIESDIRECTORY:-${DIR}/build/bin}"
 export BUILD_ARTIFACTSTAGINGDIRECTORY="${BUILD_ARTIFACTSTAGINGDIRECTORY:-${DIR}/build/packages}"
 export TMP_DIRECTORY="/tmp/dohbuild"
