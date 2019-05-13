@@ -4,6 +4,13 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.1.0
+
+- Add `local_addr` configuration for doh-server (#39)
+- Fix a problem when compiling on macOS 10.14.4 or newer
+- Add Quad9 DoH server to the example `doh-client.conf`
+- Use TCP when appropriate for the given query type/response (AXFR/IXFR)
+
 ## Version 2.0.1
 
 - Fix a crash with the random load balancing algorithm.
