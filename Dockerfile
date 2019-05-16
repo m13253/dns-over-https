@@ -13,7 +13,7 @@ COPY --from=build-env /src/doh-server/doh-server /doh-server
 ADD doh-client/doh-client.conf /doh-client.conf
 ADD doh-server/doh-server.conf /doh-server.conf
 
-RUN sed -i 's/127.0.0.1/0.0.0.0/' /doh-server.conf
+RUN sed -i '$!N;s/"127.0.0.1:8053",\s*"\[::1\]:8053",/":8053",/;P;D' /doh-server.conf
 
 EXPOSE 8053
 
