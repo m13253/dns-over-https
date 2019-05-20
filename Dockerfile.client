@@ -1,8 +1,9 @@
 FROM golang:alpine AS build-env
 
+RUN apk add --no-cache git make
+
 WORKDIR /src
 ADD . /src
-RUN apk add --no-cache git make
 RUN make doh-client/doh-client
 
 FROM alpine:latest
