@@ -4,6 +4,11 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.1.1
+
+- Add a set of Dockerfile contributed by the community
+- Include DNS.SB's resolver in example configuration
+
 ## Version 2.1.0
 
 - Add `local_addr` configuration for doh-server (#39)
