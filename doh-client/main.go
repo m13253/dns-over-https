@@ -89,7 +89,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("doh-server %s\nHomepage: https://github.com/m13253/dns-over-https\n", VERSION)
+		fmt.Printf("doh-client %s\nHomepage: https://github.com/m13253/dns-over-https\n", VERSION)
 		return
 	}
 
