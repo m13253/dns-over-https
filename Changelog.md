@@ -4,6 +4,11 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.1.2
+
+- Update address for google's resolver
+- Fix a typo
+
 ## Version 2.1.1
 
 - Add a set of Dockerfile contributed by the community
