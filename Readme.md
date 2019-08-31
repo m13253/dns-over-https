@@ -79,6 +79,47 @@ you can host DNS-over-HTTPS along with other HTTPS services.
 HTTP/2 with at least TLS v1.3 is recommended. OCSP stapling must be enabled,
 otherwise DNS recursion may happen.
 
+### Example configuration: Apache
+
+    SSLProtocol TLSv1.2
+    SSLHonorCipherOrder On
+    SSLCipherSuite ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+3DES:!aNULL:!MD5:!DSS:!eNULL:!EXP:!LOW:!MD5
+    SSLUseStapling on
+    SSLStaplingCache shmcb:/var/lib/apache2/stapling_cache(512000)
+
+    <VirtualHost *:443>
+        ServerName MY_SERVER_NAME
+        Protocols h2 http/1.1
+        ProxyPass /dns-query http://[::1]:8053/dns-query
+        ProxyPassReverse /dns-query http://[::1]:8053/dns-query
+    </VirtualHost>
+
+### Example configuration: Nginx
+
+Please submit your configuration through GitHub Pull Request.
+
+Note you must achieve at least A grade from SSL Labs, with OCSP Must Staple turned on.
+
+### Example configuration: Caddy
+
+    https://MY_SERVER_NAME {
+            log     / syslog "{remote} - {user} [{when}] \"{method} {scheme}://{host}{uri} {proto}\" {status} {size} \"{>Referer}\" \"{>User-Agent}\" {>X-Forwarded-For}"
+            errors  syslog
+            gzip
+            proxy   /dns-query      http://[::1]:18053 {
+                    header_upstream Host {host}
+                    header_upstream X-Real-IP {remote}
+                    header_upstream X-Forwarded-For {>X-Forwarded-For},{remote}
+                    header_upstream X-Forwarded-Proto {scheme}
+            }
+            root    /var/www
+            tls {
+                    ciphers ECDHE-ECDSA-WITH-CHACHA20-POLY1305 ECDHE-RSA-WITH-CHACHA20-POLY1305 ECDHE-ECDSA-AES256-GCM-SHA384 ECDHE-RSA-AES256-GCM-SHA384 ECDHE-ECDSA-AES128-GCM-SHA256 ECDHE-RSA-AES128-GCM-SHA256
+                    curves  X25519 p384 p521
+                    must_staple
+            }
+    }
+
 ## DNSSEC
 
 DNS-over-HTTPS is compatible with DNSSEC, and requests DNSSEC signatures by
