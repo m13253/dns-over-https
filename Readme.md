@@ -94,9 +94,11 @@ otherwise DNS recursion may happen.
         ProxyPassReverse /dns-query http://[::1]:8053/dns-query
     </VirtualHost>
 
+(Credit: [Joan Moreau](https://github.com/m13253/dns-over-https/issues/51#issuecomment-526820884))
+
 ### Example configuration: Nginx
 
-Please submit your configuration through GitHub Pull Request.
+Please submit your configuration through [GitHub Pull Request](https://github.com/m13253/dns-over-https/pulls).
 
 Note you must achieve at least A grade from SSL Labs, with OCSP Must Staple turned on.
 
