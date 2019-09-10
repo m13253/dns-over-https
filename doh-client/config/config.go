@@ -53,6 +53,7 @@ type others struct {
 	NoCookies        bool     `toml:"no_cookies"`
 	NoECS            bool     `toml:"no_ecs"`
 	NoIPv6           bool     `toml:"no_ipv6"`
+	NoUserAgent      bool     `toml:"no_user_agent"`
 	Verbose          bool     `toml:"verbose"`
 	DebugHTTPHeaders []string `toml:"debug_http_headers"`
 }

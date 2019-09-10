@@ -86,7 +86,11 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 	}
 
 	req.Header.Set("Accept", "application/json, application/dns-message, application/dns-udpwireformat")
-	req.Header.Set("User-Agent", USER_AGENT)
+	if !c.conf.NoUserAgent {
+		req.Header.Set("User-Agent", USER_AGENT)
+	} else {
+		req.Header.Set("User-Agent", "")
+	}
 	req = req.WithContext(ctx)
 
 	c.httpClientMux.RLock()
