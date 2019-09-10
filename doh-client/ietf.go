@@ -128,7 +128,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 		req.Header.Set("Content-Type", "application/dns-message")
 	}
 	req.Header.Set("Accept", "application/dns-message, application/dns-udpwireformat, application/json")
-	if !c.conf.NoUserAgent {
+	if !c.conf.Other.NoUserAgent {
 		req.Header.Set("User-Agent", USER_AGENT)
 	} else {
 		req.Header.Set("User-Agent", "")

@@ -59,6 +59,7 @@ uninstall:
 
 deps:
 	@# I am not sure if it is the correct way to keep the common library updated
+	$(GOGET_UPDATE) github.com/m13253/dns-over-https/doh-client/config
 	$(GOGET_UPDATE) github.com/m13253/dns-over-https/json-dns
 	$(GOGET) ./doh-client ./doh-server
 
