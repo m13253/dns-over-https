@@ -98,9 +98,41 @@ otherwise DNS recursion may happen.
 
 ### Example configuration: Nginx
 
-Please submit your configuration through [GitHub Pull Request](https://github.com/m13253/dns-over-https/pulls).
+    server {
+        listen       443 ssl http2 default_server;
+        listen       [::]:443 ssl http2 default_server;
+        server_name  MY_SERVER_NAME;
 
-Note you must achieve at least A grade from SSL Labs, with OCSP Must Staple turned on.
+        server_tokens off;
+
+        ssl_protocols TLSv1.2 TLSv1.3;          # TLS 1.3 requires nginx >= 1.13.0
+        ssl_prefer_server_ciphers on;
+        ssl_dhparam /etc/nginx/dhparam.pem;     # openssl dhparam -dsaparam -out /etc/nginx/dhparam.pem 4096
+        ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
+        ssl_ecdh_curve secp384r1;               # Requires nginx >= 1.1.0
+        ssl_session_timeout  10m;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_tickets off;                # Requires nginx >= 1.5.9
+        ssl_stapling on;                        # Requires nginx >= 1.3.7
+        ssl_stapling_verify on;                 # Requires nginx => 1.3.7
+        ssl_early_data off;                     # 0-RTT, enable if desired - Requires nginx >= 1.15.4
+        resolver 1.1.1.1 valid=300s;            # Replace with your local resolver
+        resolver_timeout 5s;
+        # HTTP Security Headers
+        add_header X-Frame-Options DENY;
+        add_header X-Content-Type-Options nosniff;
+        add_header X-XSS-Protection "1; mode=block";
+        add_header Strict-Transport-Security "max-age=63072000";
+        ssl_certificate /path/to/your/server/certificates/fullchain.pem;
+        ssl_certificate_key /path/to/your/server/certificates/privkey.pem;
+        location /dns-query {
+            proxy_pass       http://localhost:8053/dns-query;
+            proxy_set_header Host      $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+
+(Credit: [Cipherli.st](https://cipherli.st/))
 
 ### Example configuration: Caddy
 
