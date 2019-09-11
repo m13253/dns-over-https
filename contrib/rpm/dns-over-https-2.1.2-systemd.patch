@@ -1,0 +1,36 @@
+diff -Naur dns-over-https-2.1.2.org/systemd/doh-client.service dns-over-https-2.1.2/systemd/doh-client.service
+--- dns-over-https-2.1.2.org/systemd/doh-client.service	2019-09-10 12:08:35.177574074 +0200
++++ dns-over-https-2.1.2/systemd/doh-client.service	2019-09-10 12:10:05.473700374 +0200
+@@ -7,12 +7,12 @@
+ 
+ [Service]
+ AmbientCapabilities=CAP_NET_BIND_SERVICE
+-ExecStart=/usr/local/bin/doh-client -conf /etc/dns-over-https/doh-client.conf
++ExecStart=/usr/bin/doh-client -conf /etc/dns-over-https/doh-client.conf
+ LimitNOFILE=1048576
+ Restart=always
+ RestartSec=3
+ Type=simple
+-User=nobody
++User=doh-client
+ 
+ [Install]
+ WantedBy=multi-user.target
+diff -Naur dns-over-https-2.1.2.org/systemd/doh-server.service dns-over-https-2.1.2/systemd/doh-server.service
+--- dns-over-https-2.1.2.org/systemd/doh-server.service	2019-09-10 12:08:35.177574074 +0200
++++ dns-over-https-2.1.2/systemd/doh-server.service	2019-09-10 12:10:20.980273992 +0200
+@@ -5,12 +5,12 @@
+ 
+ [Service]
+ AmbientCapabilities=CAP_NET_BIND_SERVICE
+-ExecStart=/usr/local/bin/doh-server -conf /etc/dns-over-https/doh-server.conf
++ExecStart=/usr/bin/doh-server -conf /etc/dns-over-https/doh-server.conf
+ LimitNOFILE=1048576
+ Restart=always
+ RestartSec=3
+ Type=simple
+-User=nobody
++User=doh-server
+ 
+ [Install]
+ WantedBy=multi-user.target

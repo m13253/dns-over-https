@@ -1,0 +1,122 @@
+
+## <summary>policy for doh_server</summary>
+
+########################################
+## <summary>
+##	Execute doh_server_exec_t in the doh_server domain.
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to transition.
+## </summary>
+## </param>
+#
+interface(`doh_server_domtrans',`
+	gen_require(`
+		type doh_server_t, doh_server_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	domtrans_pattern($1, doh_server_exec_t, doh_server_t)
+')
+
+######################################
+## <summary>
+##	Execute doh_server in the caller domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`doh_server_exec',`
+	gen_require(`
+		type doh_server_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	can_exec($1, doh_server_exec_t)
+')
+########################################
+## <summary>
+##	Execute doh_server server in the doh_server domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed to transition.
+##	</summary>
+## </param>
+#
+interface(`doh_server_systemctl',`
+	gen_require(`
+		type doh_server_t;
+		type doh_server_unit_file_t;
+	')
+
+	systemd_exec_systemctl($1)
+        systemd_read_fifo_file_passwd_run($1)
+	allow $1 doh_server_unit_file_t:file read_file_perms;
+	allow $1 doh_server_unit_file_t:service manage_service_perms;
+
+	ps_process_pattern($1, doh_server_t)
+')
+
+
+########################################
+## <summary>
+##	All of the rules required to administrate
+##	an doh_server environment
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="role">
+##	<summary>
+##	Role allowed access.
+##	</summary>
+## </param>
+## <rolecap/>
+#
+interface(`doh_server_admin',`
+	gen_require(`
+		type doh_server_t;
+	type doh_server_unit_file_t;
+	')
+
+	allow $1 doh_server_t:process { signal_perms };
+	ps_process_pattern($1, doh_server_t)
+
+    tunable_policy(`deny_ptrace',`',`
+        allow $1 doh_server_t:process ptrace;
+    ')
+
+	doh_server_systemctl($1)
+	admin_pattern($1, doh_server_unit_file_t)
+	allow $1 doh_server_unit_file_t:service all_service_perms;
+	optional_policy(`
+		systemd_passwd_agent_exec($1)
+		systemd_read_fifo_file_passwd_run($1)
+	')
+')
+
+########################################
+## <summary>
+##      Make a TCP connection to the vault_ocsp_responder port.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+interface(`doh_server_connect',`
+        gen_require(`
+                type doh_server_port_t;
+		type $1;
+        ')
+
+        allow $1 doh_server_port_t:tcp_socket name_connect;
+')
