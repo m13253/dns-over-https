@@ -1,0 +1,103 @@
+
+## <summary>policy for doh_client</summary>
+
+########################################
+## <summary>
+##	Execute doh_client_exec_t in the doh_client domain.
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to transition.
+## </summary>
+## </param>
+#
+interface(`doh_client_domtrans',`
+	gen_require(`
+		type doh_client_t, doh_client_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	domtrans_pattern($1, doh_client_exec_t, doh_client_t)
+')
+
+######################################
+## <summary>
+##	Execute doh_client in the caller domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`doh_client_exec',`
+	gen_require(`
+		type doh_client_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	can_exec($1, doh_client_exec_t)
+')
+########################################
+## <summary>
+##	Execute doh_client server in the doh_client domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed to transition.
+##	</summary>
+## </param>
+#
+interface(`doh_client_systemctl',`
+	gen_require(`
+		type doh_client_t;
+		type doh_client_unit_file_t;
+	')
+
+	systemd_exec_systemctl($1)
+        systemd_read_fifo_file_passwd_run($1)
+	allow $1 doh_client_unit_file_t:file read_file_perms;
+	allow $1 doh_client_unit_file_t:service manage_service_perms;
+
+	ps_process_pattern($1, doh_client_t)
+')
+
+
+########################################
+## <summary>
+##	All of the rules required to administrate
+##	an doh_client environment
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="role">
+##	<summary>
+##	Role allowed access.
+##	</summary>
+## </param>
+## <rolecap/>
+#
+interface(`doh_client_admin',`
+	gen_require(`
+		type doh_client_t;
+	type doh_client_unit_file_t;
+	')
+
+	allow $1 doh_client_t:process { signal_perms };
+	ps_process_pattern($1, doh_client_t)
+
+    tunable_policy(`deny_ptrace',`',`
+        allow $1 doh_client_t:process ptrace;
+    ')
+
+	doh_client_systemctl($1)
+	admin_pattern($1, doh_client_unit_file_t)
+	allow $1 doh_client_unit_file_t:service all_service_perms;
+	optional_policy(`
+		systemd_passwd_agent_exec($1)
+		systemd_read_fifo_file_passwd_run($1)
+	')
+')

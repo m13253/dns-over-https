@@ -1,0 +1,42 @@
+policy_module(doh_server, 1.0.0)
+
+require {
+	class process execmem;
+	class tcp_socket { accept bind create read write getattr listen setopt connect getopt };
+	class udp_socket { connect create getattr setopt read write };
+	class file execmod;
+}
+
+type doh_server_t;
+type doh_server_exec_t;
+
+init_daemon_domain(doh_server_t, doh_server_exec_t)
+
+type doh_server_port_t;
+
+corenet_port(doh_server_port_t)
+
+type doh_server_unit_file_t;
+systemd_unit_file(doh_server_unit_file_t)
+
+allow doh_server_t self:fifo_file rw_fifo_file_perms;
+allow doh_server_t self:unix_stream_socket create_stream_socket_perms;
+allow doh_server_t self:process execmem;
+allow doh_server_t self:tcp_socket { accept read write bind create getattr listen setopt connect getopt};
+allow doh_server_t self:udp_socket { connect create getattr setopt read write };
+
+allow doh_server_t doh_server_exec_t:file execmod;
+allow doh_server_t doh_server_port_t:tcp_socket name_bind;
+
+domain_use_interactive_fds(doh_server_t)
+
+files_read_etc_files(doh_server_t)
+
+corenet_tcp_bind_generic_node(doh_server_t)
+corenet_tcp_connect_dns_port(doh_server_t)
+doh_server_connect(httpd_t)
+
+kernel_read_net_sysctls(doh_server_t)
+kernel_search_network_sysctl(doh_server_t)
+
+miscfiles_read_localization(doh_server_t)

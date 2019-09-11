@@ -1,0 +1,49 @@
+policy_module(doh_client, 1.0.0)
+
+########################################
+#
+# Declarations
+#
+
+type doh_client_t;
+type doh_client_exec_t;
+init_daemon_domain(doh_client_t, doh_client_exec_t)
+
+type doh_client_port_t;
+
+corenet_port(doh_client_port_t)
+
+type doh_client_unit_file_t;
+systemd_unit_file(doh_client_unit_file_t)
+
+########################################
+#
+# doh_client local policy
+#
+allow doh_client_t self:fifo_file rw_fifo_file_perms;
+allow doh_client_t self:unix_stream_socket create_stream_socket_perms;
+
+allow doh_client_t self:capability net_bind_service;
+allow doh_client_t self:process execmem;
+allow doh_client_t self:tcp_socket { accept bind connect create getattr getopt listen read setopt write };
+allow doh_client_t self:udp_socket { bind connect create getattr read setopt write };
+
+allow doh_client_t doh_client_exec_t:file execmod;
+allow doh_client_t doh_client_port_t:tcp_socket name_bind;
+
+corenet_tcp_bind_dns_port(doh_client_t)
+corenet_tcp_bind_generic_node(doh_client_t)
+corenet_tcp_connect_http_port(doh_client_t)
+corenet_udp_bind_dns_port(doh_client_t)
+corenet_udp_bind_generic_node(doh_client_t)
+corenet_udp_bind_generic_port(doh_client_t)
+kernel_read_net_sysctls(doh_client_t)
+kernel_search_network_sysctl(doh_client_t)
+miscfiles_read_certs(doh_client_t)
+sysnet_read_config(doh_client_t)
+
+domain_use_interactive_fds(doh_client_t)
+
+files_read_etc_files(doh_client_t)
+
+miscfiles_read_localization(doh_client_t)

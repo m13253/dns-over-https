@@ -1,0 +1,2 @@
+/usr/bin/doh-client					--	gen_context(system_u:object_r:doh_client_exec_t,s0)
+/usr/lib/systemd/system/doh-client.service		--	gen_context(system_u:object_r:doh_client_unit_file_t,s0)
