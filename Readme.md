@@ -44,7 +44,7 @@ To test your configuration, type:
 
     dig www.google.com
 
-If it is OK, you will wee:
+If it is OK, you will see:
 
     ;; SERVER: 127.0.0.1#53(127.0.0.1)
 
