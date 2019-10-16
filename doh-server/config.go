@@ -25,6 +25,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/BurntSushi/toml"
 )
@@ -38,7 +39,6 @@ type config struct {
 	Upstream         []string `toml:"upstream"`
 	Timeout          uint     `toml:"timeout"`
 	Tries            uint     `toml:"tries"`
-	TCPOnly          bool     `toml:"tcp_only"`
 	Verbose          bool     `toml:"verbose"`
 	DebugHTTPHeaders []string `toml:"debug_http_headers"`
 	LogGuessedIP     bool     `toml:"log_guessed_client_ip"`
@@ -62,7 +62,7 @@ func loadConfig(path string) (*config, error) {
 		conf.Path = "/dns-query"
 	}
 	if len(conf.Upstream) == 0 {
-		conf.Upstream = []string{"8.8.8.8:53", "8.8.4.4:53"}
+		conf.Upstream = []string{"udp:8.8.8.8:53", "udp:8.8.4.4:53"}
 	}
 	if conf.Timeout == 0 {
 		conf.Timeout = 10
@@ -75,7 +75,34 @@ func loadConfig(path string) (*config, error) {
 		return nil, &configError{"You must specify both -cert and -key to enable TLS"}
 	}
 
+	// validate all upstreams
+	for _, us := range conf.Upstream {
+		address, t := addressAndType(us)
+		if address == "" {
+			return nil, &configError{"One of the upstreams has not a (udp|tcp|tcp-tls) prefix e.g. udp:1.1.1.1:53"}
+		}
+
+		switch t {
+		case "tcp", "udp", "tcp-tls":
+			// OK
+		default:
+			return nil, &configError{"Invalid upstream prefix specified, choose one of: udp tcp tcp-tls"}
+		}
+	}
+
 	return conf, nil
+}
+
+var rxUpstreamWithTypePrefix = regexp.MustCompile("^[a-z-]+(:)")
+
+func addressAndType(us string) (string, string) {
+	p := rxUpstreamWithTypePrefix.FindStringSubmatchIndex(us)
+	fmt.Println(p)
+	if len(p) != 4 {
+		return "", ""
+	}
+
+	return us[p[2]+1:], us[:p[2]]
 }
 
 type configError struct {

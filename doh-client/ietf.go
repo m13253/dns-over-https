@@ -36,7 +36,7 @@ import (
 	"time"
 
 	"github.com/m13253/dns-over-https/doh-client/selector"
-	"github.com/m13253/dns-over-https/json-dns"
+	jsonDNS "github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
@@ -180,7 +180,7 @@ func (c *Client) parseResponseIETF(ctx context.Context, w dns.ResponseWriter, r 
 
 	body, err := ioutil.ReadAll(req.response.Body)
 	if err != nil {
-		log.Println(err)
+		log.Printf("read error from upstream %s: %v\n", req.currentUpstream, err)
 		req.reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(req.reply)
 		return
@@ -191,7 +191,7 @@ func (c *Client) parseResponseIETF(ctx context.Context, w dns.ResponseWriter, r 
 		if nowDate, err := time.Parse(http.TimeFormat, headerNow); err == nil {
 			now = nowDate
 		} else {
-			log.Println(err)
+			log.Printf("Date header parse error from upstream %s: %v\n", req.currentUpstream, err)
 		}
 	}
 	headerLastModified := req.response.Header.Get("Last-Modified")
@@ -200,7 +200,7 @@ func (c *Client) parseResponseIETF(ctx context.Context, w dns.ResponseWriter, r 
 		if lastModifiedDate, err := time.Parse(http.TimeFormat, headerLastModified); err == nil {
 			lastModified = lastModifiedDate
 		} else {
-			log.Println(err)
+			log.Printf("Last-Modified header parse error from upstream %s: %v\n", req.currentUpstream, err)
 		}
 	}
 	timeDelta := now.Sub(lastModified)
@@ -211,7 +211,7 @@ func (c *Client) parseResponseIETF(ctx context.Context, w dns.ResponseWriter, r 
 	fullReply := new(dns.Msg)
 	err = fullReply.Unpack(body)
 	if err != nil {
-		log.Println(err)
+		log.Printf("unpacking error from upstream %s: %v\n", req.currentUpstream, err)
 		req.reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(req.reply)
 		return
@@ -233,7 +233,7 @@ func (c *Client) parseResponseIETF(ctx context.Context, w dns.ResponseWriter, r 
 
 	buf, err := fullReply.Pack()
 	if err != nil {
-		log.Println(err)
+		log.Printf("packing error with upstream %s: %v\n", req.currentUpstream, err)
 		req.reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(req.reply)
 		return
@@ -242,12 +242,15 @@ func (c *Client) parseResponseIETF(ctx context.Context, w dns.ResponseWriter, r 
 		fullReply.Truncated = true
 		buf, err = fullReply.Pack()
 		if err != nil {
-			log.Println(err)
+			log.Printf("re-packing error with upstream %s: %v\n", req.currentUpstream, err)
 			return
 		}
 		buf = buf[:req.udpSize]
 	}
-	w.Write(buf)
+	_, err = w.Write(buf)
+	if err != nil {
+		log.Printf("failed to write to client: %v\n", err)
+	}
 }
 
 func fixRecordTTL(rr dns.RR, delta time.Duration) dns.RR {

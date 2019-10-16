@@ -38,7 +38,7 @@ func PrepareReply(req *dns.Msg) *dns.Msg {
 	reply := new(dns.Msg)
 	reply.Id = req.Id
 	reply.Response = true
-	reply.Opcode = reply.Opcode
+	reply.Opcode = req.Opcode
 	reply.RecursionDesired = req.RecursionDesired
 	reply.RecursionAvailable = req.RecursionDesired
 	reply.CheckingDisabled = req.CheckingDisabled
