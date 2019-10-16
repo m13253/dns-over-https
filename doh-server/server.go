@@ -35,6 +35,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -48,9 +49,22 @@ type Server struct {
 	tcpClient    *dns.Client
 	tcpClientTLS *dns.Client
 	servemux     *http.ServeMux
+
+	cacheLock sync.RWMutex
+	cache     map[uint64]cacheEntry
+}
+
+type cacheEntry struct {
+	expiresAt time.Time
+	dns.Msg
+	upstream string
 }
 
 type DNSRequest struct {
+	// key is the DNS request key, used for caching
+	key uint64
+	// keyJSON is used to debug cache
+	keyJSON         string
 	request         *dns.Msg
 	response        *dns.Msg
 	transactionID   uint16
@@ -78,6 +92,7 @@ func NewServer(conf *config) (*Server, error) {
 			Timeout: timeout,
 		},
 		servemux: http.NewServeMux(),
+		cache:    map[uint64]cacheEntry{},
 	}
 	if conf.LocalAddr != "" {
 		udpLocalAddr, err := net.ResolveUDPAddr("udp", conf.LocalAddr)
@@ -199,6 +214,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//RFC: this is always true?
 	if r.Form == nil {
 		const maxMemory = 32 << 20 // 32 MB
 		r.ParseMultipartForm(maxMemory)
@@ -341,6 +357,10 @@ func (s *Server) indexQuestionType(msg *dns.Msg, qtype uint16) int {
 }
 
 func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (resp *DNSRequest, err error) {
+	if s.getCached(req) {
+		return nil, nil
+	}
+
 	numServers := len(s.conf.Upstream)
 	for i := uint(0); i < s.conf.Tries; i++ {
 		req.currentUpstream = s.conf.Upstream[rand.Intn(numServers)]
@@ -360,9 +380,15 @@ func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (resp *DNSRequ
 				req.response, _, err = s.tcpClient.ExchangeContext(ctx, req.request, upstream)
 			} else {
 				req.response, _, err = s.udpClient.ExchangeContext(ctx, req.request, upstream)
-				if err == nil && req.response != nil && req.response.Truncated {
-					log.Println(err)
-					req.response, _, err = s.tcpClient.ExchangeContext(ctx, req.request, upstream)
+				if err != nil {
+					goto Failed
+				}
+
+				if req.response != nil && req.response.Truncated {
+					req.response, _, err = s.tcpClient.Exchange(req.request, upstream)
+					if err != nil {
+						goto Failed
+					}
 				}
 
 				// Retry with TCP if this was an IXFR request and we only received an SOA
@@ -373,10 +399,12 @@ func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (resp *DNSRequ
 				}
 			}
 		}
-
 		if err == nil {
+			go s.saveCached(req)
 			return req, nil
 		}
+
+	Failed:
 		log.Printf("DNS error from upstream %s: %s\n", req.currentUpstream, err.Error())
 	}
 	return req, err
