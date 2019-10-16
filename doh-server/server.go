@@ -35,15 +35,16 @@ import (
 	"time"
 
 	"github.com/gorilla/handlers"
-	"github.com/m13253/dns-over-https/json-dns"
+	jsonDNS "github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
 type Server struct {
-	conf      *config
-	udpClient *dns.Client
-	tcpClient *dns.Client
-	servemux  *http.ServeMux
+	conf         *config
+	udpClient    *dns.Client
+	tcpClient    *dns.Client
+	tcpClientTLS *dns.Client
+	servemux     *http.ServeMux
 }
 
 type DNSRequest struct {
@@ -69,6 +70,10 @@ func NewServer(conf *config) (*Server, error) {
 			Net:     "tcp",
 			Timeout: timeout,
 		},
+		tcpClientTLS: &dns.Client{
+			Net:     "tcp-tls",
+			Timeout: timeout,
+		},
 		servemux: http.NewServeMux(),
 	}
 	if conf.LocalAddr != "" {
@@ -85,6 +90,10 @@ func NewServer(conf *config) (*Server, error) {
 			LocalAddr: udpLocalAddr,
 		}
 		s.tcpClient.Dialer = &net.Dialer{
+			Timeout:   timeout,
+			LocalAddr: tcpLocalAddr,
+		}
+		s.tcpClientTLS.Dialer = &net.Dialer{
 			Timeout:   timeout,
 			LocalAddr: tcpLocalAddr,
 		}
@@ -279,23 +288,35 @@ func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (resp *DNSRequ
 	for i := uint(0); i < s.conf.Tries; i++ {
 		req.currentUpstream = s.conf.Upstream[rand.Intn(numServers)]
 
-		// Use TCP if always configured to or if the Query type dictates it (AXFR)
-		if s.conf.TCPOnly || (s.indexQuestionType(req.request, dns.TypeAXFR) > -1) {
-			req.response, _, err = s.tcpClient.Exchange(req.request, req.currentUpstream)
-		} else {
-			req.response, _, err = s.udpClient.Exchange(req.request, req.currentUpstream)
-			if err == nil && req.response != nil && req.response.Truncated {
-				log.Println(err)
-				req.response, _, err = s.tcpClient.Exchange(req.request, req.currentUpstream)
-			}
+		upstream, t := addressAndType(req.currentUpstream)
 
-			// Retry with TCP if this was an IXFR request and we only received an SOA
-			if (s.indexQuestionType(req.request, dns.TypeIXFR) > -1) &&
-				(len(req.response.Answer) == 1) &&
-				(req.response.Answer[0].Header().Rrtype == dns.TypeSOA) {
-				req.response, _, err = s.tcpClient.Exchange(req.request, req.currentUpstream)
+		switch t {
+		default:
+			log.Printf("invalid DNS type %q in upstream %q", t, upstream)
+			return nil, &configError{"invalid DNS type"}
+		// Use DNS-over-TLS (DoT) if configured to do so
+		case "tcp-tls":
+			req.response, _, err = s.tcpClientTLS.Exchange(req.request, upstream)
+		case "tcp", "udp":
+			// Use TCP if always configured to or if the Query type dictates it (AXFR)
+			if t == "tcp" || (s.indexQuestionType(req.request, dns.TypeAXFR) > -1) {
+				req.response, _, err = s.tcpClient.Exchange(req.request, upstream)
+			} else {
+				req.response, _, err = s.udpClient.Exchange(req.request, upstream)
+				if err == nil && req.response != nil && req.response.Truncated {
+					log.Println(err)
+					req.response, _, err = s.tcpClient.Exchange(req.request, upstream)
+				}
+
+				// Retry with TCP if this was an IXFR request and we only received an SOA
+				if (s.indexQuestionType(req.request, dns.TypeIXFR) > -1) &&
+					(len(req.response.Answer) == 1) &&
+					(req.response.Answer[0].Header().Rrtype == dns.TypeSOA) {
+					req.response, _, err = s.tcpClient.Exchange(req.request, upstream)
+				}
 			}
 		}
+
 		if err == nil {
 			return req, nil
 		}
