@@ -36,7 +36,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/m13253/dns-over-https/json-dns"
+	jsonDNS "github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
@@ -160,7 +160,7 @@ func (s *Server) generateResponseIETF(ctx context.Context, w http.ResponseWriter
 	req.response.Id = req.transactionID
 	respBytes, err := req.response.Pack()
 	if err != nil {
-		log.Println(err)
+		log.Printf("DNS packet construct failure with upstream %s: %v\n", req.currentUpstream, err)
 		jsonDNS.FormatError(w, fmt.Sprintf("DNS packet construct failure (%s)", err.Error()), 500)
 		return
 	}
@@ -183,9 +183,13 @@ func (s *Server) generateResponseIETF(ctx context.Context, w http.ResponseWriter
 	}
 
 	if respJSON.Status == dns.RcodeServerFailure {
+		log.Printf("received server failure from upstream %s: %v\n", req.currentUpstream, req.response)
 		w.WriteHeader(503)
 	}
-	w.Write(respBytes)
+	_, err = w.Write(respBytes)
+	if err != nil {
+		log.Printf("failed to write to client: %v\n", err)
+	}
 }
 
 // Workaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe
