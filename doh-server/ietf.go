@@ -124,6 +124,7 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 			break
 		}
 	}
+	// if no EDSN0SUBNET option was provided then attempt to tailor one
 	isTailored := edns0Subnet == nil
 
 	if edns0Subnet == nil {
@@ -131,6 +132,7 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 		ednsClientAddress := s.findClientIP(r)
 		ednsClientNetmask := uint8(255)
 		if ednsClientAddress != nil {
+			isTailored = true
 			if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
 				ednsClientFamily = 1
 				ednsClientAddress = ipv4
@@ -154,6 +156,8 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 			edns0Subnet.Family = ednsClientFamily
 			edns0Subnet.SourceNetmask = ednsClientNetmask
 			edns0Subnet.SourceScope = 0
+			// miekg/dns will take care of applying the proper subnet mask
+			// before sending the EDNS data
 			edns0Subnet.Address = ednsClientAddress
 			opt.Option = append(opt.Option, edns0Subnet)
 		}

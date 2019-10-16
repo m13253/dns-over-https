@@ -9,12 +9,16 @@ import (
 	"github.com/miekg/dns"
 )
 
-const debugCache = true
+const debugCache = false
 
 func getRequestKey(msg *dns.Msg) (uint64, string) {
 	// blank out ID before creating hash
 	id := msg.Id
 	msg.Id = 0
+
+	// take away extra options, e.g. TSIG and EDNS
+	extras := msg.Extra
+	msg.Extra = nil
 
 	// use JSON to get data representation
 	var b []byte
@@ -28,6 +32,7 @@ func getRequestKey(msg *dns.Msg) (uint64, string) {
 		panic(err)
 	}
 	msg.Id = id
+	msg.Extra = extras
 
 	// calculate hash
 	h := fnv.New64a()
@@ -48,15 +53,16 @@ func (s *Server) getCached(req *DNSRequest) bool {
 	}
 
 	req.key, req.keyJSON = getRequestKey(req.request)
+	if !debugCache {
+		req.keyJSON = ""
+	}
 
 	s.cacheLock.RLock()
 	e, ok := s.cache[req.key]
 	s.cacheLock.RUnlock()
 
 	if ok {
-		if debugCache {
-			log.Printf("cache hit for request 0x%x\n", req.key)
-		}
+		log.Printf("cache hit for request 0x%x\n", req.key)
 		req.currentUpstream = e.upstream
 		req.response = &e.Msg
 
@@ -72,6 +78,10 @@ func (s *Server) saveCached(req *DNSRequest) {
 		return
 	}
 
+	// remove extras like TSIG and EDNS
+	//TODO: check if this is always safe
+	req.response.Extra = nil
+
 	s.cacheLock.Lock()
 
 	// remove any entry which contains expired data
@@ -82,7 +92,7 @@ func (s *Server) saveCached(req *DNSRequest) {
 		}
 	}
 
-	ttl := findMinimumTTL(req.request)
+	ttl := findMinimumTTL(req.response)
 	if ttl == 0 {
 		// no caching
 		s.cacheLock.Unlock()
@@ -102,12 +112,20 @@ func (s *Server) saveCached(req *DNSRequest) {
 	s.cacheLock.Unlock()
 
 	if debugCache {
-		log.Printf("cache miss for request 0x%x (TTL=%v)\n%s\n", req.key, ttl.Round(time.Second), req.keyJSON)
+		b, err := json.MarshalIndent(req.response, "", "\t")
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("cache miss for request 0x%x (TTL=%v)\nREQUEST:\n%s\nRESPONSE:\n%s\n", req.key, ttl.Round(time.Second), req.keyJSON, string(b))
+	} else {
+		log.Printf("cache miss for request 0x%x (TTL=%v)\n", req.key, ttl.Round(time.Second))
 	}
 }
 
+const maxTTLDuration = time.Duration(2147483647) * time.Second
+
 func findMinimumTTL(msg *dns.Msg) time.Duration {
-	shortestTTL := time.Duration(-1)
+	shortestTTL := maxTTLDuration
 
 	for _, a := range msg.Answer {
 		hdr := a.Header()
@@ -129,7 +147,7 @@ func findMinimumTTL(msg *dns.Msg) time.Duration {
 	}
 
 	// no answer record found, use a default TTL
-	if time.Duration(-1) == shortestTTL {
+	if maxTTLDuration == shortestTTL {
 		shortestTTL = time.Second * 30
 	}
 
