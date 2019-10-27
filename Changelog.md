@@ -4,6 +4,18 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.2.0
+
+- Breaking change: The configuration format of doh-server is changed
+- Add support for type prefix for upstream addresses of doh-server
+- Add support for DNS-over-TLS upstream addresses of doh-server
+- Remove `tcp_only` configuration option in doh-server
+- Add `no_user_agent` configuration option in doh-server
+- Add an RPM package script with SELinux policy
+- Fix Opcode never assigned in `jsonDNS.PrepareReply`
+- Improve error logging / checking
+- Updated Readme
+
 ## Version 2.1.2
 
 - Update address for google's resolver
