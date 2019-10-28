@@ -97,7 +97,6 @@ var rxUpstreamWithTypePrefix = regexp.MustCompile("^[a-z-]+(:)")
 
 func addressAndType(us string) (string, string) {
 	p := rxUpstreamWithTypePrefix.FindStringSubmatchIndex(us)
-	fmt.Println(p)
 	if len(p) != 4 {
 		return "", ""
 	}
