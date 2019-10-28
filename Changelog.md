@@ -4,6 +4,10 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.2.1
+
+- Fix messy log
+
 ## Version 2.2.0
 
 - Breaking change: The configuration format of doh-server is changed
