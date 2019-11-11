@@ -234,6 +234,11 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) findClientIP(r *http.Request) net.IP {
+	noEcs := r.URL.Query().Get("no_ecs")
+	if strings.ToLower(noEcs) == "true" {
+		return nil
+	}
+
 	XForwardedFor := r.Header.Get("X-Forwarded-For")
 	if XForwardedFor != "" {
 		for _, addr := range strings.Split(XForwardedFor, ",") {
