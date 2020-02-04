@@ -79,6 +79,17 @@ you can host DNS-over-HTTPS along with other HTTPS services.
 HTTP/2 with at least TLS v1.3 is recommended. OCSP stapling must be enabled,
 otherwise DNS recursion may happen.
 
+### Configuration file
+
+The main configuration file is `doh-client.conf`.
+
+**Server selectors.** If several upstream servers are set, one is selected according to `upstream_selector` for each request. With `upstream_selector = "random"`, a random upstream server will be chosen for each request.
+
+```toml
+# available selector: random (default) or weighted_round_robin or lvs_weighted_round_robin
+upstream_selector = "random"
+```
+
 ### Example configuration: Apache
 
     SSLProtocol TLSv1.2
