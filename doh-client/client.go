@@ -46,30 +46,30 @@ import (
 )
 
 type Client struct {
-	conf				 *config.Config
-	bootstrap			[]string
-	passthrough		  []string
-	udpClient			*dns.Client
-	tcpClient			*dns.Client
-	udpServers		   []*dns.Server
-	tcpServers		   []*dns.Server
-	bootstrapResolver	*net.Resolver
-	cookieJar			http.CookieJar
-	httpClientMux		*sync.RWMutex
-	httpTransport		*http.Transport
-	httpClient		   *http.Client
+	conf                 *config.Config
+	bootstrap            []string
+	passthrough          []string
+	udpClient            *dns.Client
+	tcpClient            *dns.Client
+	udpServers           []*dns.Server
+	tcpServers           []*dns.Server
+	bootstrapResolver    *net.Resolver
+	cookieJar            http.CookieJar
+	httpClientMux        *sync.RWMutex
+	httpTransport        *http.Transport
+	httpClient           *http.Client
 	httpClientLastCreate time.Time
-	selector			 selector.Selector
+	selector             selector.Selector
 }
 
 type DNSRequest struct {
-	response		  *http.Response
-	reply			 *dns.Msg
-	udpSize		   uint16
+	response          *http.Response
+	reply             *dns.Msg
+	udpSize           uint16
 	ednsClientAddress net.IP
 	ednsClientNetmask uint8
 	currentUpstream   string
-	err			   error
+	err               error
 }
 
 func NewClient(conf *config.Config) (c *Client, err error) {
@@ -80,24 +80,24 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 	udpHandler := dns.HandlerFunc(c.udpHandlerFunc)
 	tcpHandler := dns.HandlerFunc(c.tcpHandlerFunc)
 	c.udpClient = &dns.Client{
-		Net:	 "udp",
+		Net:     "udp",
 		UDPSize: dns.DefaultMsgSize,
 		Timeout: time.Duration(conf.Other.Timeout) * time.Second,
 	}
 	c.tcpClient = &dns.Client{
-		Net:	 "tcp",
+		Net:     "tcp",
 		Timeout: time.Duration(conf.Other.Timeout) * time.Second,
 	}
 	for _, addr := range conf.Listen {
 		c.udpServers = append(c.udpServers, &dns.Server{
-			Addr:	addr,
-			Net:	 "udp",
+			Addr:    addr,
+			Net:     "udp",
 			Handler: udpHandler,
 			UDPSize: dns.DefaultMsgSize,
 		})
 		c.tcpServers = append(c.tcpServers, &dns.Server{
-			Addr:	addr,
-			Net:	 "tcp",
+			Addr:    addr,
+			Net:     "tcp",
 			Handler: tcpHandler,
 		})
 	}
@@ -193,24 +193,24 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 
 		c.selector = s
 	case config.Hash:
-		if c.conf.Other.Verbose {
-			log.Println(config.Random, "mode start")
+	    if c.conf.Other.Verbose {
+		log.Println(config.Random, "mode start")
+	    }
+	    s := selector.NewHashSelector()
+	    for _, u := range c.conf.Upstream.UpstreamGoogle {
+		if err := s.Add(u.URL, selector.Google); err != nil {
+		    return nil, err
 		}
-		s := selector.NewHashSelector()
-		for _, u := range c.conf.Upstream.UpstreamGoogle {
-			if err := s.Add(u.URL, selector.Google); err != nil {
-				return nil, err
-			}
+	    }
+	    
+	    for _, u := range c.conf.Upstream.UpstreamIETF {
+		if err := s.Add(u.URL, selector.IETF); err != nil {
+		    return nil, err
 		}
-		
-		for _, u := range c.conf.Upstream.UpstreamIETF {
-			if err := s.Add(u.URL, selector.IETF); err != nil {
-				return nil, err
-			}
-		}
-		
-		c.selector = s
-
+	    }
+	    
+	    c.selector = s
+	    
 	default:
 		if c.conf.Other.Verbose {
 			log.Println(config.Random, "mode start")
@@ -258,12 +258,12 @@ func (c *Client) newHTTPClient() error {
 		Resolver: c.bootstrapResolver,
 	}
 	c.httpTransport = &http.Transport{
-		DialContext:		   dialer.DialContext,
+		DialContext:           dialer.DialContext,
 		ExpectContinueTimeout: 1 * time.Second,
-		IdleConnTimeout:	   90 * time.Second,
-		MaxIdleConns:		  100,
+		IdleConnTimeout:       90 * time.Second,
+		MaxIdleConns:          100,
 		MaxIdleConnsPerHost:   10,
-		Proxy:				 http.ProxyFromEnvironment,
+		Proxy:                 http.ProxyFromEnvironment,
 		TLSHandshakeTimeout:   time.Duration(c.conf.Other.Timeout) * time.Second,
 	}
 	if c.conf.Other.NoIPv6 {
@@ -280,7 +280,7 @@ func (c *Client) newHTTPClient() error {
 	}
 	c.httpClient = &http.Client{
 		Transport: c.httpTransport,
-		Jar:	   c.cookieJar,
+		Jar:       c.cookieJar,
 	}
 	c.httpClientLastCreate = time.Now()
 	return nil
