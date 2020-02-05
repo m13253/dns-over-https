@@ -192,8 +192,26 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 		}
 
 		c.selector = s
-
-	default:
+        case config.Hash:
+            if c.conf.Other.Verbose {
+                log.Println(config.Random, "mode start")
+            }
+            s := selector.NewHashSelector()
+            for _, u := range c.conf.Upstream.UpstreamGoogle {
+                if err := s.Add(u.URL, selector.Google); err != nil {
+                    return nil, err
+                }
+            }
+            
+            for _, u := range c.conf.Upstream.UpstreamIETF {
+                if err := s.Add(u.URL, selector.IETF); err != nil {
+                    return nil, err
+                }
+            }
+            
+            c.selector = s
+            
+        default:
 		if c.conf.Other.Verbose {
 			log.Println(config.Random, "mode start")
 		}
