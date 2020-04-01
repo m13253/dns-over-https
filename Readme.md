@@ -165,6 +165,124 @@ upstream_selector = "random"
             }
     }
 
+### Example configuration: Docker Flow Proxy + Docker
+
+```
+version: '3.7'
+networks:
+  default:
+    driver: overlay
+    attachable: true
+    external: false
+  proxy:
+    external: true
+services:
+  swarm-listener:
+    image: dockerflow/docker-flow-swarm-listener:latest
+    hostname: swarm-listener
+    init: true
+    networks:
+      - default
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DF_NOTIFY_CREATE_SERVICE_URL=http://proxy:8080/v1/docker-flow-proxy/reconfigure
+      - DF_NOTIFY_REMOVE_SERVICE_URL=http://proxy:8080/v1/docker-flow-proxy/remove
+    deploy:
+      placement:
+        constraints:
+          - node.role==manager
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 99
+        window: 180s
+    healthcheck:
+      test: [ "CMD", "wget", "http://localhost:8080/v1/docker-flow-swarm-listener/ping", "-O", "/dev/null" ]
+      interval: 2m
+      timeout: 1m
+      retries: 3
+  proxy:
+    image: dockerflow/docker-flow-proxy:latest
+    hostname: proxy
+    init: true
+    networks:
+      - default
+      - proxy
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./data/proxy/certs:/certs
+    environment:
+      TINI_SUBREAPER: 1
+      LISTENER_ADDRESS: swarm-listener
+      MODE: swarm
+      COMPRESSION_ALGO: gzip
+      COMPRESSION_TYPE: text/css text/html text/javascript application/javascript text/plain text/xml application/json
+      CONNECTION_MODE: http-keep-alive
+      DEBUG: "true"
+      HTTPS_ONLY: "true"
+      STATS_URI: /stats
+      EXTRA_FRONTEND: http-request set-log-level debug,http-response set-log-level debug,capture request header User-Agent len 64,acl is_vd path -i /dns-admin,http-request redirect scheme https drop-query append-slash if is_vd,http-response set-header X-Frame-Options DENY,http-response set-header X-Content-Type-Options nosniff,
+      EXTRA_GLOBAL:
+      SSL_BIND_OPTIONS: no-sslv3 no-tls-tickets no-tlsv10 no-tlsv11
+      SSL_BIND_CIPHERS: EECDH+AESGCM:EDH+AESGCM
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 99
+        window: 180s
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "/usr/local/bin/check.sh"]
+      interval: 2m
+      timeout: 1m
+      retries: 3
+
+  doh-server:
+    image: satishweb/doh-server
+    # Docker Image based on https://github.com/m13253/dns-over-https
+    hostname: doh-server
+    networks:
+      - default
+    environment:
+      DEBUG: "0"
+      UPSTREAM_DNS_SERVER: "udp:YOUR-DNS-SERVER-IP:53"
+      DOH_HTTP_PREFIX: "/dns-query"
+      DOH_SERVER_LISTEN: ":8053"
+      DOH_SERVER_TIMEOUT: "10"
+      DOH_SERVER_TRIES: "3"
+      DOH_SERVER_VERBOSE: "true"
+      # You can add more variables here or as docker secret and entrypoint
+      # script will replace them inside doh-server.conf file
+      # Entrypoint script source is at https://github.com/satishweb/docker-doh
+    volumes:
+      # If you want to use your custom doh-server.conf, use below volume mount.
+      # - ./doh-server.conf:/server/doh-server.conf
+      # Mount app-config script with your customizations
+      # - ./app-config:/app-config
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 10s
+        max_attempts: 99
+        window: 180s
+      labels:
+        - com.df.notify=true
+        - com.df.distribute=true
+        - com.df.servicePath='/dns-query'
+        - com.df.port=8053
+```
+> Above example needs you to add your chained SSL certificate in folder: ./data/proxy/certs and configure upstream DNS server address.
+
+> Complete Docker Stack with DFProxy: https://github.com/satishweb/docker-doh
+
+> Docker Flow Proxy: https://github.com/docker-flow/docker-flow-proxy
+
 ## DNSSEC
 
 DNS-over-HTTPS is compatible with DNSSEC, and requests DNSSEC signatures by
