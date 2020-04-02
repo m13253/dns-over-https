@@ -9,7 +9,7 @@ and [IETF DNS-over-HTTPS (RFC 8484)](https://www.rfc-editor.org/rfc/rfc8484.txt)
 [Tutorial to setup your own DNS-over-HTTPS (DoH) server](https://www.aaflalo.me/2018/10/tutorial-setup-dns-over-https-server/). (Thanks to Antoine Aflalo)
 
 ## Installing
-
+### From Source
 Install [Go](https://golang.org), at least version 1.10.
 
 (Note for Debian/Ubuntu users: You need to set `$GOROOT` if you could not get your new version of Go selected by the Makefile.)
@@ -48,13 +48,26 @@ If it is OK, you will see:
 
     ;; SERVER: 127.0.0.1#53(127.0.0.1)
 
-### Uninstalling
+#### Uninstall
 
 To uninstall, type:
 
     sudo make uninstall
 
 The configuration files are kept at `/etc/dns-over-https`. Remove them manually if you want.
+
+### Using docker image
+```
+docker run -itd --name doh-server \
+    -p 8053:8053 \
+    -e UPSTREAM_DNS_SERVER="udp:8.8.8.8:53" \
+    -e DOH_HTTP_PREFIX="/dns-query"
+    -e DOH_SERVER_LISTEN=":8053"
+    -e DOH_SERVER_TIMEOUT="10"
+    -e DOH_SERVER_TRIES="3"
+    -e DOH_SERVER_VERBOSE="false"
+satishweb/doh-server
+```
 
 ## Server Configuration
 
@@ -165,7 +178,7 @@ upstream_selector = "random"
             }
     }
 
-### Example configuration: Docker Flow Proxy + Docker
+### Example configuration: Docker Flow Proxy + Docker Swarm
 
 ```
 version: '3.7'
@@ -276,12 +289,14 @@ services:
         - com.df.distribute=true
         - com.df.servicePath='/dns-query'
         - com.df.port=8053
-```
+````
 > Above example needs you to add your chained SSL certificate in folder: ./data/proxy/certs and configure upstream DNS server address.
 
-> Complete Docker Stack with DFProxy: https://github.com/satishweb/docker-doh
+> Complete Docker Stack with DFProxy + Lets Encrypt SSL: https://github.com/satishweb/docker-doh
 
 > Docker Flow Proxy: https://github.com/docker-flow/docker-flow-proxy
+
+> No IPV6 Support: Docker Swarm does not support IPV6 as of yet. Issue is logged [here](https://github.com/moby/moby/issues/24379)
 
 ## DNSSEC
 
