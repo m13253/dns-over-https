@@ -15,7 +15,8 @@ ADD doh-client/doh-client.conf /doh-client.conf
 RUN sed -i '$!N;s/"127.0.0.1:53",.*"127.0.0.1:5380",/":53",/;P;D' /doh-client.conf
 RUN sed -i '$!N;s/"\[::1\]:53",.*"\[::1\]:5380",/":5380",/;P;D' /doh-client.conf
 
-EXPOSE 53
+EXPOSE 53/udp
+EXPOSE 53/tcp
 EXPOSE 5380
 
 ENTRYPOINT ["/doh-client"]
