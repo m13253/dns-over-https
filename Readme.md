@@ -303,7 +303,7 @@ services:
 DNS-over-HTTPS is compatible with DNSSEC, and requests DNSSEC signatures by
 default. However signature validation is not built-in. It is highly recommended
 that you install `unbound` or `bind` and pass results for them to validate DNS
-records.
+records. An instance of [Pi Hole](https://pi-hole.net) could also be used to validate DNS signatures as well as provide other capabilities.
 
 ## EDNS0-Client-Subnet (GeoDNS)
 
