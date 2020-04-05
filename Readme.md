@@ -4,68 +4,66 @@ DNS-over-HTTPS
 Client and server software to query DNS over HTTPS, using [Google DNS-over-HTTPS protocol](https://developers.google.com/speed/public-dns/docs/dns-over-https)
 and [IETF DNS-over-HTTPS (RFC 8484)](https://www.rfc-editor.org/rfc/rfc8484.txt).
 
-## Guide
+## Guides
 
-[Tutorial to setup your own DNS-over-HTTPS (DoH) server](https://www.aaflalo.me/2018/10/tutorial-setup-dns-over-https-server/). (Thanks to Antoine Aflalo)
+- [Tutorial: Setup your own DNS-over-HTTPS (DoH) server](https://www.aaflalo.me/2018/10/tutorial-setup-dns-over-https-server/). (Thanks to Antoine Aflalo)
+- [Tutorial: Setup your own Docker based DNS-over-HTTPS (DoH) server](https://github.com/satishweb/docker-doh/blob/master/README.md). (Thanks to Satish Gaikwad)
 
 ## Installing
 ### From Source
-Install [Go](https://golang.org), at least version 1.10.
+- Install [Go](https://golang.org), at least version 1.10.
+> Note for Debian/Ubuntu users: You need to set `$GOROOT` if you could not get your new version of Go selected by the Makefile.)
 
-(Note for Debian/Ubuntu users: You need to set `$GOROOT` if you could not get your new version of Go selected by the Makefile.)
-
-First create an empty directory, used for `$GOPATH`:
-
-    mkdir ~/gopath
-    export GOPATH=~/gopath
-
-To build the program, type:
-
-    make
-
-To install DNS-over-HTTPS as Systemd services, type:
-
-    sudo make install
-
-By default, [Google DNS over HTTPS](https://dns.google.com) is used. It should
+- First create an empty directory, used for `$GOPATH`:
+```bash
+mkdir ~/gopath
+export GOPATH=~/gopath
+```
+- To build the program, type:
+```bash
+make
+```
+- To install DNS-over-HTTPS as Systemd services, type:
+```bash
+sudo make install
+```
+- By default, [Google DNS over HTTPS](https://dns.google.com) is used. It should
 work for most users (except for People's Republic of China). If you need to
 modify the default settings, type:
+```bash
+sudoedit /etc/dns-over-https/doh-client.conf
+```
+- To automatically start DNS-over-HTTPS client as a system service, type:
+```bash
+sudo systemctl start doh-client.service
+sudo systemctl enable doh-client.service
+```
+- Then, modify your DNS settings (usually with NetworkManager) to 127.0.0.1.
 
-    sudoedit /etc/dns-over-https/doh-client.conf
-
-To automatically start DNS-over-HTTPS client as a system service, type:
-
-    sudo systemctl start doh-client.service
-    sudo systemctl enable doh-client.service
-
-Then, modify your DNS settings (usually with NetworkManager) to 127.0.0.1.
-
-To test your configuration, type:
-
-    dig www.google.com
-
-If it is OK, you will see:
-
-    ;; SERVER: 127.0.0.1#53(127.0.0.1)
-
+- To test your configuration, type:
+```bash
+dig www.google.com
+Output:
+;; SERVER: 127.0.0.1#53(127.0.0.1)
+```
 #### Uninstall
 
-To uninstall, type:
-
-    sudo make uninstall
-
-The configuration files are kept at `/etc/dns-over-https`. Remove them manually if you want.
+- To uninstall, type:
+```bash
+sudo make uninstall
+```
+> Note: The configuration files are kept at `/etc/dns-over-https`. Remove them manually if you want.
 
 ### Using docker image
-```
+```bash
 docker run -itd --name doh-server \
-    -p 8053:8053 \
-    -e UPSTREAM_DNS_SERVER="udp:8.8.8.8:53" \
-    -e DOH_HTTP_PREFIX="/dns-query"
-    -e DOH_SERVER_LISTEN=":8053"
-    -e DOH_SERVER_TIMEOUT="10"
-    -e DOH_SERVER_TRIES="3"
-    -e DOH_SERVER_VERBOSE="false"
+  -p 8053:8053 \
+  -e UPSTREAM_DNS_SERVER="udp:8.8.8.8:53" \
+  -e DOH_HTTP_PREFIX="/dns-query"
+  -e DOH_SERVER_LISTEN=":8053"
+  -e DOH_SERVER_TIMEOUT="10"
+  -e DOH_SERVER_TRIES="3"
+  -e DOH_SERVER_VERBOSE="false"
 satishweb/doh-server
 ```
 
@@ -104,199 +102,185 @@ upstream_selector = "random"
 ```
 
 ### Example configuration: Apache
+```bash
+SSLProtocol TLSv1.2
+SSLHonorCipherOrder On
+SSLCipherSuite ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+3DES:!aNULL:!MD5:!DSS:!eNULL:!EXP:!LOW:!MD5
+SSLUseStapling on
+SSLStaplingCache shmcb:/var/lib/apache2/stapling_cache(512000)
 
-    SSLProtocol TLSv1.2
-    SSLHonorCipherOrder On
-    SSLCipherSuite ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+3DES:!aNULL:!MD5:!DSS:!eNULL:!EXP:!LOW:!MD5
-    SSLUseStapling on
-    SSLStaplingCache shmcb:/var/lib/apache2/stapling_cache(512000)
-
-    <VirtualHost *:443>
-        ServerName MY_SERVER_NAME
-        Protocols h2 http/1.1
-        ProxyPass /dns-query http://[::1]:8053/dns-query
-        ProxyPassReverse /dns-query http://[::1]:8053/dns-query
-    </VirtualHost>
-
+<VirtualHost *:443>
+    ServerName MY_SERVER_NAME
+    Protocols h2 http/1.1
+    ProxyPass /dns-query http://[::1]:8053/dns-query
+    ProxyPassReverse /dns-query http://[::1]:8053/dns-query
+</VirtualHost>
+```
 (Credit: [Joan Moreau](https://github.com/m13253/dns-over-https/issues/51#issuecomment-526820884))
 
 ### Example configuration: Nginx
+```bash
+server {
+  listen       443 ssl http2 default_server;
+  listen       [::]:443 ssl http2 default_server;
+  server_name  MY_SERVER_NAME;
 
-    server {
-        listen       443 ssl http2 default_server;
-        listen       [::]:443 ssl http2 default_server;
-        server_name  MY_SERVER_NAME;
+  server_tokens off;
 
-        server_tokens off;
-
-        ssl_protocols TLSv1.2 TLSv1.3;          # TLS 1.3 requires nginx >= 1.13.0
-        ssl_prefer_server_ciphers on;
-        ssl_dhparam /etc/nginx/dhparam.pem;     # openssl dhparam -dsaparam -out /etc/nginx/dhparam.pem 4096
-        ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
-        ssl_ecdh_curve secp384r1;               # Requires nginx >= 1.1.0
-        ssl_session_timeout  10m;
-        ssl_session_cache shared:SSL:10m;
-        ssl_session_tickets off;                # Requires nginx >= 1.5.9
-        ssl_stapling on;                        # Requires nginx >= 1.3.7
-        ssl_stapling_verify on;                 # Requires nginx => 1.3.7
-        ssl_early_data off;                     # 0-RTT, enable if desired - Requires nginx >= 1.15.4
-        resolver 1.1.1.1 valid=300s;            # Replace with your local resolver
-        resolver_timeout 5s;
-        # HTTP Security Headers
-        add_header X-Frame-Options DENY;
-        add_header X-Content-Type-Options nosniff;
-        add_header X-XSS-Protection "1; mode=block";
-        add_header Strict-Transport-Security "max-age=63072000";
-        ssl_certificate /path/to/your/server/certificates/fullchain.pem;
-        ssl_certificate_key /path/to/your/server/certificates/privkey.pem;
-        location /dns-query {
-            proxy_pass       http://localhost:8053/dns-query;
-            proxy_set_header Host      $host;
-            proxy_set_header X-Real-IP $remote_addr;
-        }
-    }
-
+  ssl_protocols TLSv1.2 TLSv1.3;          # TLS 1.3 requires nginx >= 1.13.0
+  ssl_prefer_server_ciphers on;
+  ssl_dhparam /etc/nginx/dhparam.pem;     # openssl dhparam -dsaparam -out /etc/nginx/dhparam.pem 4096
+  ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
+  ssl_ecdh_curve secp384r1;               # Requires nginx >= 1.1.0
+  ssl_session_timeout  10m;
+  ssl_session_cache shared:SSL:10m;
+  ssl_session_tickets off;                # Requires nginx >= 1.5.9
+  ssl_stapling on;                        # Requires nginx >= 1.3.7
+  ssl_stapling_verify on;                 # Requires nginx => 1.3.7
+  ssl_early_data off;                     # 0-RTT, enable if desired - Requires nginx >= 1.15.4
+  resolver 1.1.1.1 valid=300s;            # Replace with your local resolver
+  resolver_timeout 5s;
+  # HTTP Security Headers
+  add_header X-Frame-Options DENY;
+  add_header X-Content-Type-Options nosniff;
+  add_header X-XSS-Protection "1; mode=block";
+  add_header Strict-Transport-Security "max-age=63072000";
+  ssl_certificate /path/to/your/server/certificates/fullchain.pem;
+  ssl_certificate_key /path/to/your/server/certificates/privkey.pem;
+  location /dns-query {
+    proxy_pass       http://localhost:8053/dns-query;
+    proxy_set_header Host      $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}
+```
 (Credit: [Cipherli.st](https://cipherli.st/))
 
 ### Example configuration: Caddy
-
-    https://MY_SERVER_NAME {
-            log     / syslog "{remote} - {user} [{when}] \"{method} {scheme}://{host}{uri} {proto}\" {status} {size} \"{>Referer}\" \"{>User-Agent}\" {>X-Forwarded-For}"
-            errors  syslog
-            gzip
-            proxy   /dns-query      http://[::1]:18053 {
-                    header_upstream Host {host}
-                    header_upstream X-Real-IP {remote}
-                    header_upstream X-Forwarded-For {>X-Forwarded-For},{remote}
-                    header_upstream X-Forwarded-Proto {scheme}
-            }
-            root    /var/www
-            tls {
-                    ciphers ECDHE-ECDSA-WITH-CHACHA20-POLY1305 ECDHE-RSA-WITH-CHACHA20-POLY1305 ECDHE-ECDSA-AES256-GCM-SHA384 ECDHE-RSA-AES256-GCM-SHA384 ECDHE-ECDSA-AES128-GCM-SHA256 ECDHE-RSA-AES128-GCM-SHA256
-                    curves  X25519 p384 p521
-                    must_staple
-            }
-    }
-
-### Example configuration: Docker Flow Proxy + Docker Swarm
-
+```bash
+https://MY_SERVER_NAME {
+  log     / syslog "{remote} - {user} [{when}] \"{method} {scheme}://{host}{uri} {proto}\" {status} {size} \"{>Referer}\" \"{>User-Agent}\" {>X-Forwarded-For}"
+  errors  syslog
+  gzip
+  proxy   /dns-query      http://[::1]:18053 {
+    header_upstream Host {host}
+    header_upstream X-Real-IP {remote}
+    header_upstream X-Forwarded-For {>X-Forwarded-For},{remote}
+    header_upstream X-Forwarded-Proto {scheme}
+  }
+  root    /var/www
+  tls {
+    ciphers ECDHE-ECDSA-WITH-CHACHA20-POLY1305 ECDHE-RSA-WITH-CHACHA20-POLY1305 ECDHE-ECDSA-AES256-GCM-SHA384 ECDHE-RSA-AES256-GCM-SHA384 ECDHE-ECDSA-AES128-GCM-SHA256 ECDHE-RSA-AES128-GCM-SHA256
+    curves  X25519 p384 p521
+    must_staple
+  }
+}
 ```
-version: '3.7'
+### Example configuration: Docker Compose + Traefik + Unbound
+
+```yaml
+version: '2.2'
 networks:
   default:
-    driver: overlay
-    attachable: true
-    external: false
-  proxy:
-    external: true
 services:
-  swarm-listener:
-    image: dockerflow/docker-flow-swarm-listener:latest
-    hostname: swarm-listener
-    init: true
-    networks:
-      - default
-      - proxy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - DF_NOTIFY_CREATE_SERVICE_URL=http://proxy:8080/v1/docker-flow-proxy/reconfigure
-      - DF_NOTIFY_REMOVE_SERVICE_URL=http://proxy:8080/v1/docker-flow-proxy/remove
-    deploy:
-      placement:
-        constraints:
-          - node.role==manager
-      restart_policy:
-        condition: any
-        delay: 10s
-        max_attempts: 99
-        window: 180s
-    healthcheck:
-      test: [ "CMD", "wget", "http://localhost:8080/v1/docker-flow-swarm-listener/ping", "-O", "/dev/null" ]
-      interval: 2m
-      timeout: 1m
-      retries: 3
   proxy:
-    image: dockerflow/docker-flow-proxy:latest
+    # The official v2 Traefik docker image
+    image: traefik:v2.2
     hostname: proxy
-    init: true
     networks:
       - default
-      - proxy
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - ./data/proxy/certs:/certs
     environment:
-      TINI_SUBREAPER: 1
-      LISTENER_ADDRESS: swarm-listener
-      MODE: swarm
-      COMPRESSION_ALGO: gzip
-      COMPRESSION_TYPE: text/css text/html text/javascript application/javascript text/plain text/xml application/json
-      CONNECTION_MODE: http-keep-alive
-      DEBUG: "true"
-      HTTPS_ONLY: "true"
-      STATS_URI: /stats
-      EXTRA_FRONTEND: http-request set-log-level debug,http-response set-log-level debug,capture request header User-Agent len 64,acl is_vd path -i /dns-admin,http-request redirect scheme https drop-query append-slash if is_vd,http-response set-header X-Frame-Options DENY,http-response set-header X-Content-Type-Options nosniff,
-      EXTRA_GLOBAL:
-      SSL_BIND_OPTIONS: no-sslv3 no-tls-tickets no-tlsv10 no-tlsv11
-      SSL_BIND_CIPHERS: EECDH+AESGCM:EDH+AESGCM
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: any
-        delay: 10s
-        max_attempts: 99
-        window: 180s
-    healthcheck:
-      test: [ "CMD", "sh", "-c", "/usr/local/bin/check.sh"]
-      interval: 2m
-      timeout: 1m
-      retries: 3
-
+      TRAEFIK_ACCESSLOG: "true"
+      TRAEFIK_API: "true"
+      TRAEFIK_PROVIDERS_DOCKER: "true"
+      TRAEFIK_API_INSECURE: "true"
+      TRAEFIK_PROVIDERS_DOCKER_NETWORK: "${STACK}_default"
+      # DNS provider specific environment variables for DNS Challenge using route53 (AWS)
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      AWS_HOSTED_ZONE_ID: ${AWS_HOSTED_ZONE_ID}
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    command:
+      #- "--log.level=DEBUG"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
+      # Providers list:
+      #  https://docs.traefik.io/https/acme/#providers
+      #  https://go-acme.github.io/lego/dns/
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=route53"
+      # Enable below line to use staging letsencrypt server.
+      #- "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.letsencrypt.acme.email=${EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/certs/acme.json"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/proxy/certs:/certs
   doh-server:
-    image: satishweb/doh-server
-    # Docker Image based on https://github.com/m13253/dns-over-https
+    image: satishweb/doh-server:latest
     hostname: doh-server
     networks:
       - default
     environment:
-      DEBUG: "0"
-      UPSTREAM_DNS_SERVER: "udp:YOUR-DNS-SERVER-IP:53"
-      DOH_HTTP_PREFIX: "/dns-query"
-      DOH_SERVER_LISTEN: ":8053"
+      # Enable below line to see more logs
+      # DEBUG: "1"
+      UPSTREAM_DNS_SERVER: "udp:unbound:53"
+      DOH_HTTP_PREFIX: "${DOH_HTTP_PREFIX}"
+      DOH_SERVER_LISTEN: ":${DOH_SERVER_LISTEN}"
       DOH_SERVER_TIMEOUT: "10"
       DOH_SERVER_TRIES: "3"
-      DOH_SERVER_VERBOSE: "true"
-      # You can add more variables here or as docker secret and entrypoint
-      # script will replace them inside doh-server.conf file
-      # Entrypoint script source is at https://github.com/satishweb/docker-doh
-    volumes:
-      # If you want to use your custom doh-server.conf, use below volume mount.
+      DOH_SERVER_VERBOSE: "false"
+    #volumes:
       # - ./doh-server.conf:/server/doh-server.conf
-      # Mount app-config script with your customizations
       # - ./app-config:/app-config
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: any
-        delay: 10s
-        max_attempts: 99
-        window: 180s
-      labels:
-        - com.df.notify=true
-        - com.df.distribute=true
-        - com.df.servicePath='/dns-query'
-        - com.df.port=8053
+    depends_on:
+      - unbound
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.doh-server.rule=Host(`${SUBDOMAIN}.${DOMAIN}`) && Path(`${DOH_HTTP_PREFIX}`)"
+      - "traefik.http.services.doh-server.loadbalancer.server.port=${DOH_SERVER_LISTEN}"
+      - "traefik.http.middlewares.mw-doh-compression.compress=true"
+      - "traefik.http.routers.doh-server.tls=true"
+      - "traefik.http.middlewares.mw-doh-tls.headers.sslredirect=true"
+      - "traefik.http.middlewares.mw-doh-tls.headers.sslforcehost=true"
+      - "traefik.http.routers.doh-server.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.doh-server.tls.domains[0].main=${DOMAIN}"
+      - "traefik.http.routers.doh-server.tls.domains[0].sans=${SUBDOMAIN}.${DOMAIN}"
+      # Protection from requests flood
+      - "traefik.http.middlewares.mw-doh-ratelimit.ratelimit.average=100"
+      - "traefik.http.middlewares.mw-doh-ratelimit.ratelimit.burst=50"
+      - "traefik.http.middlewares.mw-doh-ratelimit.ratelimit.period=10s"
+  unbound:
+    image: satishweb/unbound:latest
+    hostname: unbound
+    networks:
+      - default
+    ports:
+      # Disable these ports if DOH server is the only client
+      - 53:53/tcp
+      - 53:53/udp
+    volumes:
+      - ./unbound.sample.conf:/templates/unbound.sample.conf
+      - ./data/unbound/custom:/etc/unbound/custom
+      # Keep your custom.hosts file inside custom folder
+    #environment:
+    #  DEBUG: "1"
 ````
-> Above example needs you to add your chained SSL certificate in folder: ./data/proxy/certs and configure upstream DNS server address.
 
-> Complete Docker Stack with DFProxy + Lets Encrypt SSL: https://github.com/satishweb/docker-doh
-
-> Docker Flow Proxy: https://github.com/docker-flow/docker-flow-proxy
+> Complete Guide available at: https://github.com/satishweb/docker-doh
 
 > No IPV6 Support: Docker Swarm does not support IPV6 as of yet. Issue is logged [here](https://github.com/moby/moby/issues/24379)
+
+> IPV6 Support for Docker Compose based configuration TBA
 
 ## DNSSEC
 
