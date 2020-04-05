@@ -176,7 +176,7 @@ https://MY_SERVER_NAME {
   }
 }
 ```
-### Example configuration: Docker Compose + Traefik + Unbound
+### Example configuration: Docker Compose + Traefik + Unbound (Raspberry Pi/Linux/Mac) [linux/amd64,linux/arm64,linux/arm/v7]
 
 ```yaml
 version: '2.2'
