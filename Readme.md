@@ -156,24 +156,12 @@ server {
 ```
 (Credit: [Cipherli.st](https://cipherli.st/))
 
-### Example configuration: Caddy
+### Example configuration: Caddy (v2)
 ```bash
-https://MY_SERVER_NAME {
-  log     / syslog "{remote} - {user} [{when}] \"{method} {scheme}://{host}{uri} {proto}\" {status} {size} \"{>Referer}\" \"{>User-Agent}\" {>X-Forwarded-For}"
-  errors  syslog
-  gzip
-  proxy   /dns-query      http://[::1]:18053 {
-    header_upstream Host {host}
-    header_upstream X-Real-IP {remote}
-    header_upstream X-Forwarded-For {>X-Forwarded-For},{remote}
-    header_upstream X-Forwarded-Proto {scheme}
-  }
-  root    /var/www
-  tls {
-    ciphers ECDHE-ECDSA-WITH-CHACHA20-POLY1305 ECDHE-RSA-WITH-CHACHA20-POLY1305 ECDHE-ECDSA-AES256-GCM-SHA384 ECDHE-RSA-AES256-GCM-SHA384 ECDHE-ECDSA-AES128-GCM-SHA256 ECDHE-RSA-AES128-GCM-SHA256
-    curves  X25519 p384 p521
-    must_staple
-  }
+my.server.name {
+        reverse_proxy * localhost:8053
+        tls your@email.address
+        try_files {path} {path}/index.php /index.php?{query}
 }
 ```
 ### Example configuration: Docker Compose + Traefik + Unbound (Raspberry Pi/Linux/Mac) [linux/amd64,linux/arm64,linux/arm/v7]
