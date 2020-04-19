@@ -67,6 +67,9 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 	udpSize := uint16(512)
 	if opt := r.IsEdns0(); opt != nil {
 		udpSize = opt.UDPSize()
+		if opt.Do() {
+			requestURL += "&do=1"
+		}
 	}
 
 	ednsClientAddress, ednsClientNetmask := c.findClientIP(w, r)
