@@ -3,6 +3,9 @@
 *.dll
 *.so
 *.dylib
+darwin-wrapper/doh-logger
+doh-client/doh-client
+doh-server/doh-server
 
 # Test binary, build with `go test -c`
 *.test
