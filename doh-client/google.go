@@ -157,6 +157,7 @@ func (c *Client) parseResponseGoogle(ctx context.Context, w dns.ResponseWriter, 
 	if respJSON.Status != dns.RcodeSuccess && respJSON.Comment != "" {
 		log.Printf("DNS error: %s\n", respJSON.Comment)
 	}
+	fixEmptyNames(&respJSON)
 
 	fullReply := jsonDNS.Unmarshal(req.reply, &respJSON, req.udpSize, req.ednsClientNetmask)
 	buf, err := fullReply.Pack()
@@ -176,4 +177,20 @@ func (c *Client) parseResponseGoogle(ctx context.Context, w dns.ResponseWriter, 
 		buf = buf[:req.udpSize]
 	}
 	w.Write(buf)
+}
+
+// Fix DNS response empty []RR.Name
+// Additional section won't be rectified
+// see: https://stackoverflow.com/questions/52136176/what-is-additional-section-in-dns-and-how-it-works
+func fixEmptyNames(respJSON *jsonDNS.Response) {
+	for i := range respJSON.Answer {
+		if respJSON.Answer[i].Name == "" {
+			respJSON.Answer[i].Name = "."
+		}
+	}
+	for i := range respJSON.Authority {
+		if respJSON.Authority[i].Name == "" {
+			respJSON.Authority[i].Name = "."
+		}
+	}
 }
