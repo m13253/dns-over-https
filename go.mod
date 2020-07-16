@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/gorilla/handlers v1.4.0
+	github.com/infobloxopen/go-trees v0.0.0-20190313150506-2af4e13f9062
 	github.com/miekg/dns v1.1.22
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect
 	golang.org/x/net v0.0.0-20191027093000-83d349e8ac1a

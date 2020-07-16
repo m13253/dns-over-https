@@ -2,6 +2,8 @@ github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/gorilla/handlers v1.4.0 h1:XulKRWSQK5uChr4pEgSE4Tc/OcmnU9GJuSwdog/tZsA=
 github.com/gorilla/handlers v1.4.0/go.mod h1:Qkdc/uu4tH4g6mTK6auzZ766c4CA0Ng8+o/OAirnOIQ=
+github.com/infobloxopen/go-trees v0.0.0-20190313150506-2af4e13f9062 h1:d3VSuNcgTCn21dNMm8g412Fck/XWFmMj4nJhhHT7ZZ0=
+github.com/infobloxopen/go-trees v0.0.0-20190313150506-2af4e13f9062/go.mod h1:PcNJqIlcX/dj3DTG/+QQnRvSgTMG6CLpRMjWcv4+J6w=
 github.com/miekg/dns v1.1.14 h1:wkQWn9wIp4mZbwW8XV6Km6owkvRPbOiV004ZM2CkGvA=
 github.com/miekg/dns v1.1.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
 github.com/miekg/dns v1.1.22 h1:Jm64b3bO9kP43ddLjL2EY3Io6bmy1qGb9Xxz6TqS6rc=
