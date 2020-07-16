@@ -36,6 +36,7 @@ type config struct {
 	Cert             string   `toml:"cert"`
 	Key              string   `toml:"key"`
 	Path             string   `toml:"path"`
+	JsonPath         string   `toml:"json_path"`
 	Upstream         []string `toml:"upstream"`
 	Timeout          uint     `toml:"timeout"`
 	Tries            uint     `toml:"tries"`
@@ -60,6 +61,9 @@ func loadConfig(path string) (*config, error) {
 
 	if conf.Path == "" {
 		conf.Path = "/dns-query"
+	}
+	if conf.JsonPath == "" {
+		conf.JsonPath = "/resolve"
 	}
 	if len(conf.Upstream) == 0 {
 		conf.Upstream = []string{"udp:8.8.8.8:53", "udp:8.8.4.4:53"}

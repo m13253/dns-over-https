@@ -35,7 +35,7 @@ import (
 	"time"
 
 	"github.com/gorilla/handlers"
-	jsonDNS "github.com/m13253/dns-over-https/json-dns"
+	"github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
@@ -99,6 +99,7 @@ func NewServer(conf *config) (*Server, error) {
 		}
 	}
 	s.servemux.HandleFunc(conf.Path, s.handlerFunc)
+	s.servemux.HandleFunc(conf.JsonPath, s.handlerJsonFunc)
 	return s, nil
 }
 
@@ -143,6 +144,57 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Server", USER_AGENT)
 	w.Header().Set("X-Powered-By", USER_AGENT)
 
+	for _, header := range s.conf.DebugHTTPHeaders {
+		if value := r.Header.Get(header); value != "" {
+			log.Printf("%s: %s\n", header, value)
+		}
+	}
+
+	contentType := r.Header.Get("accept")
+	var req *DNSRequest
+	if contentType == "application/dns-message" {
+		switch r.Method {
+		case http.MethodGet:
+			req = s.parseGetRequestIETF(ctx, w, r)
+		case http.MethodPost:
+			req = s.parsePostRequestIETF(ctx, w, r)
+		default:
+			w.Header().Set("Content-Length", "0")
+			return
+		}
+	} else {
+		jsonDNS.FormatError(w, fmt.Sprintf("Invalid argument value: \"ct\" = %q", contentType), 415)
+		return
+	}
+
+	if req.errcode == 444 {
+		return
+	}
+	if req.errcode != 0 {
+		jsonDNS.FormatError(w, req.errtext, req.errcode)
+		return
+	}
+
+	req = s.patchRootRD(req)
+	var err error
+	req, err = s.doDNSQuery(ctx, req)
+	if err != nil {
+		jsonDNS.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 503)
+		return
+	}
+	s.generateResponseIETF(ctx, w, r, req)
+}
+
+func (s *Server) handlerJsonFunc(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS, POST")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Max-Age", "3600")
+	w.Header().Set("Server", USER_AGENT)
+	w.Header().Set("X-Powered-By", USER_AGENT)
+
 	if r.Method == "OPTIONS" {
 		w.Header().Set("Content-Length", "0")
 		return
@@ -163,46 +215,16 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	if ct := r.FormValue("ct"); ct != "" {
 		contentType = ct
 	}
-	if contentType == "" {
-		// Guess request Content-Type based on other parameters
-		if r.FormValue("name") != "" {
-			contentType = "application/dns-json"
-		} else if r.FormValue("dns") != "" {
-			contentType = "application/dns-message"
-		}
-	}
-	var responseType string
-	for _, responseCandidate := range strings.Split(r.Header.Get("Accept"), ",") {
-		responseCandidate = strings.SplitN(responseCandidate, ";", 2)[0]
-		if responseCandidate == "application/json" {
-			responseType = "application/json"
-			break
-		} else if responseCandidate == "application/dns-udpwireformat" {
-			responseType = "application/dns-message"
-			break
-		} else if responseCandidate == "application/dns-message" {
-			responseType = "application/dns-message"
-			break
-		}
-	}
-	if responseType == "" {
-		// Guess response Content-Type based on request Content-Type
-		if contentType == "application/dns-json" {
-			responseType = "application/json"
-		} else if contentType == "application/dns-message" {
-			responseType = "application/dns-message"
-		} else if contentType == "application/dns-udpwireformat" {
-			responseType = "application/dns-message"
-		}
-	}
 
 	var req *DNSRequest
 	if contentType == "application/dns-json" {
-		req = s.parseRequestGoogle(ctx, w, r)
-	} else if contentType == "application/dns-message" {
-		req = s.parseRequestIETF(ctx, w, r)
-	} else if contentType == "application/dns-udpwireformat" {
-		req = s.parseRequestIETF(ctx, w, r)
+		switch r.Method {
+		case http.MethodGet:
+			req = s.parseRequestGoogle(ctx, w, r)
+		default: //only support get requests    from [https://developers.google.com/speed/public-dns/docs/doh/json]
+			jsonDNS.FormatError(w, fmt.Sprintf("only support get requests"), 400)
+			return
+		}
 	} else {
 		jsonDNS.FormatError(w, fmt.Sprintf("Invalid argument value: \"ct\" = %q", contentType), 415)
 		return
@@ -223,14 +245,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 		jsonDNS.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 503)
 		return
 	}
-
-	if responseType == "application/json" {
-		s.generateResponseGoogle(ctx, w, r, req)
-	} else if responseType == "application/dns-message" {
-		s.generateResponseIETF(ctx, w, r, req)
-	} else {
-		panic("Unknown response Content-Type")
-	}
+	s.generateResponseGoogle(ctx, w, r, req)
 }
 
 func (s *Server) findClientIP(r *http.Request) net.IP {

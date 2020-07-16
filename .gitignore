@@ -17,3 +17,4 @@ doh-server/doh-server
 .glide/
 
 .idea/
+vendor/*
