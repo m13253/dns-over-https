@@ -138,7 +138,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS, POST")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Max-Age", "3600")
 	w.Header().Set("Server", USER_AGENT)
@@ -189,7 +189,7 @@ func (s *Server) handlerJsonFunc(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS, POST")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Max-Age", "3600")
 	w.Header().Set("Server", USER_AGENT)
