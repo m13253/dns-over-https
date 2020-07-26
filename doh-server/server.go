@@ -288,7 +288,6 @@ func (s *Server) indexQuestionType(msg *dns.Msg, qtype uint16) int {
 }
 
 func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (resp *DNSRequest, err error) {
-	// TODO(m13253): Make ctx work. Waiting for a patch for ExchangeContext from miekg/dns.
 	numServers := len(s.conf.Upstream)
 	for i := uint(0); i < s.conf.Tries; i++ {
 		req.currentUpstream = s.conf.Upstream[rand.Intn(numServers)]
@@ -301,23 +300,23 @@ func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (resp *DNSRequ
 			return nil, &configError{"invalid DNS type"}
 		// Use DNS-over-TLS (DoT) if configured to do so
 		case "tcp-tls":
-			req.response, _, err = s.tcpClientTLS.Exchange(req.request, upstream)
+			req.response, _, err = s.tcpClientTLS.ExchangeContext(ctx, req.request, upstream)
 		case "tcp", "udp":
 			// Use TCP if always configured to or if the Query type dictates it (AXFR)
 			if t == "tcp" || (s.indexQuestionType(req.request, dns.TypeAXFR) > -1) {
-				req.response, _, err = s.tcpClient.Exchange(req.request, upstream)
+				req.response, _, err = s.tcpClient.ExchangeContext(ctx, req.request, upstream)
 			} else {
-				req.response, _, err = s.udpClient.Exchange(req.request, upstream)
+				req.response, _, err = s.udpClient.ExchangeContext(ctx, req.request, upstream)
 				if err == nil && req.response != nil && req.response.Truncated {
 					log.Println(err)
-					req.response, _, err = s.tcpClient.Exchange(req.request, upstream)
+					req.response, _, err = s.tcpClient.ExchangeContext(ctx, req.request, upstream)
 				}
 
 				// Retry with TCP if this was an IXFR request and we only received an SOA
 				if (s.indexQuestionType(req.request, dns.TypeIXFR) > -1) &&
 					(len(req.response.Answer) == 1) &&
 					(req.response.Answer[0].Header().Rrtype == dns.TypeSOA) {
-					req.response, _, err = s.tcpClient.Exchange(req.request, upstream)
+					req.response, _, err = s.tcpClient.ExchangeContext(ctx, req.request, upstream)
 				}
 			}
 		}
