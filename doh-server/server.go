@@ -136,6 +136,18 @@ func (s *Server) Start() error {
 func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	if realIP := r.Header.Get("X-Real-IP"); realIP != "" {
+		if strings.ContainsRune(realIP, ':') {
+			r.RemoteAddr = "[" + realIP + "]:0"
+		} else {
+			r.RemoteAddr = realIP + ":0"
+		}
+		_, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			r.RemoteAddr = realIP
+		}
+	}
+
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS, POST")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
