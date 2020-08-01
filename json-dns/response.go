@@ -24,8 +24,28 @@
 package jsonDNS
 
 import (
+	"encoding/json"
 	"time"
 )
+
+type QuestionList []Question
+
+// Fix variant question response in Response.Question
+//
+// Solution taken from:
+//	https://engineering.bitnami.com/articles/dealing-with-json-with-non-homogeneous-types-in-go.html
+//	https://archive.is/NU4zR
+func (ql *QuestionList) UnmarshalJSON(b []byte) error {
+	if len(b) > 0 && b[0] == '[' {
+		return json.Unmarshal(b, (*[]Question)(ql))
+	}
+	var q Question
+	if err := json.Unmarshal(b, &q); err != nil {
+		return err
+	}
+	*ql = []Question{q}
+	return nil
+}
 
 type Response struct {
 	// Standard DNS response code (32 bit integer)
@@ -40,13 +60,13 @@ type Response struct {
 	// FIXME: We don't have DNSSEC yet! This bit is not reliable!
 	AD bool `json:"AD"`
 	// Whether the client asked to disable DNSSEC
-	CD               bool       `json:"CD"`
-	Question         []Question `json:"Question"`
-	Answer           []RR       `json:"Answer,omitempty"`
-	Authority        []RR       `json:"Authority,omitempty"`
-	Additional       []RR       `json:"Additional,omitempty"`
-	Comment          string     `json:"Comment,omitempty"`
-	EdnsClientSubnet string     `json:"edns_client_subnet,omitempty"`
+	CD               bool           `json:"CD"`
+	Question         QuestionList   `json:"Question"`
+	Answer           []RR           `json:"Answer,omitempty"`
+	Authority        []RR           `json:"Authority,omitempty"`
+	Additional       []RR           `json:"Additional,omitempty"`
+	Comment          string         `json:"Comment,omitempty"`
+	EdnsClientSubnet string         `json:"edns_client_subnet,omitempty"`
 	// Least time-to-live
 	HaveTTL         bool      `json:"-"`
 	LeastTTL        uint32    `json:"-"`
