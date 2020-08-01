@@ -35,7 +35,7 @@ import (
 	"time"
 
 	"github.com/gorilla/handlers"
-	jsonDNS "github.com/m13253/dns-over-https/json-dns"
+	jsondns "github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
@@ -216,14 +216,14 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	} else if contentType == "application/dns-udpwireformat" {
 		req = s.parseRequestIETF(ctx, w, r)
 	} else {
-		jsonDNS.FormatError(w, fmt.Sprintf("Invalid argument value: \"ct\" = %q", contentType), 415)
+		jsondns.FormatError(w, fmt.Sprintf("Invalid argument value: \"ct\" = %q", contentType), 415)
 		return
 	}
 	if req.errcode == 444 {
 		return
 	}
 	if req.errcode != 0 {
-		jsonDNS.FormatError(w, req.errtext, req.errcode)
+		jsondns.FormatError(w, req.errtext, req.errcode)
 		return
 	}
 
@@ -232,7 +232,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	var err error
 	req, err = s.doDNSQuery(ctx, req)
 	if err != nil {
-		jsonDNS.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 503)
+		jsondns.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 503)
 		return
 	}
 
@@ -256,7 +256,7 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 		for _, addr := range strings.Split(XForwardedFor, ",") {
 			addr = strings.TrimSpace(addr)
 			ip := net.ParseIP(addr)
-			if jsonDNS.IsGlobalIP(ip) {
+			if jsondns.IsGlobalIP(ip) {
 				return ip
 			}
 		}
@@ -265,7 +265,7 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 	if XRealIP != "" {
 		addr := strings.TrimSpace(XRealIP)
 		ip := net.ParseIP(addr)
-		if jsonDNS.IsGlobalIP(ip) {
+		if jsondns.IsGlobalIP(ip) {
 			return ip
 		}
 	}
@@ -273,7 +273,7 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 	if err != nil {
 		return nil
 	}
-	if ip := remoteAddr.IP; jsonDNS.IsGlobalIP(ip) {
+	if ip := remoteAddr.IP; jsondns.IsGlobalIP(ip) {
 		return ip
 	}
 	return nil

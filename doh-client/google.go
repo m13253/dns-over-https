@@ -44,7 +44,7 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 	questionName := question.Name
 	questionClass := question.Qclass
 	if questionClass != dns.ClassINET {
-		reply := jsonDNS.PrepareReply(r)
+		reply := jsondns.PrepareReply(r)
 		reply.Rcode = dns.RcodeRefused
 		w.WriteMsg(reply)
 		return &DNSRequest{
@@ -80,7 +80,7 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {
 		log.Println(err)
-		reply := jsonDNS.PrepareReply(r)
+		reply := jsondns.PrepareReply(r)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
 		return &DNSRequest{
@@ -111,7 +111,7 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 
 	if err != nil {
 		log.Println(err)
-		reply := jsonDNS.PrepareReply(r)
+		reply := jsondns.PrepareReply(r)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
 		return &DNSRequest{
@@ -121,7 +121,7 @@ func (c *Client) generateRequestGoogle(ctx context.Context, w dns.ResponseWriter
 
 	return &DNSRequest{
 		response:          resp,
-		reply:             jsonDNS.PrepareReply(r),
+		reply:             jsondns.PrepareReply(r),
 		udpSize:           udpSize,
 		ednsClientAddress: ednsClientAddress,
 		ednsClientNetmask: ednsClientNetmask,
@@ -148,7 +148,7 @@ func (c *Client) parseResponseGoogle(ctx context.Context, w dns.ResponseWriter, 
 		return
 	}
 
-	var respJSON jsonDNS.Response
+	var respJSON jsondns.Response
 	err = json.Unmarshal(body, &respJSON)
 	if err != nil {
 		log.Println(err)
@@ -162,7 +162,7 @@ func (c *Client) parseResponseGoogle(ctx context.Context, w dns.ResponseWriter, 
 	}
 	fixEmptyNames(&respJSON)
 
-	fullReply := jsonDNS.Unmarshal(req.reply, &respJSON, req.udpSize, req.ednsClientNetmask)
+	fullReply := jsondns.Unmarshal(req.reply, &respJSON, req.udpSize, req.ednsClientNetmask)
 	buf, err := fullReply.Pack()
 	if err != nil {
 		log.Println(err)
@@ -185,7 +185,7 @@ func (c *Client) parseResponseGoogle(ctx context.Context, w dns.ResponseWriter, 
 // Fix DNS response empty []RR.Name
 // Additional section won't be rectified
 // see: https://stackoverflow.com/questions/52136176/what-is-additional-section-in-dns-and-how-it-works
-func fixEmptyNames(respJSON *jsonDNS.Response) {
+func fixEmptyNames(respJSON *jsondns.Response) {
 	for i := range respJSON.Answer {
 		if respJSON.Answer[i].Name == "" {
 			respJSON.Answer[i].Name = "."

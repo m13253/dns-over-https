@@ -39,7 +39,7 @@ import (
 
 	"github.com/m13253/dns-over-https/doh-client/config"
 	"github.com/m13253/dns-over-https/doh-client/selector"
-	jsonDNS "github.com/m13253/dns-over-https/json-dns"
+	jsondns "github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/idna"
@@ -305,7 +305,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 
 	if len(r.Question) != 1 {
 		log.Println("Number of questions is not 1")
-		reply := jsonDNS.PrepareReply(r)
+		reply := jsondns.PrepareReply(r)
 		reply.Rcode = dns.RcodeFormatError
 		w.WriteMsg(reply)
 		return
@@ -356,7 +356,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 			return
 		}
 		log.Println(err)
-		reply = jsonDNS.PrepareReply(r)
+		reply = jsondns.PrepareReply(r)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
 		return
@@ -471,7 +471,7 @@ func (c *Client) findClientIP(w dns.ResponseWriter, r *dns.Msg) (ednsClientAddre
 	if err != nil {
 		return
 	}
-	if ip := remoteAddr.IP; jsonDNS.IsGlobalIP(ip) {
+	if ip := remoteAddr.IP; jsondns.IsGlobalIP(ip) {
 		if ipv4 := ip.To4(); ipv4 != nil {
 			ednsClientAddress = ipv4.Mask(ipv4Mask24)
 			ednsClientNetmask = 24

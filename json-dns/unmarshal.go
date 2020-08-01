@@ -21,7 +21,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-package jsonDNS
+package jsondns
 
 import (
 	"fmt"

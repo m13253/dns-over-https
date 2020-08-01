@@ -170,11 +170,11 @@ func (s *Server) parseRequestGoogle(ctx context.Context, w http.ResponseWriter, 
 }
 
 func (s *Server) generateResponseGoogle(ctx context.Context, w http.ResponseWriter, r *http.Request, req *DNSRequest) {
-	respJSON := jsonDNS.Marshal(req.response)
+	respJSON := jsondns.Marshal(req.response)
 	respStr, err := json.Marshal(respJSON)
 	if err != nil {
 		log.Println(err)
-		jsonDNS.FormatError(w, fmt.Sprintf("DNS packet parse failure (%s)", err.Error()), 500)
+		jsondns.FormatError(w, fmt.Sprintf("DNS packet parse failure (%s)", err.Error()), 500)
 		return
 	}
 

@@ -36,7 +36,7 @@ import (
 	"time"
 
 	"github.com/m13253/dns-over-https/doh-client/selector"
-	jsonDNS "github.com/m13253/dns-over-https/json-dns"
+	jsondns "github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
@@ -90,7 +90,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 	requestBinary, err := r.Pack()
 	if err != nil {
 		log.Println(err)
-		reply := jsonDNS.PrepareReply(r)
+		reply := jsondns.PrepareReply(r)
 		reply.Rcode = dns.RcodeFormatError
 		w.WriteMsg(reply)
 		return &DNSRequest{
@@ -107,7 +107,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 		req, err = http.NewRequest(http.MethodGet, requestURL, nil)
 		if err != nil {
 			log.Println(err)
-			reply := jsonDNS.PrepareReply(r)
+			reply := jsondns.PrepareReply(r)
 			reply.Rcode = dns.RcodeServerFailure
 			w.WriteMsg(reply)
 			return &DNSRequest{
@@ -118,7 +118,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 		req, err = http.NewRequest(http.MethodPost, upstream.URL, bytes.NewReader(requestBinary))
 		if err != nil {
 			log.Println(err)
-			reply := jsonDNS.PrepareReply(r)
+			reply := jsondns.PrepareReply(r)
 			reply.Rcode = dns.RcodeServerFailure
 			w.WriteMsg(reply)
 			return &DNSRequest{
@@ -149,7 +149,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 
 	if err != nil {
 		log.Println(err)
-		reply := jsonDNS.PrepareReply(r)
+		reply := jsondns.PrepareReply(r)
 		reply.Rcode = dns.RcodeServerFailure
 		w.WriteMsg(reply)
 		return &DNSRequest{
@@ -159,7 +159,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 
 	return &DNSRequest{
 		response:          resp,
-		reply:             jsonDNS.PrepareReply(r),
+		reply:             jsondns.PrepareReply(r),
 		udpSize:           udpSize,
 		ednsClientAddress: ednsClientAddress,
 		ednsClientNetmask: ednsClientNetmask,

@@ -1,11 +1,11 @@
-package jsonDNS
+package jsondns
 
 import (
 	"fmt"
 	"net"
 )
 
-func ExampleFindIP() {
+func ExampleIsGlobalIP() {
 	fmt.Println(IsGlobalIP(net.ParseIP("127.0.0.1")))
 	fmt.Println(IsGlobalIP(net.IP{192, 168, 1, 1}))
 	fmt.Println(IsGlobalIP(net.ParseIP("8.8.8.8")))

@@ -36,7 +36,7 @@ import (
 	"strings"
 	"time"
 
-	jsonDNS "github.com/m13253/dns-over-https/json-dns"
+	jsondns "github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
 
@@ -156,12 +156,12 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 }
 
 func (s *Server) generateResponseIETF(ctx context.Context, w http.ResponseWriter, r *http.Request, req *DNSRequest) {
-	respJSON := jsonDNS.Marshal(req.response)
+	respJSON := jsondns.Marshal(req.response)
 	req.response.Id = req.transactionID
 	respBytes, err := req.response.Pack()
 	if err != nil {
 		log.Printf("DNS packet construct failure with upstream %s: %v\n", req.currentUpstream, err)
-		jsonDNS.FormatError(w, fmt.Sprintf("DNS packet construct failure (%s)", err.Error()), 500)
+		jsondns.FormatError(w, fmt.Sprintf("DNS packet construct failure (%s)", err.Error()), 500)
 		return
 	}
 
