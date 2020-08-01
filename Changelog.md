@@ -4,6 +4,14 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.2.2
+
+- Allow client to opt-out EDNS0 Client Support
+- [JSON-DoH] Honor DNSSEC OK flag for incoming DNS requests
+- [JSON-DoH] Add support for non-standard response formats
+- `X-Real-IP` is now used in logging if set by frontend load balancer
+- Fix documentation
+
 ## Version 2.2.1
 
 - Fix messy log
