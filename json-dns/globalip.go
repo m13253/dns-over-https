@@ -24,106 +24,107 @@
 package jsonDNS
 
 import (
+	"github.com/infobloxopen/go-trees/iptree"
 	"net"
 )
 
-// RFC6890
-var localIPv4Nets = []net.IPNet{
+var defaultFilter *iptree.Tree
+
+func init() {
+	defaultFilter = iptree.NewTree()
+
+	// RFC6890
 	// This host on this network
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{0, 0, 0, 0},
 		net.IPMask{255, 0, 0, 0},
-	},
+	}, struct{}{})
+
 	// Private-Use Networks
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{10, 0, 0, 0},
 		net.IPMask{255, 0, 0, 0},
-	},
+	}, struct{}{})
+
 	// Shared Address Space
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{100, 64, 0, 0},
 		net.IPMask{255, 192, 0, 0},
-	},
+	}, struct{}{})
+
 	// Loopback
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{127, 0, 0, 0},
 		net.IPMask{255, 0, 0, 0},
-	},
+	}, struct{}{})
+
 	// Link Local
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{169, 254, 0, 0},
 		net.IPMask{255, 255, 0, 0},
-	},
+	}, struct{}{})
+
 	// Private-Use Networks
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{172, 16, 0, 0},
 		net.IPMask{255, 240, 0, 0},
-	},
+	}, struct{}{})
+
 	// DS-Lite
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{192, 0, 0, 0},
 		net.IPMask{255, 255, 255, 248},
-	},
+	}, struct{}{})
+
 	// 6to4 Relay Anycast
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{192, 88, 99, 0},
 		net.IPMask{255, 255, 255, 0},
-	},
+	}, struct{}{})
+
 	// Private-Use Networks
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{192, 168, 0, 0},
 		net.IPMask{255, 255, 0, 0},
-	},
+	}, struct{}{})
+
 	// Reserved for Future Use & Limited Broadcast
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{240, 0, 0, 0},
 		net.IPMask{240, 0, 0, 0},
-	},
-}
+	}, struct{}{})
 
-// RFC6890
-var localIPv6Nets = []net.IPNet{
+	// RFC6890
 	// Unspecified & Loopback Address
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		net.IPMask{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe},
-	},
+	}, struct{}{})
+
 	// Discard-Only Prefix
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		net.IPMask{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	},
+	}, struct{}{})
+
 	// Unique-Local
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{0xfc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		net.IPMask{0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	},
+	}, struct{}{})
+
 	// Linked-Scoped Unicast
-	net.IPNet{
+	defaultFilter.InplaceInsertNet(&net.IPNet{
 		net.IP{0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 		net.IPMask{0xff, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	},
+	}, struct{}{})
+
 }
 
 func IsGlobalIP(ip net.IP) bool {
 	if ip == nil {
 		return false
 	}
-	if ipv4 := ip.To4(); len(ipv4) == net.IPv4len {
-		for _, ipnet := range localIPv4Nets {
-			if ipnet.Contains(ip) {
-				return false
-			}
-		}
-		return true
-	}
-	if len(ip) == net.IPv6len {
-		for _, ipnet := range localIPv6Nets {
-			if ipnet.Contains(ip) {
-				return false
-			}
-		}
-		return true
-	}
-	return true
+	_, contained := defaultFilter.GetByIP(ip)
+	return !contained
 }
