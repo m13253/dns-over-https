@@ -39,7 +39,7 @@ import (
 
 	"github.com/m13253/dns-over-https/doh-client/config"
 	"github.com/m13253/dns-over-https/doh-client/selector"
-	"github.com/m13253/dns-over-https/json-dns"
+	jsonDNS "github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/idna"
