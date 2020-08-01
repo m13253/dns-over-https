@@ -3,13 +3,32 @@ package jsonDNS
 import (
 	"fmt"
 	"net"
-	"testing"
 )
 
-func TestFindIp(t *testing.T) {
-
-	fmt.Println(IsGlobalIP(net.IP{127, 0, 0, 1}))
-	fmt.Println(IsGlobalIP(net.IP{192, 168, 0, 0}))
-	fmt.Println(IsGlobalIP(net.IP{110, 100, 100, 100}))
-
+func ExampleFindIP() {
+	fmt.Println(IsGlobalIP(net.ParseIP("127.0.0.1")))
+	fmt.Println(IsGlobalIP(net.IP{192, 168, 1, 1}))
+	fmt.Println(IsGlobalIP(net.ParseIP("8.8.8.8")))
+	fmt.Println(IsGlobalIP(net.IP{8, 8, 4, 4}))
+	fmt.Println(IsGlobalIP(net.ParseIP("::1")))
+	fmt.Println(IsGlobalIP(net.IP{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}))
+	fmt.Println(IsGlobalIP(net.ParseIP("2001:4860:4860::8888")))
+	fmt.Println(IsGlobalIP(net.IP{0x20, 0x01, 0x48, 0x60, 0x48, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x88, 0x44}))
+	fmt.Println(IsGlobalIP(net.ParseIP("::ffff:127.0.0.1")))
+	fmt.Println(IsGlobalIP(net.IP{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 192, 168, 1, 1}))
+	fmt.Println(IsGlobalIP(net.ParseIP("::ffff:808:808")))
+	fmt.Println(IsGlobalIP(net.IP{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 8, 8, 4, 4}))
+	// Output:
+	// false
+	// false
+	// true
+	// true
+	// false
+	// false
+	// true
+	// true
+	// false
+	// false
+	// true
+	// true
 }
