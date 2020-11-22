@@ -43,6 +43,8 @@ import (
 	"github.com/miekg/dns"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/idna"
+
+	"crypto/tls"
 )
 
 type Client struct {
@@ -247,6 +249,7 @@ func (c *Client) newHTTPClient() error {
 		MaxIdleConnsPerHost:   10,
 		Proxy:                 http.ProxyFromEnvironment,
 		TLSHandshakeTimeout:   time.Duration(c.conf.Other.Timeout) * time.Second,
+		TLSClientConfig:       &tls.Config{InsecureSkipVerify: c.conf.Other.TLSInsecureSkipVerify},
 	}
 	if c.conf.Other.NoIPv6 {
 		c.httpTransport.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {

@@ -125,6 +125,7 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 		}
 	}
 	isTailored := edns0Subnet == nil
+
 	if edns0Subnet == nil {
 		ednsClientFamily := uint16(0)
 		ednsClientAddress := s.findClientIP(r)
@@ -133,10 +134,19 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 			if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
 				ednsClientFamily = 1
 				ednsClientAddress = ipv4
-				ednsClientNetmask = 24
+				if s.conf.ECSFullSubnet {
+					ednsClientNetmask = 32
+				} else {
+					ednsClientNetmask = 24
+					ednsClientAddress = ednsClientAddress.Mask(net.CIDRMask(24, 32))
+				}
 			} else {
 				ednsClientFamily = 2
-				ednsClientNetmask = 56
+				if s.conf.ECSFullSubnet {
+					ednsClientNetmask = 128
+				} else {
+					ednsClientNetmask = 56
+				}
 			}
 			edns0Subnet = new(dns.EDNS0_SUBNET)
 			edns0Subnet.Code = dns.EDNS0SUBNET

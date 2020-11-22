@@ -42,6 +42,8 @@ type config struct {
 	Verbose          bool     `toml:"verbose"`
 	DebugHTTPHeaders []string `toml:"debug_http_headers"`
 	LogGuessedIP     bool     `toml:"log_guessed_client_ip"`
+	LocalIPFilter    bool     `toml:"local_ip_filtering"`
+	ECSFullSubnet    bool     `toml:"ecs_full_subnet"`
 }
 
 func loadConfig(path string) (*config, error) {
