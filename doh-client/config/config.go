@@ -56,6 +56,7 @@ type others struct {
 	NoUserAgent      bool     `toml:"no_user_agent"`
 	Verbose          bool     `toml:"verbose"`
 	DebugHTTPHeaders []string `toml:"debug_http_headers"`
+	TLSInsecureSkipVerify bool `toml:"tls_skipverify"`
 }
 
 type Config struct {
