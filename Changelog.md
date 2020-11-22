@@ -4,6 +4,11 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.2.3
+
+- Use the library ipTree to determine whether an IP is global routable, improving the performance
+- Google's 8.8.8.8 resolver is now marked as "Good ECS" in the example configuration file
+
 ## Version 2.2.2
 
 - Allow client to opt-out EDNS0 Client Support
