@@ -167,7 +167,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 
 	for _, header := range s.conf.DebugHTTPHeaders {
 		if value := r.Header.Get(header); value != "" {
-			log.Printf("headers %s: %s\n", header, value)
+			log.Printf("%s: %s\n", header, value)
 		}
 	}
 

@@ -106,8 +106,6 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 		}
 	}
 
-	// fmt.Printf("req - %v\n", msg)
-
 	transactionID := msg.Id
 	msg.Id = dns.Id()
 	opt := msg.IsEdns0()
@@ -160,8 +158,6 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 		}
 	}
 
-	// fmt.Printf("req - %v\n", msg)
-		
 	return &DNSRequest{
 		request:       msg,
 		transactionID: transactionID,
