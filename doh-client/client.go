@@ -27,12 +27,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/m13253/dns-over-https/doh-client/config"
-	"github.com/m13253/dns-over-https/doh-client/selector"
-	jsondns "github.com/m13253/dns-over-https/json-dns"
-	"github.com/miekg/dns"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/idna"
 	"log"
 	"math/rand"
 	"net"
@@ -43,6 +37,13 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/m13253/dns-over-https/doh-client/config"
+	"github.com/m13253/dns-over-https/doh-client/selector"
+	jsondns "github.com/m13253/dns-over-https/json-dns"
+	"github.com/miekg/dns"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/idna"
 )
 
 type Client struct {
