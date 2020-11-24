@@ -34,7 +34,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/m13253/dns-over-https/json-dns"
+	jsondns "github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 	"golang.org/x/net/idna"
 )
