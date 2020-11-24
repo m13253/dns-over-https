@@ -146,6 +146,7 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 					ednsClientNetmask = 128
 				} else {
 					ednsClientNetmask = 56
+					ednsClientAddress = ednsClientAddress.Mask(net.CIDRMask(56, 128))
 				}
 			}
 			edns0Subnet = new(dns.EDNS0_SUBNET)
