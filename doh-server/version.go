@@ -24,6 +24,6 @@
 package main
 
 const (
-	VERSION    = "2.2.4"
+	VERSION    = "2.2.5"
 	USER_AGENT = "DNS-over-HTTPS/" + VERSION + " (+https://github.com/m13253/dns-over-https)"
 )
