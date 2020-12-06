@@ -4,6 +4,11 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.2.4
+
+- Add options to configure ECS netmask length
+- Add an option to disable TLS verification (Note: dangerous)
+
 ## Version 2.2.3
 
 - Use the library ipTree to determine whether an IP is global routable, improving the performance
