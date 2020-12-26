@@ -170,10 +170,11 @@ my.server.name {
 version: '2.2'
 networks:
   default:
+
 services:
   proxy:
     # The official v2 Traefik docker image
-    image: traefik:v2.2
+    image: traefik:v2.3
     hostname: proxy
     networks:
       - default
@@ -265,8 +266,6 @@ services:
 ````
 
 > Complete Guide available at: https://github.com/satishweb/docker-doh
-
-> No IPV6 Support: Docker Swarm does not support IPV6 as of yet. Issue is logged [here](https://github.com/moby/moby/issues/24379)
 
 > IPV6 Support for Docker Compose based configuration TBA
 
