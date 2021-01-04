@@ -119,7 +119,10 @@ func (s *Server) Start() error {
 		}
 		clientCAPool = x509.NewCertPool()
 		clientCAPool.AppendCertsFromPEM(clientCA)
-		log.Println("Client cert loaded for TLS authentication")
+		log.Println("Certificate loaded for client TLS authentication")
+	} else {
+		log.Fatalln("TLS client authentication requires both tls_client_auth and tls_client_auth_ca, exiting.")
+		
 	}
 
 	results := make(chan error, len(s.conf.Listen))
