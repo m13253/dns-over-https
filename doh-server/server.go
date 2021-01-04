@@ -25,7 +25,10 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net"
@@ -33,10 +36,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"crypto/tls"
-	"crypto/x509"
-	"io/ioutil"
 
 	"github.com/gorilla/handlers"
 	jsondns "github.com/m13253/dns-over-https/json-dns"
@@ -113,10 +112,10 @@ func (s *Server) Start() error {
 	}
 
 	var clientCAPool *x509.CertPool
-	if s.conf.TLSClientAuth && s.conf.CertCA != "" {
-		clientCA, err := ioutil.ReadFile(s.conf.CertCA)
+	if s.conf.TLSClientAuth && s.conf.TLSClientAuthCA != "" {
+		clientCA, err := ioutil.ReadFile(s.conf.TLSClientAuthCA)
 		if err != nil {
-			log.Fatalf("reading cert failed : %v", err)
+			log.Fatalf("Reading certificate for client authentication has failed: %v", err)
 		}
 		clientCAPool = x509.NewCertPool()
 		clientCAPool.AppendCertsFromPEM(clientCA)
@@ -130,7 +129,7 @@ func (s *Server) Start() error {
 			log.Println("start server")
 
 			if s.conf.Cert != "" || s.conf.Key != "" {
-				if s.conf.TLSClientAuth && s.conf.CertCA != "" {
+				if s.conf.TLSClientAuth && s.conf.TLSClientAuthCA != "" {
 					srvtls := &http.Server{
 						Handler: servemux,
 						Addr:    addr,
@@ -140,7 +139,7 @@ func (s *Server) Start() error {
 							GetCertificate: func(info *tls.ClientHelloInfo) (certificate *tls.Certificate, e error) {
 								c, err := tls.LoadX509KeyPair(s.conf.Cert, s.conf.Key)
 								if err != nil {
-									fmt.Printf("Error loading key pair: %v\n", err)
+									fmt.Printf("Error loading server certificate key pair: %v\n", err)
 									return nil, err
 								}
 								return &c, nil
@@ -163,7 +162,6 @@ func (s *Server) Start() error {
 	// wait for all handlers
 	for i := 0; i < cap(results); i++ {
 		err := <-results
-
 		if err != nil {
 			return err
 		}
