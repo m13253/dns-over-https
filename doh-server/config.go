@@ -44,6 +44,8 @@ type config struct {
 	LogGuessedIP     bool     `toml:"log_guessed_client_ip"`
 	LocalIPFilter    bool     `toml:"ecs_allow_non_global_ip"`
 	ECSFullSubnet    bool     `toml:"ecs_use_precise_ip"`
+	TLSClientAuth    bool     `toml:"tls_client_auth"`
+	CertCA           string   `toml:"cert_ca"`
 }
 
 func loadConfig(path string) (*config, error) {

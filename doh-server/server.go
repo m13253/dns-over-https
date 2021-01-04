@@ -34,6 +34,10 @@ import (
 	"strings"
 	"time"
 
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
+
 	"github.com/gorilla/handlers"
 	jsondns "github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
@@ -107,12 +111,46 @@ func (s *Server) Start() error {
 	if s.conf.Verbose {
 		servemux = handlers.CombinedLoggingHandler(os.Stdout, servemux)
 	}
+
+	var clientCAPool *x509.CertPool
+	if s.conf.TLSClientAuth && s.conf.CertCA != "" {
+		clientCA, err := ioutil.ReadFile(s.conf.CertCA)
+		if err != nil {
+			log.Fatalf("reading cert failed : %v", err)
+		}
+		clientCAPool = x509.NewCertPool()
+		clientCAPool.AppendCertsFromPEM(clientCA)
+		log.Println("Client cert loaded for TLS authentication")
+	}
+
 	results := make(chan error, len(s.conf.Listen))
 	for _, addr := range s.conf.Listen {
 		go func(addr string) {
 			var err error
+			log.Println("start server")
+
 			if s.conf.Cert != "" || s.conf.Key != "" {
-				err = http.ListenAndServeTLS(addr, s.conf.Cert, s.conf.Key, servemux)
+				if s.conf.TLSClientAuth && s.conf.CertCA != "" {
+					srvtls := &http.Server{
+						Handler: servemux,
+						Addr:    addr,
+						TLSConfig: &tls.Config{
+							ClientCAs:  clientCAPool,
+							ClientAuth: tls.RequireAndVerifyClientCert,
+							GetCertificate: func(info *tls.ClientHelloInfo) (certificate *tls.Certificate, e error) {
+								c, err := tls.LoadX509KeyPair(s.conf.Cert, s.conf.Key)
+								if err != nil {
+									fmt.Printf("Error loading key pair: %v\n", err)
+									return nil, err
+								}
+								return &c, nil
+							},
+						},
+					}
+					err = srvtls.ListenAndServeTLS("", "")
+				} else {
+					err = http.ListenAndServeTLS(addr, s.conf.Cert, s.conf.Key, servemux)
+				}
 			} else {
 				err = http.ListenAndServe(addr, servemux)
 			}
@@ -125,6 +163,7 @@ func (s *Server) Start() error {
 	// wait for all handlers
 	for i := 0; i < cap(results); i++ {
 		err := <-results
+
 		if err != nil {
 			return err
 		}
