@@ -302,7 +302,7 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 	if XRealIP != "" {
 		addr := strings.TrimSpace(XRealIP)
 		ip := net.ParseIP(addr)
-		if !s.conf.LocalIPFilter || jsondns.IsGlobalIP(ip) {
+		if !s.conf.ECSAllowNonGlobalIP || jsondns.IsGlobalIP(ip) {
 			return ip
 		}
 	}
@@ -311,7 +311,7 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 	if err != nil {
 		return nil
 	}
-	if !s.conf.LocalIPFilter {
+	if !s.conf.ECSAllowNonGlobalIP {
 		return remoteAddr.IP
 	}
 	if ip := remoteAddr.IP; jsondns.IsGlobalIP(ip) {

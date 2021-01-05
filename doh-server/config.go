@@ -31,21 +31,21 @@ import (
 )
 
 type config struct {
-	Listen           []string `toml:"listen"`
-	LocalAddr        string   `toml:"local_addr"`
-	Cert             string   `toml:"cert"`
-	Key              string   `toml:"key"`
-	Path             string   `toml:"path"`
-	Upstream         []string `toml:"upstream"`
-	Timeout          uint     `toml:"timeout"`
-	Tries            uint     `toml:"tries"`
-	Verbose          bool     `toml:"verbose"`
-	DebugHTTPHeaders []string `toml:"debug_http_headers"`
-	LogGuessedIP     bool     `toml:"log_guessed_client_ip"`
-	LocalIPFilter    bool     `toml:"ecs_allow_non_global_ip"`
-	ECSFullSubnet    bool     `toml:"ecs_use_precise_ip"`
-	TLSClientAuth    bool     `toml:"tls_client_auth"`
-	TLSClientAuthCA  string   `toml:"tls_client_auth_ca"`
+	Listen              []string `toml:"listen"`
+	LocalAddr           string   `toml:"local_addr"`
+	Cert                string   `toml:"cert"`
+	Key                 string   `toml:"key"`
+	Path                string   `toml:"path"`
+	Upstream            []string `toml:"upstream"`
+	Timeout             uint     `toml:"timeout"`
+	Tries               uint     `toml:"tries"`
+	Verbose             bool     `toml:"verbose"`
+	DebugHTTPHeaders    []string `toml:"debug_http_headers"`
+	LogGuessedIP        bool     `toml:"log_guessed_client_ip"`
+	ECSAllowNonGlobalIP bool     `toml:"ecs_allow_non_global_ip"`
+	ECSUsePreciseIP     bool     `toml:"ecs_use_precise_ip"`
+	TLSClientAuth       bool     `toml:"tls_client_auth"`
+	TLSClientAuthCA     string   `toml:"tls_client_auth_ca"`
 }
 
 func loadConfig(path string) (*config, error) {

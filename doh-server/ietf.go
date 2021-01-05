@@ -134,7 +134,7 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 			if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
 				ednsClientFamily = 1
 				ednsClientAddress = ipv4
-				if s.conf.ECSFullSubnet {
+				if s.conf.ECSUsePreciseIP {
 					ednsClientNetmask = 32
 				} else {
 					ednsClientNetmask = 24
@@ -142,7 +142,7 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 				}
 			} else {
 				ednsClientFamily = 2
-				if s.conf.ECSFullSubnet {
+				if s.conf.ECSUsePreciseIP {
 					ednsClientNetmask = 128
 				} else {
 					ednsClientNetmask = 56
