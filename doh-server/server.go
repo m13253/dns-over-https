@@ -112,16 +112,18 @@ func (s *Server) Start() error {
 	}
 
 	var clientCAPool *x509.CertPool
-	if s.conf.TLSClientAuth && s.conf.TLSClientAuthCA != "" {
-		clientCA, err := ioutil.ReadFile(s.conf.TLSClientAuthCA)
-		if err != nil {
-			log.Fatalf("Reading certificate for client authentication has failed: %v", err)
+	if s.conf.TLSClientAuth {
+		if s.conf.TLSClientAuthCA != "" {
+			clientCA, err := ioutil.ReadFile(s.conf.TLSClientAuthCA)
+			if err != nil {
+				log.Fatalf("Reading certificate for client authentication has failed: %v", err)
+			}
+			clientCAPool = x509.NewCertPool()
+			clientCAPool.AppendCertsFromPEM(clientCA)
+			log.Println("Certificate loaded for client TLS authentication")
+		} else {
+			log.Fatalln("TLS client authentication requires both tls_client_auth and tls_client_auth_ca, exiting.")
 		}
-		clientCAPool = x509.NewCertPool()
-		clientCAPool.AppendCertsFromPEM(clientCA)
-		log.Println("Certificate loaded for client TLS authentication")
-	} else {
-		log.Fatalln("TLS client authentication requires both tls_client_auth and tls_client_auth_ca, exiting.")
 	}
 
 	results := make(chan error, len(s.conf.Listen))
@@ -129,7 +131,7 @@ func (s *Server) Start() error {
 		go func(addr string) {
 			var err error
 			if s.conf.Cert != "" || s.conf.Key != "" {
-				if s.conf.TLSClientAuth && s.conf.TLSClientAuthCA != "" {
+				if clientCAPool != nil {
 					srvtls := &http.Server{
 						Handler: servemux,
 						Addr:    addr,
@@ -302,7 +304,7 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 	if XRealIP != "" {
 		addr := strings.TrimSpace(XRealIP)
 		ip := net.ParseIP(addr)
-		if !s.conf.ECSAllowNonGlobalIP || jsondns.IsGlobalIP(ip) {
+		if s.conf.ECSAllowNonGlobalIP || jsondns.IsGlobalIP(ip) {
 			return ip
 		}
 	}
@@ -311,13 +313,10 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 	if err != nil {
 		return nil
 	}
-	if !s.conf.ECSAllowNonGlobalIP {
-		return remoteAddr.IP
-	}
-	if ip := remoteAddr.IP; jsondns.IsGlobalIP(ip) {
+	ip := remoteAddr.IP
+	if s.conf.ECSAllowNonGlobalIP || jsondns.IsGlobalIP(ip) {
 		return ip
 	}
-
 	return nil
 }
 
