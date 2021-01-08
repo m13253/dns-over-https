@@ -25,7 +25,10 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net"
@@ -107,12 +110,48 @@ func (s *Server) Start() error {
 	if s.conf.Verbose {
 		servemux = handlers.CombinedLoggingHandler(os.Stdout, servemux)
 	}
+
+	var clientCAPool *x509.CertPool
+	if s.conf.TLSClientAuth {
+		if s.conf.TLSClientAuthCA != "" {
+			clientCA, err := ioutil.ReadFile(s.conf.TLSClientAuthCA)
+			if err != nil {
+				log.Fatalf("Reading certificate for client authentication has failed: %v", err)
+			}
+			clientCAPool = x509.NewCertPool()
+			clientCAPool.AppendCertsFromPEM(clientCA)
+			log.Println("Certificate loaded for client TLS authentication")
+		} else {
+			log.Fatalln("TLS client authentication requires both tls_client_auth and tls_client_auth_ca, exiting.")
+		}
+	}
+
 	results := make(chan error, len(s.conf.Listen))
 	for _, addr := range s.conf.Listen {
 		go func(addr string) {
 			var err error
 			if s.conf.Cert != "" || s.conf.Key != "" {
-				err = http.ListenAndServeTLS(addr, s.conf.Cert, s.conf.Key, servemux)
+				if clientCAPool != nil {
+					srvtls := &http.Server{
+						Handler: servemux,
+						Addr:    addr,
+						TLSConfig: &tls.Config{
+							ClientCAs:  clientCAPool,
+							ClientAuth: tls.RequireAndVerifyClientCert,
+							GetCertificate: func(info *tls.ClientHelloInfo) (certificate *tls.Certificate, e error) {
+								c, err := tls.LoadX509KeyPair(s.conf.Cert, s.conf.Key)
+								if err != nil {
+									fmt.Printf("Error loading server certificate key pair: %v\n", err)
+									return nil, err
+								}
+								return &c, nil
+							},
+						},
+					}
+					err = srvtls.ListenAndServeTLS("", "")
+				} else {
+					err = http.ListenAndServeTLS(addr, s.conf.Cert, s.conf.Key, servemux)
+				}
 			} else {
 				err = http.ListenAndServe(addr, servemux)
 			}
@@ -265,7 +304,7 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 	if XRealIP != "" {
 		addr := strings.TrimSpace(XRealIP)
 		ip := net.ParseIP(addr)
-		if !s.conf.LocalIPFilter || jsondns.IsGlobalIP(ip) {
+		if s.conf.ECSAllowNonGlobalIP || jsondns.IsGlobalIP(ip) {
 			return ip
 		}
 	}
@@ -274,13 +313,10 @@ func (s *Server) findClientIP(r *http.Request) net.IP {
 	if err != nil {
 		return nil
 	}
-	if !s.conf.LocalIPFilter {
-		return remoteAddr.IP
-	}
-	if ip := remoteAddr.IP; jsondns.IsGlobalIP(ip) {
+	ip := remoteAddr.IP
+	if s.conf.ECSAllowNonGlobalIP || jsondns.IsGlobalIP(ip) {
 		return ip
 	}
-
 	return nil
 }
 
