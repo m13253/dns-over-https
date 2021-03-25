@@ -4,6 +4,11 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.2.5
+
+- Add client certificate authentication
+- Fixing documentation related to Docker
+
 ## Version 2.2.4
 
 - Add options to configure ECS netmask length
