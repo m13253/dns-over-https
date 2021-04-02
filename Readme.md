@@ -11,7 +11,7 @@ and [IETF DNS-over-HTTPS (RFC 8484)](https://www.rfc-editor.org/rfc/rfc8484.txt)
 
 ## Installing
 ### From Source
-- Install [Go](https://golang.org), at least version 1.10.
+- Install [Go](https://golang.org), at least version 1.13. The newer the better.
 > Note for Debian/Ubuntu users: You need to set `$GOROOT` if you could not get your new version of Go selected by the Makefile.)
 
 - First create an empty directory, used for `$GOPATH`:
