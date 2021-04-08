@@ -13,9 +13,9 @@ GOGET_UPDATE = $(GOROOT)/bin/go get -d -u -v
 endif
 
 ifeq ($(shell uname),Darwin)
-CONFDIR = /usr/local/etc/dns-over-https
+CONFDIR = $(DESTDIR)$(PREFIX)/usr/local/etc/dns-over-https
 else
-CONFDIR = /etc/dns-over-https
+CONFDIR = $(DESTDIR)$(PREFIX)/etc/dns-over-https
 endif
 
 all: doh-client/doh-client doh-server/doh-server
