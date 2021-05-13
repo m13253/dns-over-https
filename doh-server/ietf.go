@@ -206,7 +206,9 @@ func (s *Server) generateResponseIETF(ctx context.Context, w http.ResponseWriter
 // Workaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe
 func (s *Server) patchDNSCryptProxyReqID(w http.ResponseWriter, r *http.Request, requestBinary []byte) bool {
 	if strings.Contains(r.UserAgent(), "dnscrypt-proxy") && bytes.Equal(requestBinary, []byte("\xca\xfe\x01\x00\x00\x01\x00\x00\x00\x00\x00\x01\x00\x00\x02\x00\x01\x00\x00\x29\x10\x00\x00\x00\x80\x00\x00\x00")) {
-		log.Println("DNSCrypt-Proxy detected. Patching response.")
+		if s.conf.Verbose {
+			log.Println("DNSCrypt-Proxy detected. Patching response.")
+		}
 		w.Header().Set("Content-Type", "application/dns-message")
 		w.Header().Set("Vary", "Accept, User-Agent")
 		now := time.Now().UTC().Format(http.TimeFormat)
@@ -220,7 +222,9 @@ func (s *Server) patchDNSCryptProxyReqID(w http.ResponseWriter, r *http.Request,
 // Workaround a bug causing Firefox 61-62 to reject responses with Content-Type = application/dns-message
 func (s *Server) patchFirefoxContentType(w http.ResponseWriter, r *http.Request, req *DNSRequest) bool {
 	if strings.Contains(r.UserAgent(), "Firefox") && strings.Contains(r.Header.Get("Accept"), "application/dns-udpwireformat") && !strings.Contains(r.Header.Get("Accept"), "application/dns-message") {
-		log.Println("Firefox 61-62 detected. Patching response.")
+		if s.conf.Verbose {
+			log.Println("Firefox 61-62 detected. Patching response.")
+		}
 		w.Header().Set("Content-Type", "application/dns-udpwireformat")
 		w.Header().Set("Vary", "Accept, User-Agent")
 		req.isTailored = true
