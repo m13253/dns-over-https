@@ -46,6 +46,7 @@ type config struct {
 	ECSUsePreciseIP     bool     `toml:"ecs_use_precise_ip"`
 	TLSClientAuth       bool     `toml:"tls_client_auth"`
 	TLSClientAuthCA     string   `toml:"tls_client_auth_ca"`
+	Caching             bool     `toml:"caching"`
 }
 
 func loadConfig(path string) (*config, error) {
