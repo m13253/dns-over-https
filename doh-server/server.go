@@ -268,8 +268,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 
 	req = s.patchRootRD(req)
 
-	var err error
-	req, err = s.doDNSQuery(ctx, req)
+	err := s.doDNSQuery(ctx, req)
 	if err != nil {
 		jsondns.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 503)
 		return
@@ -340,7 +339,7 @@ func (s *Server) indexQuestionType(msg *dns.Msg, qtype uint16) int {
 	return -1
 }
 
-func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (resp *DNSRequest, err error) {
+func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (err error) {
 	numServers := len(s.conf.Upstream)
 	for i := uint(0); i < s.conf.Tries; i++ {
 		req.currentUpstream = s.conf.Upstream[rand.Intn(numServers)]
@@ -350,7 +349,7 @@ func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (resp *DNSRequ
 		switch t {
 		default:
 			log.Printf("invalid DNS type %q in upstream %q", t, upstream)
-			return nil, &configError{"invalid DNS type"}
+			return &configError{"invalid DNS type"}
 		// Use DNS-over-TLS (DoT) if configured to do so
 		case "tcp-tls":
 			req.response, _, err = s.tcpClientTLS.ExchangeContext(ctx, req.request, upstream)
@@ -375,9 +374,9 @@ func (s *Server) doDNSQuery(ctx context.Context, req *DNSRequest) (resp *DNSRequ
 		}
 
 		if err == nil {
-			return req, nil
+			return nil
 		}
 		log.Printf("DNS error from upstream %s: %s\n", req.currentUpstream, err.Error())
 	}
-	return req, err
+	return err
 }
