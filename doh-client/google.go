@@ -34,8 +34,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/m13253/dns-over-https/doh-client/selector"
-	jsondns "github.com/m13253/dns-over-https/json-dns"
+	"github.com/m13253/dns-over-https/v2/doh-client/selector"
+	jsondns "github.com/m13253/dns-over-https/v2/json-dns"
 	"github.com/miekg/dns"
 )
 

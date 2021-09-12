@@ -1,4 +1,4 @@
-module github.com/m13253/dns-over-https
+module github.com/m13253/dns-over-https/v2
 
 go 1.13
 
