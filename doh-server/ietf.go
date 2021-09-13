@@ -36,7 +36,7 @@ import (
 	"strings"
 	"time"
 
-	jsondns "github.com/m13253/dns-over-https/json-dns"
+	jsondns "github.com/m13253/dns-over-https/v2/json-dns"
 	"github.com/miekg/dns"
 )
 

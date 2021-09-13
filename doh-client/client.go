@@ -38,9 +38,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/m13253/dns-over-https/doh-client/config"
-	"github.com/m13253/dns-over-https/doh-client/selector"
-	jsondns "github.com/m13253/dns-over-https/json-dns"
+	"github.com/m13253/dns-over-https/v2/doh-client/config"
+	"github.com/m13253/dns-over-https/v2/doh-client/selector"
+	jsondns "github.com/m13253/dns-over-https/v2/json-dns"
 	"github.com/miekg/dns"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/idna"
