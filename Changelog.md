@@ -4,6 +4,11 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.3.1
+
+- No new features in this release
+- Bumped versions of Go toolchain and third-party dependencies, requested by #128
+
 ## Version 2.3.0
 
 - The repository now conforms to the Go semvar standard (Fixed #115, thanks to @leiless)
