@@ -67,6 +67,10 @@ docker run -d --name doh-server \
   satishweb/doh-server
 ```
 
+## Logging
+
+All log lines (by either doh-client or doh-server) are written into `stderr`; you can view them using your OS tool of choice (`journalctl` when using systemd).
+
 ## Server Configuration
 
 The following is a typical DNS-over-HTTPS architecture:
