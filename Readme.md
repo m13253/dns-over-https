@@ -319,6 +319,10 @@ Currently supported features are:
 - [X] EDNS0 large UDP packet (4 KiB by default)
 - [X] EDNS0-Client-Subnet (/24 for IPv4, /56 for IPv6 by default)
 
+## Known issues
+
+* it does not work well with [dnscrypt-proxy](https://github.com/DNSCrypt/dnscrypt-proxy), you might want to use either (or fix the compatibility bugs by submitting PRs)
+
 ## The name of the project
 
 This project is named "DNS-over-HTTPS" because it was written before the IETF DoH project. Although this project is compatible with IETF DoH, the project is not affiliated with IETF.
