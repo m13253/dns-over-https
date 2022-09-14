@@ -90,45 +90,14 @@ func (s *Server) parseRequestGoogle(ctx context.Context, w http.ResponseWriter, 
 		if ednsClientSubnet == "0/0" {
 			ednsClientSubnet = "0.0.0.0/0"
 		}
-		slash := strings.IndexByte(ednsClientSubnet, '/')
-		if slash < 0 {
-			ednsClientAddress = net.ParseIP(ednsClientSubnet)
-			if ednsClientAddress == nil {
-				return &DNSRequest{
-					errcode: 400,
-					errtext: fmt.Sprintf("Invalid argument value: \"edns_client_subnet\" = %q", ednsClientSubnet),
-				}
+
+		var err error
+		ednsClientFamily, ednsClientAddress, ednsClientNetmask, err = parseSubnet(ednsClientSubnet)
+		if err != nil {
+			return &DNSRequest{
+				errcode: 400,
+				errtext: err.Error(),
 			}
-			if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
-				ednsClientFamily = 1
-				ednsClientAddress = ipv4
-				ednsClientNetmask = 24
-			} else {
-				ednsClientFamily = 2
-				ednsClientNetmask = 56
-			}
-		} else {
-			ednsClientAddress = net.ParseIP(ednsClientSubnet[:slash])
-			if ednsClientAddress == nil {
-				return &DNSRequest{
-					errcode: 400,
-					errtext: fmt.Sprintf("Invalid argument value: \"edns_client_subnet\" = %q", ednsClientSubnet),
-				}
-			}
-			if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
-				ednsClientFamily = 1
-				ednsClientAddress = ipv4
-			} else {
-				ednsClientFamily = 2
-			}
-			netmask, err := strconv.ParseUint(ednsClientSubnet[slash+1:], 10, 8)
-			if err != nil {
-				return &DNSRequest{
-					errcode: 400,
-					errtext: fmt.Sprintf("Invalid argument value: \"edns_client_subnet\" = %q", ednsClientSubnet),
-				}
-			}
-			ednsClientNetmask = uint8(netmask)
 		}
 	} else {
 		ednsClientAddress = s.findClientIP(r)
@@ -167,6 +136,45 @@ func (s *Server) parseRequestGoogle(ctx context.Context, w http.ResponseWriter, 
 		request:    msg,
 		isTailored: ednsClientSubnet == "",
 	}
+}
+
+func parseSubnet(ednsClientSubnet string) (ednsClientFamily uint16, ednsClientAddress net.IP, ednsClientNetmask uint8, err error) {
+	slash := strings.IndexByte(ednsClientSubnet, '/')
+	if slash < 0 {
+		ednsClientAddress = net.ParseIP(ednsClientSubnet)
+		if ednsClientAddress == nil {
+			err = fmt.Errorf("Invalid argument value: \"edns_client_subnet\" = %q", ednsClientSubnet)
+			return
+		}
+		if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
+			ednsClientFamily = 1
+			ednsClientAddress = ipv4
+			ednsClientNetmask = 24
+		} else {
+			ednsClientFamily = 2
+			ednsClientNetmask = 56
+		}
+	} else {
+		ednsClientAddress = net.ParseIP(ednsClientSubnet[:slash])
+		if ednsClientAddress == nil {
+			err = fmt.Errorf("Invalid argument value: \"edns_client_subnet\" = %q", ednsClientSubnet)
+			return
+		}
+		if ipv4 := ednsClientAddress.To4(); ipv4 != nil {
+			ednsClientFamily = 1
+			ednsClientAddress = ipv4
+		} else {
+			ednsClientFamily = 2
+		}
+		netmask, err1 := strconv.ParseUint(ednsClientSubnet[slash+1:], 10, 8)
+		if err1 != nil {
+			err = fmt.Errorf("Invalid argument value: \"edns_client_subnet\" = %q", ednsClientSubnet)
+			return
+		}
+		ednsClientNetmask = uint8(netmask)
+	}
+
+	return
 }
 
 func (s *Server) generateResponseGoogle(ctx context.Context, w http.ResponseWriter, r *http.Request, req *DNSRequest) {
