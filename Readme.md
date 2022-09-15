@@ -273,6 +273,24 @@ services:
 
 > IPV6 Support for Docker Compose based configuration TBA
 
+### Example configuration: DNS-over-TLS
+
+There is no native [DNS-over-TLS](https://en.wikipedia.org/wiki/DNS_over_TLS) support but you can easily add it via nginx:
+```
+stream {
+    server {
+        listen                  *:853 ssl;
+        proxy_pass              ipofyourdnsresolver:port  #127.0.0.1:53
+    }
+
+    ssl_certificate /etc/letsencrypt/live/site.yourdomain/fullchain.pem; 
+    ssl_certificate_key /etc/letsencrypt/live/site.yourdomain/privkey.pem; 
+}
+```
+
+The DoT service can also be provided by running a [STunnel](https://www.stunnel.org/) instance to wrap dnsmasq (or any other resolver of your choice, listening on a TCP port);
+this approach does not need a stand-alone daemon to provide the DoT service.
+
 ## DNSSEC
 
 DNS-over-HTTPS is compatible with DNSSEC, and requests DNSSEC signatures by
