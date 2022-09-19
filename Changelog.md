@@ -4,6 +4,15 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.3.2
+
+- Documentation updates, including deploying recommenation alongside DoT, thanks @gdm85
+- Add unit tests for CIDR subnets parsing, thanks @gdm85
+- Removing Firefox 61-62 patch
+
+Since this version, @gdm85, @GreyXor, @Jamesits will be able to maintain this repository alongside @m13253. Anyone who contributed to this project can also apply to be a maintainer.
+This is because changes in life have delayed the development of this project. By constructing a community hopefully can we restore the pace of development.
+
 ## Version 2.3.1
 
 - No new features in this release
