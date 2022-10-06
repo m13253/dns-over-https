@@ -12,7 +12,7 @@ LimitNOFILE=1048576
 Restart=always
 RestartSec=3
 Type=simple
-User=nobody
+DynamicUser=yes
 
 [Install]
 WantedBy=multi-user.target
