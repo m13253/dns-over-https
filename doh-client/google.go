@@ -27,7 +27,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -140,7 +140,7 @@ func (c *Client) parseResponseGoogle(ctx context.Context, w dns.ResponseWriter, 
 		}
 	}
 
-	body, err := ioutil.ReadAll(req.response.Body)
+	body, err := io.ReadAll(req.response.Body)
 	if err != nil {
 		log.Println(err)
 		req.reply.Rcode = dns.RcodeServerFailure

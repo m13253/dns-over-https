@@ -28,7 +28,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -178,7 +178,7 @@ func (c *Client) parseResponseIETF(ctx context.Context, w dns.ResponseWriter, r 
 		}
 	}
 
-	body, err := ioutil.ReadAll(req.response.Body)
+	body, err := io.ReadAll(req.response.Body)
 	if err != nil {
 		log.Printf("read error from upstream %s: %v\n", req.currentUpstream, err)
 		req.reply.Rcode = dns.RcodeServerFailure

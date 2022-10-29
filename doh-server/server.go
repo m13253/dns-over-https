@@ -28,7 +28,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net"
@@ -114,7 +113,7 @@ func (s *Server) Start() error {
 	var clientCAPool *x509.CertPool
 	if s.conf.TLSClientAuth {
 		if s.conf.TLSClientAuthCA != "" {
-			clientCA, err := ioutil.ReadFile(s.conf.TLSClientAuthCA)
+			clientCA, err := os.ReadFile(s.conf.TLSClientAuthCA)
 			if err != nil {
 				log.Fatalf("Reading certificate for client authentication has failed: %v", err)
 			}

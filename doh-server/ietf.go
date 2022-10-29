@@ -28,7 +28,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -50,7 +50,7 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 		}
 	}
 	if len(requestBinary) == 0 && (r.Header.Get("Content-Type") == "application/dns-message" || r.Header.Get("Content-Type") == "application/dns-udpwireformat") {
-		requestBinary, err = ioutil.ReadAll(r.Body)
+		requestBinary, err = io.ReadAll(r.Body)
 		if err != nil {
 			return &DNSRequest{
 				errcode: 400,

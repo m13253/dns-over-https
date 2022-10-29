@@ -27,7 +27,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
@@ -40,7 +39,7 @@ func checkPIDFile(pidFile string) (bool, error) {
 retry:
 	f, err := os.OpenFile(pidFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
 	if os.IsExist(err) {
-		pidStr, err := ioutil.ReadFile(pidFile)
+		pidStr, err := os.ReadFile(pidFile)
 		if err != nil {
 			return false, err
 		}
