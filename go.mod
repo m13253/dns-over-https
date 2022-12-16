@@ -7,13 +7,13 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/infobloxopen/go-trees v0.0.0-20200715205103-96a057b8dfb9
 	github.com/miekg/dns v1.1.50
-	golang.org/x/net v0.1.0
+	golang.org/x/net v0.4.0
 )
 
 require (
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/sys v0.1.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 )
