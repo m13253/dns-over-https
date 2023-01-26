@@ -4,6 +4,12 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.3.3
+
+- systemd: Use DynamicUser=yes instead of User=nobody (Fixed #139)
+- Migrate deprecated Go packages `ioutil` to `io` and `os`
+- Fix a bug that truncates the response improperly, causing malformed DNS responsed (Fixed #144)
+
 ## Version 2.3.2
 
 - Documentation updates, including deploying recommenation alongside DoT, thanks @gdm85
