@@ -80,7 +80,7 @@ func (ls *LVSWRRSelector) StartEvaluate() {
 						acceptType = "application/dns-message"
 					}
 
-					req, err := http.NewRequest(http.MethodGet, upstreamURL, nil)
+					req, err := http.NewRequest(http.MethodGet, upstreamURL, http.NoBody)
 					if err != nil {
 						/*log.Println("upstream:", upstreamURL, "type:", typeMap[upstream.Type], "check failed:", err)
 						continue*/

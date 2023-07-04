@@ -11,8 +11,8 @@ and [IETF DNS-over-HTTPS (RFC 8484)](https://www.rfc-editor.org/rfc/rfc8484.txt)
 
 ## Installing
 ### From Source
-- Install [Go](https://golang.org), at least version 1.13. The newer the better.
-> Note for Debian/Ubuntu users: You need to set `$GOROOT` if you could not get your new version of Go selected by the Makefile.)
+- Install [Go](https://golang.org), at least version 1.13. The newer, the better.
+> Note for Debian/Ubuntu users: You need to set `$GOROOT` if you could not get your new version of Go selected by the Makefile.
 
 - First create an empty directory, used for `$GOPATH`:
 ```bash
@@ -88,7 +88,7 @@ The following is a typical DNS-over-HTTPS architecture:
     |  doh-client  +--+ Content Delivery Network +--+ (Apache, Nginx, Caddy) |
     +--------------+  +--------------------------+  +------------------------+
 
-Although DNS-over-HTTPS can work alone, a HTTP service muxer would be useful as
+Although DNS-over-HTTPS can work alone, an HTTP service muxer would be useful as
 you can host DNS-over-HTTPS along with other HTTPS services.
 
 HTTP/2 with at least TLS v1.3 is recommended. OCSP stapling must be enabled,
@@ -275,7 +275,7 @@ services:
 
 ### Example configuration: DNS-over-TLS
 
-There is no native [DNS-over-TLS](https://en.wikipedia.org/wiki/DNS_over_TLS) support but you can easily add it via nginx:
+There is no native [DNS-over-TLS](https://en.wikipedia.org/wiki/DNS_over_TLS) support, but you can easily add it via nginx:
 ```
 stream {
     server {
@@ -294,7 +294,7 @@ this approach does not need a stand-alone daemon to provide the DoT service.
 ## DNSSEC
 
 DNS-over-HTTPS is compatible with DNSSEC, and requests DNSSEC signatures by
-default. However signature validation is not built-in. It is highly recommended
+default. However, signature validation is not built-in. It is highly recommended
 that you install `unbound` or `bind` and pass results for them to validate DNS
 records. An instance of [Pi Hole](https://pi-hole.net) could also be used to validate DNS signatures as well as provide other capabilities.
 

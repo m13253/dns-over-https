@@ -35,9 +35,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/miekg/dns"
+
 	"github.com/m13253/dns-over-https/v2/doh-client/selector"
 	jsondns "github.com/m13253/dns-over-https/v2/json-dns"
-	"github.com/miekg/dns"
 )
 
 func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, r *dns.Msg, isTCP bool, upstream *selector.Upstream) *DNSRequest {
@@ -104,7 +105,7 @@ func (c *Client) generateRequestIETF(ctx context.Context, w dns.ResponseWriter, 
 
 	var req *http.Request
 	if len(requestURL) < 2048 {
-		req, err = http.NewRequest(http.MethodGet, requestURL, nil)
+		req, err = http.NewRequest(http.MethodGet, requestURL, http.NoBody)
 		if err != nil {
 			log.Println(err)
 			reply := jsondns.PrepareReply(r)

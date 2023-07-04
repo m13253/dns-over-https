@@ -73,7 +73,7 @@ func (ws *NginxWRRSelector) StartEvaluate() {
 						acceptType = "application/dns-message"
 					}
 
-					req, err := http.NewRequest(http.MethodGet, upstreamURL, nil)
+					req, err := http.NewRequest(http.MethodGet, upstreamURL, http.NoBody)
 					if err != nil {
 						/*log.Println("upstream:", upstreamURL, "type:", typeMap[upstream.Type], "check failed:", err)
 						continue*/
@@ -110,7 +110,7 @@ func (ws *NginxWRRSelector) StartEvaluate() {
 	}()
 }
 
-// nginx wrr like
+// nginx wrr like.
 func (ws *NginxWRRSelector) Get() *Upstream {
 	var (
 		total             int32

@@ -38,39 +38,40 @@ import (
 	"sync"
 	"time"
 
-	"github.com/m13253/dns-over-https/v2/doh-client/config"
-	"github.com/m13253/dns-over-https/v2/doh-client/selector"
-	jsondns "github.com/m13253/dns-over-https/v2/json-dns"
 	"github.com/miekg/dns"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/idna"
+
+	"github.com/m13253/dns-over-https/v2/doh-client/config"
+	"github.com/m13253/dns-over-https/v2/doh-client/selector"
+	jsondns "github.com/m13253/dns-over-https/v2/json-dns"
 )
 
 type Client struct {
-	conf                 *config.Config
-	bootstrap            []string
-	passthrough          []string
-	udpClient            *dns.Client
-	tcpClient            *dns.Client
-	udpServers           []*dns.Server
-	tcpServers           []*dns.Server
-	bootstrapResolver    *net.Resolver
+	httpClientLastCreate time.Time
 	cookieJar            http.CookieJar
+	selector             selector.Selector
 	httpClientMux        *sync.RWMutex
+	tcpClient            *dns.Client
+	bootstrapResolver    *net.Resolver
+	udpClient            *dns.Client
+	conf                 *config.Config
 	httpTransport        *http.Transport
 	httpClient           *http.Client
-	httpClientLastCreate time.Time
-	selector             selector.Selector
+	udpServers           []*dns.Server
+	tcpServers           []*dns.Server
+	passthrough          []string
+	bootstrap            []string
 }
 
 type DNSRequest struct {
+	err               error
 	response          *http.Response
 	reply             *dns.Msg
-	udpSize           uint16
-	ednsClientAddress net.IP
-	ednsClientNetmask uint8
 	currentUpstream   string
-	err               error
+	ednsClientAddress net.IP
+	udpSize           uint16
+	ednsClientNetmask uint8
 }
 
 func NewClient(conf *config.Config) (c *Client, err error) {
@@ -427,7 +428,7 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 
 	// https://developers.cloudflare.com/1.1.1.1/dns-over-https/request-structure/ says
 	// returns code will be 200 / 400 / 413 / 415 / 504, some server will return 503, so
-	// I think if status code is 5xx, upstream must has some problems
+	// I think if status code is 5xx, upstream must have some problems
 	/*if req.response.StatusCode/100 == 5 {
 		c.selector.ReportUpstreamStatus(upstream, selector.Medium)
 	}*/

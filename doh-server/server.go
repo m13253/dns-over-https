@@ -53,11 +53,11 @@ type Server struct {
 type DNSRequest struct {
 	request         *dns.Msg
 	response        *dns.Msg
-	transactionID   uint16
 	currentUpstream string
-	isTailored      bool
-	errcode         int
 	errtext         string
+	errcode         int
+	transactionID   uint16
+	isTailored      bool
 }
 
 func NewServer(conf *config) (*Server, error) {
@@ -285,7 +285,7 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) findClientIP(r *http.Request) net.IP {
 	noEcs := r.URL.Query().Get("no_ecs")
-	if strings.ToLower(noEcs) == "true" {
+	if strings.EqualFold(noEcs, "true") {
 		return nil
 	}
 
