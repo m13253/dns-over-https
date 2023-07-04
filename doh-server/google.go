@@ -34,9 +34,10 @@ import (
 	"strings"
 	"time"
 
-	jsondns "github.com/m13253/dns-over-https/v2/json-dns"
 	"github.com/miekg/dns"
 	"golang.org/x/net/idna"
+
+	jsondns "github.com/m13253/dns-over-https/v2/json-dns"
 )
 
 func (s *Server) parseRequestGoogle(ctx context.Context, w http.ResponseWriter, r *http.Request) *DNSRequest {

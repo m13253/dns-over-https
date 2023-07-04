@@ -26,7 +26,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"runtime"
@@ -35,7 +34,7 @@ import (
 
 func checkPIDFile(pidFile string) (bool, error) {
 retry:
-	f, err := os.OpenFile(pidFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0666)
+	f, err := os.OpenFile(pidFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o666)
 	if os.IsExist(err) {
 		pidStr, err := os.ReadFile(pidFile)
 		if err != nil {
@@ -61,7 +60,7 @@ retry:
 		return false, err
 	}
 	defer f.Close()
-	_, err = io.WriteString(f, strconv.FormatInt(int64(os.Getpid()), 10))
+	_, err = f.WriteString(strconv.FormatInt(int64(os.Getpid()), 10))
 	if err != nil {
 		return false, err
 	}

@@ -36,8 +36,9 @@ import (
 	"strings"
 	"time"
 
-	jsondns "github.com/m13253/dns-over-https/v2/json-dns"
 	"github.com/miekg/dns"
+
+	jsondns "github.com/m13253/dns-over-https/v2/json-dns"
 )
 
 func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r *http.Request) *DNSRequest {
@@ -201,7 +202,7 @@ func (s *Server) generateResponseIETF(ctx context.Context, w http.ResponseWriter
 	}
 }
 
-// Workaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe
+// Workaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe.
 func (s *Server) patchDNSCryptProxyReqID(w http.ResponseWriter, r *http.Request, requestBinary []byte) bool {
 	if strings.Contains(r.UserAgent(), "dnscrypt-proxy") && bytes.Equal(requestBinary, []byte("\xca\xfe\x01\x00\x00\x01\x00\x00\x00\x00\x00\x01\x00\x00\x02\x00\x01\x00\x00\x29\x10\x00\x00\x00\x80\x00\x00\x00")) {
 		if s.conf.Verbose {
