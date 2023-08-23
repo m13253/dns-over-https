@@ -25,6 +25,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+          logout: true
       -
         name: Build and push
         uses: docker/build-push-action@v4
@@ -32,11 +33,3 @@ jobs:
           file: ./Dockerfile.${{ matrix.variant }}
           tags: m13253/dns-over-https-${{ matrix.variant }}:latest
           push: true
-      -
-        name: Logout from Docker Hub
-        uses: docker/login-action@v2
-        if: always()
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          logout: true
