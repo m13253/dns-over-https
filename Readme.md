@@ -11,7 +11,7 @@ and [IETF DNS-over-HTTPS (RFC 8484)](https://www.rfc-editor.org/rfc/rfc8484.txt)
 
 ## Installing
 ### From Source
-- Install [Go](https://golang.org), at least version 1.13. The newer, the better.
+- Install [Go](https://golang.org), at least version 1.20. The newer, the better.
 > Note for Debian/Ubuntu users: You need to set `$GOROOT` if you could not get your new version of Go selected by the Makefile.
 
 - First create an empty directory, used for `$GOPATH`:
@@ -66,6 +66,11 @@ docker run -d --name doh-server \
   -e DOH_SERVER_VERBOSE="false" \
   satishweb/doh-server
 ```
+
+Feeling adventurous? Try the latest build:
+
+- `m13253/dns-over-https-server:latest`
+- `m13253/dns-over-https-client:latest`
 
 ## Logging
 
@@ -131,7 +136,7 @@ server {
 
   server_tokens off;
 
-  ssl_protocols TLSv1.2 TLSv1.3;          # TLS 1.3 requires nginx >= 1.13.0
+  ssl_protocols TLSv1.2 TLSv1.3;          # TLS 1.3 requires nginx >= 1.20.0
   ssl_prefer_server_ciphers on;
   ssl_dhparam /etc/nginx/dhparam.pem;     # openssl dhparam -dsaparam -out /etc/nginx/dhparam.pem 4096
   ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
@@ -283,8 +288,8 @@ stream {
         proxy_pass              ipofyourdnsresolver:port  #127.0.0.1:53
     }
 
-    ssl_certificate /etc/letsencrypt/live/site.yourdomain/fullchain.pem; 
-    ssl_certificate_key /etc/letsencrypt/live/site.yourdomain/privkey.pem; 
+    ssl_certificate /etc/letsencrypt/live/site.yourdomain/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/site.yourdomain/privkey.pem;
 }
 ```
 
