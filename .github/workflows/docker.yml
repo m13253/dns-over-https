@@ -12,12 +12,6 @@ jobs:
     strategy:
       matrix:
         variant: ["client", "server"]
-        platforms: [
-          "linux/amd64",
-          "linux/arm/v6",
-          "linux/arm/v7",
-          "linux/arm64/v8"
-        ]
     steps:
       -
         name: Set up QEMU
@@ -32,11 +26,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           logout: true
-      -
+      - # TODO: port https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
         name: Build and push
         uses: docker/build-push-action@v4
         with:
           file: ./Dockerfile.${{ matrix.variant }}
           tags: m13253/dns-over-https-${{ matrix.variant }}:latest
           push: true
-          platforms: ${{ matrix.platforms }}
+          platforms: "linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8"
