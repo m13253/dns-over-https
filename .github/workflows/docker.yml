@@ -33,3 +33,4 @@ jobs:
           file: ./Dockerfile.${{ matrix.variant }}
           tags: m13253/dns-over-https-${{ matrix.variant }}:latest
           push: true
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8
