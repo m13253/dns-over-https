@@ -3,9 +3,9 @@
 PREFIX = /usr/local
 
 ifeq ($(GOROOT),)
-GOBUILD = go build
+GOBUILD = go build -ldflags "-s -w"
 else
-GOBUILD = $(GOROOT)/bin/go build
+GOBUILD = $(GOROOT)/bin/go build -ldflags "-s -w"
 endif
 
 ifeq ($(shell uname),Darwin)
