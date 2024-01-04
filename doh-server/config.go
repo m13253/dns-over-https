@@ -43,6 +43,7 @@ type config struct {
 	Tries               uint     `toml:"tries"`
 	Verbose             bool     `toml:"verbose"`
 	LogGuessedIP        bool     `toml:"log_guessed_client_ip"`
+	ECSDisable          bool     `toml:"ecs_disable"`
 	ECSAllowNonGlobalIP bool     `toml:"ecs_allow_non_global_ip"`
 	ECSUsePreciseIP     bool     `toml:"ecs_use_precise_ip"`
 	TLSClientAuth       bool     `toml:"tls_client_auth"`
