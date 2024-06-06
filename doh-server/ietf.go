@@ -62,7 +62,7 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 	if len(requestBinary) == 0 {
 		return &DNSRequest{
 			errcode: 400,
-			errtext: fmt.Sprintf("Invalid argument value: \"dns\""),
+			errtext: "Invalid argument value: \"dns\"",
 		}
 	}
 
