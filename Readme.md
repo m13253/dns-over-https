@@ -66,6 +66,7 @@ docker run -d --name doh-server \
   -e DOH_SERVER_VERBOSE="false" \
   satishweb/doh-server
 ```
+Note: Multiple Upstream DNS server support for the container image was added after `satishweb/doh-server:v2.3.7-1`
 
 Feeling adventurous? Try the latest build:
 
