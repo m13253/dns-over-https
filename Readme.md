@@ -58,7 +58,7 @@ sudo make uninstall
 ```bash
 docker run -d --name doh-server \
   -p 8053:8053 \
-  -e UPSTREAM_DNS_SERVER="udp:8.8.8.8:53" \
+  -e UPSTREAM_DNS_SERVER="udp:208.67.222.222:53,udp:208.67.220.220:53" \
   -e DOH_HTTP_PREFIX="/dns-query" \
   -e DOH_SERVER_LISTEN=":8053" \
   -e DOH_SERVER_TIMEOUT="10" \
@@ -66,6 +66,7 @@ docker run -d --name doh-server \
   -e DOH_SERVER_VERBOSE="false" \
   satishweb/doh-server
 ```
+Note: Multiple Upstream DNS server support was added in the container image on 2024-12-19.
 
 Feeling adventurous? Try the latest build:
 
