@@ -33,6 +33,7 @@ const (
 	Random   = "random"
 	NginxWRR = "weighted_round_robin"
 	LVSWRR   = "lvs_weighted_round_robin"
+	Hash   = "hostname_hash"
 )
 
 type upstreamDetail struct {
