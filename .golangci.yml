@@ -1,0 +1,36 @@
+---
+issues:
+  fix: true
+linters:
+  enable-all: true
+  disable:
+    - importas
+    - depguard
+    - lll
+    - exhaustruct
+    - perfsprint
+    - gochecknoinits
+    - wsl
+    - exportloopref
+linters-settings:
+  revive:
+    enable-all-rules: true
+    rules:
+      - name: line-length-limit
+        disabled: true
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - experimental
+      - opinionated
+  govet:
+    enable-all: true
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/m13253/dns-over-https/v2)
+  gofumpt:
+    extra-rules: true
