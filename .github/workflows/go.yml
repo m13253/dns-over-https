@@ -14,7 +14,7 @@ jobs:
       id: go
 
     - name: Check out repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Linux build
       run: |
@@ -29,7 +29,7 @@ jobs:
           doh-server/doh-server
 
     - name: Cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       with:
         # A directory to store and save the cache
         path: ~/go/pkg/mod
