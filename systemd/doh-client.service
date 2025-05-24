@@ -4,6 +4,7 @@ Documentation=https://github.com/m13253/dns-over-https
 After=network.target
 Before=nss-lookup.target
 Wants=nss-lookup.target
+StartLimitIntervalSec=0
 
 [Service]
 AmbientCapabilities=CAP_NET_BIND_SERVICE
@@ -13,7 +14,6 @@ Restart=always
 RestartSec=1s
 RestartMaxDelaySec=76s
 RestartSteps=9
-StartLimitIntervalSec=0
 Type=simple
 DynamicUser=yes
 
