@@ -52,9 +52,8 @@ func (s *Server) parseRequestIETF(ctx context.Context, w http.ResponseWriter, r 
 		}
 	}
 	if len(requestBinary) == 0 && (r.Header.Get("Content-Type") == "application/dns-message" || r.Header.Get("Content-Type") == "application/dns-udpwireformat") {
-		// DNS protocol gives 64 KiB bound.
-		// We will use our own FormatError, so not passing http.ResponseWriter into http.MaxBytesReader.
-		requestBinary, err = io.ReadAll(http.MaxBytesReader(nil, r.Body, 65536))
+		// We will use our own FormatError, thus not passing http.ResponseWriter into http.MaxBytesReader.
+		requestBinary, err = io.ReadAll(http.MaxBytesReader(nil, r.Body, dns.MaxMsgSize))
 		if _, ok := errors.AsType[*http.MaxBytesError](err); ok {
 			return &DNSRequest{
 				errcode: 413,

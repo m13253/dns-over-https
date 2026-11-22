@@ -179,7 +179,7 @@ func (c *Client) parseResponseIETF(ctx context.Context, w dns.ResponseWriter, r 
 		}
 	}
 
-	body, err := io.ReadAll(req.response.Body)
+	body, err := io.ReadAll(http.MaxBytesReader(nil, req.response.Body, dns.MaxMsgSize))
 	if err != nil {
 		log.Printf("read error from upstream %s: %v\n", req.currentUpstream, err)
 		req.reply.Rcode = dns.RcodeServerFailure

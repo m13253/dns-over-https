@@ -8,6 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	jsondns "github.com/m13253/dns-over-https/v2/json-dns"
 )
 
 type LVSWRRSelector struct {
@@ -210,7 +212,7 @@ func (ls *LVSWRRSelector) checkGoogleResponse(resp *http.Response, upstream *Ups
 	}
 
 	m := make(map[string]interface{})
-	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
+	if err := json.NewDecoder(http.MaxBytesReader(nil, resp.Body, jsondns.ReasonableJSONResponseLengthLimit)).Decode(&m); err != nil {
 		// should I check error in detail?
 		if atomic.AddInt32(&upstream.effectiveWeight, -2) < 1 {
 			atomic.StoreInt32(&upstream.effectiveWeight, 1)
