@@ -48,6 +48,14 @@ func (s *Server) parseRequestGoogle(ctx context.Context, w http.ResponseWriter, 
 			errtext: "Invalid argument value: \"name\"",
 		}
 	}
+	// idna.ToASCII is O(L^2), so we want to check the length before calling it.
+	// Because of a separate \DDD escaping rule, the maximum allowed input length actually has a "*4".
+	if len(name) > 255*4 {
+		return &DNSRequest{
+			errcode: 400,
+			errtext: "Invalid argument value: \"name\" (too long)",
+		}
+	}
 	if punycode, err := idna.ToASCII(name); err == nil {
 		name = punycode
 	} else {

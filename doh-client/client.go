@@ -182,12 +182,16 @@ func NewClient(conf *config.Config) (c *Client, err error) {
 			},
 		}
 		if len(conf.Other.Passthrough) != 0 {
-			c.passthrough = make([]string, len(conf.Other.Passthrough))
-			for i, passthrough := range conf.Other.Passthrough {
-				if punycode, err := idna.ToASCII(passthrough); err != nil {
-					passthrough = punycode
+			for _, passthrough := range conf.Other.Passthrough {
+				normalized := passthrough
+				if punycode, err := idna.ToASCII(normalized); err == nil {
+					normalized = punycode
 				}
-				c.passthrough[i] = "." + strings.ToLower(strings.Trim(passthrough, ".")) + "."
+				normalized = strings.Trim(normalized, ".")
+				if _, ok := dns.IsDomainName(normalized); !ok {
+					return nil, fmt.Errorf("passthrough %q is not a valid domain name", passthrough)
+				}
+				c.passthrough = append(c.passthrough, normalized)
 			}
 		}
 	}
@@ -449,12 +453,12 @@ func (c *Client) handlerFunc(w dns.ResponseWriter, r *dns.Msg, isTCP bool) {
 
 	shouldPassthrough := false
 	passthroughQuestionName := questionName
-	if punycode, err := idna.ToASCII(passthroughQuestionName); err != nil {
+	if punycode, err := idna.ToASCII(passthroughQuestionName); err == nil {
 		passthroughQuestionName = punycode
 	}
-	passthroughQuestionName = "." + strings.ToLower(strings.Trim(passthroughQuestionName, ".")) + "."
+	passthroughQuestionName = strings.Trim(passthroughQuestionName, ".")
 	for _, passthrough := range c.passthrough {
-		if strings.HasSuffix(passthroughQuestionName, passthrough) {
+		if dns.IsSubDomain(passthrough, passthroughQuestionName) {
 			shouldPassthrough = true
 			break
 		}
