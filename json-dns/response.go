@@ -28,6 +28,12 @@ import (
 	"time"
 )
 
+// The largest well-formed 64 KiB DNS response can be serialized into ~18 MiB of JSON, if not pretty-printed.
+// (4079 MINFO records, each with NAME = RMAILBX = EMAILBX = ("<"*63 + ".") * 3 + "<"*61 + ".")
+// That is too large as a practical size limit. Also, there is actually no upper limit if pretty-printed.
+// So, I'll set the limit to 1 MiB as for now. We can increase it if we do need more.
+const ReasonableJSONResponseLengthLimit = 1048576
+
 type QuestionList []Question
 
 func (ql *QuestionList) UnmarshalJSON(b []byte) error {
