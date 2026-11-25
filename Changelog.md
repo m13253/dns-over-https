@@ -4,6 +4,66 @@ This Changelog records major changes between versions.
 
 Not all changes are recorded. Please check git log for details.
 
+## Version 2.4.0
+
+Breaking and behavioral changes:
+
+- Building now requires Go 1.26 or newer (was 1.23.5), because the code uses `errors.AsType`. (#193)
+- doh-server: The `name` parameter of the Google protocol is limited to 1020 bytes long. (#194)
+- doh-server: The request body is now limited to 64 KiB. (#193)
+- doh-client: Invalid domain names in the `passthrough` configuration option now abort the program at launch, instead of being silently ignored. (#194)
+- doh-client: Fix Punycode conversion for `passthrough` being mistakenly skipped. (#194)
+- doh-client: The response body is now limited to 64 KiB for IETF protocol, and 1 MiB for Google protocol. (#193, #195, #196)
+- systemd: The service units restarts itself with an exponential backoff. Requires systemd 254 or newer. (#171, #174)
+
+Other changes:
+
+- docs: Add contribution guidelines and a generative AI policy. (#197)
+- doh-client: Add an `interface` configuration option to bind outgoing connections to a specific interface. (#185, thanks @shahradelahi)
+- doh-client: Add `globalreachtech.com`, `network-auth.com`, and `ping.archlinux.org` to the default passthrough list. (#172, #191, thanks @hiruocha, @bfahrenfort)
+- CI configuration changes (#192, thanks GitHub CodeQL and GitHub Copilot Autofix for security scanning)
+
+Additionally, thanks Joshua Wang from [SSLab](https://github.com/sslab-gatech) and OpenVuln from Z.ai for your vulnerability reports.
+
+## Version 2.3.10
+
+- Update third-party dependencies. No functional changes.
+- Update the GitHub Actions workflow to `actions/checkout@v4` and `actions/cache@v4`. (#169, thanks @vinnyperella)
+
+## Version 2.3.9
+
+- Update third-party dependencies.
+- Add a `golangci-lint` configuration file.
+
+## Version 2.3.8
+
+- Building now requires Go 1.23.5 or newer (was 1.22).
+- Update example to use multiple upstream DNS servers. (#162, thanks @satishweb)
+- Update third-party dependencies.
+
+## Version 2.3.7
+
+- Building now requires Go 1.22 or newer (was 1.20).
+- Update third-party dependencies.
+
+## Version 2.3.6
+
+- Update third-party dependencies.
+- Remove an unnecessary `fmt.Sprintf` call. (#159, thanks @testwill)
+
+## Version 2.3.5
+
+- Update third-party dependencies.
+- Note: binaries built from this tag report themselves as version 2.3.4, because the version number was not bumped before the release.
+
+## Version 2.3.4
+
+- Building now requires Go 1.20 or newer (was 1.19).
+- `make` now builds with `-ldflags "-s -w"`. Distributions that generate a separate debuginfo package from these binaries may need to adjust their build. (#152, thanks @Gontier-Julien)
+- Container images now support multi-architecture (`linux/amd64`, `linux/arm/v6`, `linux/arm/v7`, `linux/arm64/v8`). (thanks @Jamesits)
+- Update third-party dependencies.
+- Code cleanups with no behavioral changes.
+
 ## Version 2.3.3
 
 - systemd: Use DynamicUser=yes instead of User=nobody (Fixed #139)
