@@ -345,7 +345,10 @@ Currently supported features are:
 
 ## Known issues
 
-* it does not work well with [dnscrypt-proxy](https://github.com/DNSCrypt/dnscrypt-proxy), you might want to use either (or fix the compatibility bugs by submitting PRs)
+* It does not work well with [dnscrypt-proxy](https://github.com/DNSCrypt/dnscrypt-proxy), you might want to use either (or fix the compatibility bugs by submitting PRs)
+* The client may crash under certain WRR selector configurations.
+
+Please check [Contributing.md](Contributing.md) if you want to help us improve the software!
 
 ## The name of the project
 
