@@ -14,7 +14,7 @@ Breaking and behavioral changes:
 - doh-client: Invalid domain names in the `passthrough` configuration option now abort the program at launch, instead of being silently ignored. (#194)
 - doh-client: Fix Punycode conversion for `passthrough` being mistakenly skipped. (#194)
 - doh-client: The response body is now limited to 64 KiB for IETF protocol, and 1 MiB for Google protocol. (#193, #195, #196)
-- systemd: The service units restarts itself with an exponential backoff. Requires systemd 254 or newer. (#171, #174)
+- systemd: The service units now restart itself with an exponential backoff. Requires systemd 254 or newer. (#171, #174)
 
 Other changes:
 
@@ -38,7 +38,7 @@ Additionally, thanks Joshua Wang from [SSLab](https://github.com/sslab-gatech) a
 ## Version 2.3.8
 
 - Building now requires Go 1.23.5 or newer (was 1.22).
-- Update example to use multiple upstream DNS servers. (#162, thanks @satishweb)
+- Update the example to use multiple upstream DNS servers. (#162, thanks @satishweb)
 - Update third-party dependencies.
 
 ## Version 2.3.7

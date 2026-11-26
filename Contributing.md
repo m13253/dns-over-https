@@ -35,6 +35,6 @@ Bumping `Z` immediately after releasing seems unconventional, but not using suff
 
 ## Rules regarding Generative AI contributions
 
-We don’t ask which tools you use. However, please ensure all your deliveries (code, comments, commit messages, issue reports, pull requests, etc.) are free from copyright concerns and **indistinguishable** from the output of a skilled human developer in terms of quality, coding style, and language style. In other words, it basically means that GenAI-assisted contributions must pass the Turing test.
+While we appreciate all kinds of contributions, we follow our “Duck Vibing” policy to ensure the quality of our software development process, described as below:
 
-While we appreciate all kinds of contributions, given the current status that no generative AI can pass the Turing test yet, please refrain from sending us fully-autonomous submissions.
+We don’t ask which tools you use. However, please ensure all your deliveries (code, comments, commit messages, issue reports, pull requests, communications, etc.) are free from copyright concerns and **indistinguishable** from the output of a skilled human developer in terms of quality, coding style, and language style. In other words, it basically means that GenAI-assisted contributions must pass the Turing test and fully-autonomous submissions are likely to be rejected.
